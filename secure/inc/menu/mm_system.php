@@ -36,6 +36,7 @@ $usersLogActive   = ($section==="02" && $page==="01" && $sec_page==="05");
 
 $varsListActive   = ($section==="02" && $page==="02" && $sec_page==="02" && empty($_GET['show']));
 $cronLogActive    = ($section==="02" && $page==="02" && $sec_page==="05");
+$cronListActive   = ($section==="02" && $page==="02" && $sec_page==="06");
 $changelogActive  = ($section==="02" && $page==="02" && $sec_page==="07");
 $migrationsActive = ($section==="02" && $page==="02" && $sec_page==="08");
 $emailLogActive   = ($section==="02" && $page==="02" && $sec_page==="09");
@@ -79,6 +80,7 @@ $emailLogActive   = ($section==="02" && $page==="02" && $sec_page==="09");
     <div class="nav flex-column ms-4">
         <?= mm_sys_item($isAdmin, 'index.php?section=02&amp;page=02&amp;sec_page=02', 'Výpis proměnných', $varsListActive) ?>
         <?= mm_sys_item($isAdmin, 'index.php?section=02&amp;page=02&amp;sec_page=05', 'Cron Log', $cronLogActive) ?>
+        <?= mm_sys_item($isAdmin, 'index.php?section=02&amp;page=02&amp;sec_page=06', 'Cron', $cronListActive) ?>
         <?= mm_sys_item($isAdmin, 'index.php?section=02&amp;page=02&amp;sec_page=07', 'ChangeLog', $changelogActive) ?>
         <?= mm_sys_item($isAdmin, 'index.php?section=02&amp;page=02&amp;sec_page=08', 'DB migrace', $migrationsActive) ?>
         <?= mm_sys_item($isAdmin, 'index.php?section=02&amp;page=02&amp;sec_page=09', 'E-mail log', $emailLogActive) ?>

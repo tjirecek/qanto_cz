@@ -24,12 +24,26 @@ Projektové menu zde není. `mm_project.php` a `pages_include_rep.php` do tohoto
 - DB migrace.
 - E-mail log.
 - TinyMCE a DataTables inicializace.
+- Shared UI pro vypis cron uloh.
 
 ## Novinky
 
 Stranky v `secure/inc/pages/news/` se aktualne drzi jako shared admin a prenaseji se z `qanto_cz` do QRS i QANTOPLUS.
 
 Poznamka k dalsimu refaktoru: `secure/inc/pages/news/news_info_send.php` zatim obsahuje odesilani newsletteru i sablonu/branding. Pri dalsi uprave ho rozdelit na shared odesilaci logiku a projektovou sablonu/branding.
+
+## Cron
+
+`secure/inc/settings/cron_vypis.php` je shared UI. Samotny seznam cron uloh zustava projektovy v `secure/functions/fun_rep_cron.php`.
+
+Projektovy cron helper musi poskytovat:
+
+- `app_cron_http_base_url(): ?string`
+- `app_cron_jobs(): array`
+
+Polozky z `app_cron_jobs()` mohou pouzivat `role` hodnoty `hosting`, `manual_child` a `legacy`. Provozni crony nastavene na hostingu maji mit `role = hosting`.
+
+V cistem `qanto_cz` nemusi `secure/functions/fun_rep_cron.php` existovat. Shared UI v takovem pripade zobrazi prazdny vypis bez fatal chyby.
 
 ## DB Migrace
 

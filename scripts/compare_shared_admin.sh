@@ -117,9 +117,6 @@ is_project_path() {
     secure/index.php)
       return 0
       ;;
-    secure/inc/settings/cron_vypis.php)
-      return 0
-      ;;
     *)
       return 1
       ;;
@@ -334,7 +331,6 @@ echo '| `secure/functions/fun_rep_*` | PROJECT_HELPER | Projektove helpery; nepo
 echo '| `secure/functions/pages_include_rep*` | PROJECT_ROUTER | Projektovy router; rozdily mezi projekty jsou ocekavane. |'
 echo '| `secure/functions/fun_rep_cron.php` | PROJECT_CRON_LIST | Projektovy seznam cron uloh se sdilenym API. |'
 echo '| `secure/index.php` | PROJECT_ADMIN_SHELL | Admin shell s projektovym brandingem, projektovym menu a volitelnymi project assety; neporovnavat jako byte-identical shared soubor bez refaktoru na konfiguraci. |'
-echo '| `secure/inc/settings/cron_vypis.php` | PROJECT_CRON_SETTINGS | Projektovy vypis cron uloh; kazdy projekt muze mit vlastni cron seznam. |'
 echo '| `secure/functions/*.php` ostatni | SHARED_SYSTEM | Ostatni soubory primo v secure/functions jsou shared/admin kandidati. |'
 echo '| `secure/functions/ajax/rep_*` | PROJECT_AJAX | Projektove AJAX endpointy; neporovnavat jako shared/admin. |'
 echo '| `secure/functions/ajax/*.php` ostatni | SHARED_SYSTEM | Ostatni AJAX endpointy jsou shared/admin kandidati. |'

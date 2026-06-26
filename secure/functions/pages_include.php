@@ -54,6 +54,7 @@ $routes = [
             '03' => 'settings/menu_vypis',
             '04' => 'settings/menu_users_skup',
             '05' => 'settings/cron_log',
+            '06' => 'settings/cron_vypis',
             '07' => 'settings/changelog',
             '08' => 'settings/migrations',
             '09' => 'settings/email_log',

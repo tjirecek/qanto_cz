@@ -3,7 +3,7 @@
 - Primary qanto_cz: /Users/tjirecek/mamp/qanto_cz
 - Secondary QRS_QANTO_CZ: /Users/tjirecek/mamp/qrs-qanto_cz
 - Secondary QANTOPLUS_CZ: /Users/tjirecek/mamp/qantoplus_cz
-- Generated: 2026-06-26 18:37:33
+- Generated: 2026-06-27 00:02:14
 - Scope: shared/admin baseline only; project files are classified or scanned, not synchronization candidates.
 
 ## Overview
@@ -11,9 +11,9 @@
 | Secondary | Area | Type | Files | SAME | DIFF | ONLY_PRIMARY | ONLY_SECONDARY | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | QANTOPLUS_CZ | Shared admin assets | SHARED_ADMIN | 4 | 4 | 0 | 0 | 0 | Shared admin assets outside /secure, e.g. secure.css and sec_*.js. |
-| QANTOPLUS_CZ | Shared/System candidates | SHARED_SYSTEM | 69 | 64 | 5 | 0 | 0 | Shared/admin baseline inside repository structure. |
+| QANTOPLUS_CZ | Shared/System candidates | SHARED_SYSTEM | 70 | 66 | 4 | 0 | 0 | Shared/admin baseline inside repository structure. |
 | QRS_QANTO_CZ | Shared admin assets | SHARED_ADMIN | 4 | 4 | 0 | 0 | 0 | Shared admin assets outside /secure, e.g. secure.css and sec_*.js. |
-| QRS_QANTO_CZ | Shared/System candidates | SHARED_SYSTEM | 69 | 61 | 8 | 0 | 0 | Shared/admin baseline inside repository structure. |
+| QRS_QANTO_CZ | Shared/System candidates | SHARED_SYSTEM | 70 | 63 | 7 | 0 | 0 | Shared/admin baseline inside repository structure. |
 
 ## Open Shared/Admin Differences
 
@@ -22,14 +22,12 @@
 | QRS_QANTO_CZ | Shared/System candidates | DIFF | `functions/settings.php` | Exists in both projects but content differs; manual review required. |
 | QRS_QANTO_CZ | Shared/System candidates | DIFF | `secure/functions/fun_system.php` | Exists in both projects but content differs; manual review required. |
 | QRS_QANTO_CZ | Shared/System candidates | DIFF | `secure/functions/pages_include.php` | Exists in both projects but content differs; manual review required. |
-| QRS_QANTO_CZ | Shared/System candidates | DIFF | `secure/inc/menu/mm_system.php` | Exists in both projects but content differs; manual review required. |
 | QRS_QANTO_CZ | Shared/System candidates | DIFF | `secure/inc/pages/stattexty/statvyrazy_vypis.php` | Exists in both projects but content differs; manual review required. |
 | QRS_QANTO_CZ | Shared/System candidates | DIFF | `secure/inc/settings/changelog.php` | Exists in both projects but content differs; manual review required. |
 | QRS_QANTO_CZ | Shared/System candidates | DIFF | `secure/inc/settings/system_add.php` | Exists in both projects but content differs; manual review required. |
 | QRS_QANTO_CZ | Shared/System candidates | DIFF | `secure/inc/settings/system_edit.php` | Exists in both projects but content differs; manual review required. |
 | QANTOPLUS_CZ | Shared/System candidates | DIFF | `secure/functions/fun_system.php` | Exists in both projects but content differs; manual review required. |
 | QANTOPLUS_CZ | Shared/System candidates | DIFF | `secure/functions/pages_include.php` | Exists in both projects but content differs; manual review required. |
-| QANTOPLUS_CZ | Shared/System candidates | DIFF | `secure/inc/menu/mm_system.php` | Exists in both projects but content differs; manual review required. |
 | QANTOPLUS_CZ | Shared/System candidates | DIFF | `secure/inc/settings/system_add.php` | Exists in both projects but content differs; manual review required. |
 | QANTOPLUS_CZ | Shared/System candidates | DIFF | `secure/inc/settings/system_edit.php` | Exists in both projects but content differs; manual review required. |
 
@@ -41,7 +39,6 @@
 | `secure/functions/pages_include_rep*` | PROJECT_ROUTER | Projektovy router; rozdily mezi projekty jsou ocekavane. |
 | `secure/functions/fun_rep_cron.php` | PROJECT_CRON_LIST | Projektovy seznam cron uloh se sdilenym API. |
 | `secure/index.php` | PROJECT_ADMIN_SHELL | Admin shell s projektovym brandingem, projektovym menu a volitelnymi project assety; neporovnavat jako byte-identical shared soubor bez refaktoru na konfiguraci. |
-| `secure/inc/settings/cron_vypis.php` | PROJECT_CRON_SETTINGS | Projektovy vypis cron uloh; kazdy projekt muze mit vlastni cron seznam. |
 | `secure/functions/*.php` ostatni | SHARED_SYSTEM | Ostatni soubory primo v secure/functions jsou shared/admin kandidati. |
 | `secure/functions/ajax/rep_*` | PROJECT_AJAX | Projektove AJAX endpointy; neporovnavat jako shared/admin. |
 | `secure/functions/ajax/*.php` ostatni | SHARED_SYSTEM | Ostatni AJAX endpointy jsou shared/admin kandidati. |
@@ -82,7 +79,7 @@
 
 | Area / Path | Finding |
 | --- | --- |
-| Shared/System candidates | 13 otevrenych rozdilu proti sekundarnim projektum; review pred prenosem. |
+| Shared/System candidates | 11 otevrenych rozdilu proti sekundarnim projektum; review pred prenosem. |
 | Shared admin assets | Shared admin assety jsou shodne proti sekundarnim projektum. |
 
 ## Interpretation Rules
