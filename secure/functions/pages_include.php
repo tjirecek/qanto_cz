@@ -68,17 +68,49 @@ $routes = [
     ],
 ];
 
-$allowedRoles = [1, 2];
-$currentDefault = $defaultRoute;
+$projectConfig = [];
+$projectRoutesFile = SEC_DIR . '/functions/pages_include_rep.php';
+if (is_file($projectRoutesFile)) {
+    $loadedProjectConfig = require $projectRoutesFile;
+    if (is_array($loadedProjectConfig)) {
+        $projectConfig = $loadedProjectConfig;
+    }
+}
 
-$section = (string)$currentDefault['section'];
-$page = (string)$currentDefault['page'];
-$sec_page = (string)$currentDefault['sec_page'];
+$projectRoutes = $projectConfig['routes'] ?? [];
+if (is_array($projectRoutes) && $projectRoutes !== []) {
+    $routes = array_replace_recursive($routes, $projectRoutes);
+}
+
+$allowedRoles = array_values(array_unique(array_merge([1, 2], (array)($projectConfig['allowed_roles'] ?? []))));
+$roleDefaults = is_array($projectConfig['role_defaults'] ?? null) ? $projectConfig['role_defaults'] : [];
+$roleLocks = is_array($projectConfig['role_locks'] ?? null) ? $projectConfig['role_locks'] : [];
+
+$currentDefault = $roleDefaults[$adminUserPrava] ?? $defaultRoute;
+if (!is_array($currentDefault)) {
+    $currentDefault = $defaultRoute;
+}
+
+$section = (string)($currentDefault['section'] ?? $defaultRoute['section']);
+$page = (string)($currentDefault['page'] ?? $defaultRoute['page']);
+$sec_page = (string)($currentDefault['sec_page'] ?? $defaultRoute['sec_page']);
 
 if (in_array($adminUserPrava, $allowedRoles, true)) {
     $section  = $norm2($_GET['section']  ?? null, $section);
     $page     = $norm2($_GET['page']     ?? null, $page);
     $sec_page = $norm2($_GET['sec_page'] ?? null, $sec_page);
+}
+
+$roleLock = $roleLocks[$adminUserPrava] ?? null;
+if (is_array($roleLock)) {
+    $lockedSection = (string)($roleLock['section'] ?? '');
+    $lockedPage = (string)($roleLock['page'] ?? '');
+
+    if (($lockedSection !== '' && $section !== $lockedSection) || ($lockedPage !== '' && $page !== $lockedPage)) {
+        $section = (string)($currentDefault['section'] ?? $defaultRoute['section']);
+        $page = (string)($currentDefault['page'] ?? $defaultRoute['page']);
+        $sec_page = (string)($currentDefault['sec_page'] ?? $defaultRoute['sec_page']);
+    }
 }
 
 if (isset($routes[$section])) {
@@ -87,9 +119,9 @@ if (isset($routes[$section])) {
 }
 
 if ($sec_text === '') {
-    $section = (string)$currentDefault['section'];
-    $page = (string)$currentDefault['page'];
-    $sec_page = (string)$currentDefault['sec_page'];
+    $section = (string)($currentDefault['section'] ?? $defaultRoute['section']);
+    $page = (string)($currentDefault['page'] ?? $defaultRoute['page']);
+    $sec_page = (string)($currentDefault['sec_page'] ?? $defaultRoute['sec_page']);
 
     $main_menu = (string)($routes[$section]['_menu'] ?? 'mm_dashboard');
     $sec_text = (string)($routes[$section][$page][$sec_page] ?? 'dashboard/dashboard_main');
