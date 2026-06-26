@@ -18,7 +18,7 @@ $tableExists = changelog_table_exists();
 if (!$tableExists) {
     $messages[] = [
         'type' => 'warning',
-        'text' => 'Tabulka changelog zatím neexistuje. Nejdříve spusť SQL skript secure/sql/20260607_create_changelog.sql na lokální databázi.',
+        'text' => 'Tabulka changelog zatím neexistuje. Nejdříve spusť odpovídající aktivní migraci v secure/sql/.',
     ];
 } else {
     if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'POST') {
