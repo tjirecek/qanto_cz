@@ -45,7 +45,7 @@ $uName = admin_session_user_name();
 <nav class="navbar navbar-dark bg-dark sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
-            <img src="/img/design/logo_qanto.webp" alt="Qanto admin" class="admin-navbar-logo" style="height:32px">
+            <img src="/img/design/logo_qanto_light.webp" alt="Qanto admin" class="admin-navbar-logo" style="height:32px">
             <span class="d-none d-md-inline">shared administrace qanto.cz</span>
         </a>
 
