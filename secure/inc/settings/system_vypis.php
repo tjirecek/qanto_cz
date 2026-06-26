@@ -3,7 +3,13 @@ declare(strict_types=1);
 
 require_once "functions/fun_system.php"; // PDO funkce (settings_* / sp_hodnota / ...)
 
-$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : (int)sp_hodnota('limit_settings-vypis');
+$defaultLimit = (int)(sp_hodnota('limit_settings-vypis') ?? 500);
+if ($defaultLimit <= 0) {
+    $defaultLimit = 500;
+}
+
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : $defaultLimit;
+
 $valid = isset($_GET['valid']) ? (int)$_GET['valid'] : 1;
 $show  = isset($_GET['show'])  ? (int)$_GET['show']  : 0;
 $del   = isset($_GET['del'])   ? (int)$_GET['del']   : 0;
@@ -86,7 +92,7 @@ if ($limit === 0 || $count <= $limit) {
         <h6 class="m-0 fw-bold text-primary d-sm-inline">Systémové proměnné</h6>
         <span class="d-none d-sm-inline-block ms-2">načteno <?= (int)$limit; ?> záznamů</span>
 
-        <?php if ((int)sp_hodnota('limit_settings-vypis') <= $count): ?>
+        <?php if ($defaultLimit <= $count): ?>
             <a href="index.php?section=02&amp;page=02&amp;sec_page=02&amp;limit=0"
                class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                 načíst všechny záznamy (<?= (int)$count; ?>) <i class="bi bi-arrow-repeat ms-1"></i>
@@ -99,7 +105,7 @@ if ($limit === 0 || $count <= $limit) {
             <table
                     class="table table-striped table-hover table-bordered table-sm js-datatable align-middle"
                     data-order='[[ 1, "asc" ], [ 2, "asc" ]]'
-                    data-page-length="25"
+                    data-page-length="500"
                     id="DataTable"
                     width="100%"
                     cellspacing="0"

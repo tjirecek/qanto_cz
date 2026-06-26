@@ -32,6 +32,12 @@ Stranky v `secure/inc/pages/news/` se aktualne drzi jako shared admin a prenasej
 
 Poznamka k dalsimu refaktoru: `secure/inc/pages/news/news_info_send.php` zatim obsahuje odesilani newsletteru i sablonu/branding. Pri dalsi uprave ho rozdelit na shared odesilaci logiku a projektovou sablonu/branding.
 
+## Systemove Promenne
+
+Typ systemove promenne je volne textove pole. Nepouzivat pevny vycet hodnot, protoze typy se mohou lisit podle projektu; prazdna hodnota se uklada jako `main`.
+
+Vychozi limit vypisu systemovych promennych je 500 zaznamu. Rucni `limit=0` zustava zachovany pro nacteni vsech zaznamu.
+
 ## Cron
 
 `secure/inc/settings/cron_vypis.php` je shared UI. Samotny seznam cron uloh zustava projektovy v `secure/functions/fun_rep_cron.php`.

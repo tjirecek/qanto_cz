@@ -10,8 +10,9 @@ $hodnota_raw  = trim((string)($_POST['hodnota'] ?? '0'));
 $hodnota_text = trim((string)($_POST['hodnota_text'] ?? ''));
 $add          = isset($_POST['add']) ? (int)$_POST['add'] : 0;
 
-// whitelist typů
-$typ = in_array($typ, ['admin', 'main'], true) ? $typ : 'main';
+if ($typ === '') {
+    $typ = 'main';
+}
 
 // tolerantní převod čísla (1,5 -> 1.5)
 $hodnota_num = (float)str_replace(',', '.', $hodnota_raw);
@@ -25,10 +26,11 @@ $hodnota_num = (float)str_replace(',', '.', $hodnota_raw);
 
                 <div class="col-12 col-xl-2">
                     <label for="typ" class="form-label">Typ</label>
-                    <select name="typ" id="typ" class="form-select">
-                        <option value="admin" <?= $typ === 'admin' ? 'selected' : '' ?>>admin</option>
-                        <option value="main"  <?= $typ === 'main'  ? 'selected' : '' ?>>main</option>
-                    </select>
+                    <input type="text" name="typ" id="typ" class="form-control" value="<?= htmlspecialchars($typ, ENT_QUOTES, 'UTF-8') ?>" list="settings-type-suggestions" required>
+                    <datalist id="settings-type-suggestions">
+                        <option value="admin">
+                        <option value="main">
+                    </datalist>
                 </div>
 
                 <div class="col-12 col-xl-3">

@@ -36,6 +36,9 @@ $dev = [];
         $hodnota      = (string)($dev['hodnota'] ?? $hodnota);
         $hodnota_text = (string)($dev['hodnota_text'] ?? $hodnota_text);
         $valid        = (int)($dev['valid'] ?? $valid);
+        if ($typ === '') {
+            $typ = 'main';
+        }
         ?>
 
         <form method="post" autocomplete="off" class="needs-validation" novalidate>
@@ -43,13 +46,11 @@ $dev = [];
 
                 <div class="col-12 col-xl-2">
                     <label for="typ" class="form-label">Typ systémové hodnoty</label>
-                    <select name="typ" id="typ" class="form-select">
-                        <option value="admin" <?= $typ === 'admin' ? 'selected' : '' ?>>admin</option>
-                        <option value="main"  <?= $typ === 'main'  ? 'selected' : '' ?>>main</option>
-                        <?php if ($typ !== '' && !in_array($typ, ['admin', 'main'], true)): ?>
-                            <option value="<?= htmlspecialchars($typ, ENT_QUOTES, 'UTF-8') ?>" selected><?= htmlspecialchars($typ, ENT_QUOTES, 'UTF-8') ?></option>
-                        <?php endif; ?>
-                    </select>
+                    <input type="text" name="typ" id="typ" class="form-control" value="<?= htmlspecialchars($typ, ENT_QUOTES, 'UTF-8') ?>" list="settings-type-suggestions" required>
+                    <datalist id="settings-type-suggestions">
+                        <option value="admin">
+                        <option value="main">
+                    </datalist>
                 </div>
 
                 <div class="col-12 col-xl-3">
@@ -96,6 +97,10 @@ $dev = [];
 
     <?php
     elseif ($add === 2):
+        if ($typ === '') {
+            $typ = 'main';
+        }
+
         // ukládání přes fun_system.php (PDO)
         settings_edit($id, $typ, $name, $popis_cz, (float)$hodnota, $hodnota_text, $valid);
     endif;
