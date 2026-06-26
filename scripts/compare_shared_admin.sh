@@ -114,6 +114,9 @@ collect_secure_function_files() {
 is_project_path() {
   local rel="$1"
   case "$rel" in
+    functions/settings.php)
+      return 0
+      ;;
     secure/index.php)
       return 0
       ;;
@@ -182,7 +185,6 @@ shared_roots=(
   "functions/fun_email_log.php"
   "functions/fun_mailer.php"
   "functions/fun_users_password_reset.php"
-  "functions/settings.php"
   "functions/mysql_connect.php"
   "secure/index.php"
   "secure/inc/menu/mm_all.php"
@@ -334,6 +336,11 @@ echo '| `secure/index.php` | PROJECT_ADMIN_SHELL | Admin shell s projektovym bra
 echo '| `secure/functions/*.php` ostatni | SHARED_SYSTEM | Ostatni soubory primo v secure/functions jsou shared/admin kandidati. |'
 echo '| `secure/functions/ajax/rep_*` | PROJECT_AJAX | Projektove AJAX endpointy; neporovnavat jako shared/admin. |'
 echo '| `secure/functions/ajax/*.php` ostatni | SHARED_SYSTEM | Ostatni AJAX endpointy jsou shared/admin kandidati. |'
+
+print_section "Frontend Routing Decisions"
+echo '| Path | Type | Decision |'
+echo '| --- | --- | --- |'
+echo '| `functions/settings.php` | FRONTEND_PROJECT_ROUTING | Projektovy frontend routing; QRS muze smerovat na `/cz/main`, verejne weby na `/cz`. Neporovnavat jako shared/admin. |'
 
 print_section "Asset Decisions"
 echo '| Pattern/Path | Type | Decision |'

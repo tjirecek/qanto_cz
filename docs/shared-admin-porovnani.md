@@ -51,6 +51,7 @@ Projektove soubory nejsou synchronizacni kandidati:
 - `secure/functions/fun_rep_*`
 - `secure/functions/pages_include_rep*`
 - `secure/functions/ajax/rep_*`
+- `functions/settings.php`
 - `secure/index.php`
 - `secure/inc/pages/rep_*`
 - `assets/js/rep_*`
@@ -69,5 +70,7 @@ Projektove soubory nejsou synchronizacni kandidati:
 `secure/inc/settings/cron_vypis.php` je shared UI pro vypis cron uloh. Skutecny projektovy seznam cronu je v `secure/functions/fun_rep_cron.php`, ktery musi poskytovat spolecne API `app_cron_http_base_url()` a `app_cron_jobs()`.
 
 `secure/index.php` je projektovy admin shell. Obsahuje branding, logo/favicon, footer, volitelne projektove menu `mm_project.php`, projektove admin CSS `sec_rep_*` a muze mit rozdilny default dashboard. Shared reseni je mozne az po refaktoru na spolecnou sablonu a projektovou konfiguraci.
+
+`functions/settings.php` je projektovy frontend routing. QRS muze kanonicky smerovat na `/cz/main`, zatimco verejne weby mohou smerovat na `/cz`; tento rozdil se nepovazuje za shared/admin rozdil.
 
 Pri opravach shared adminu se zmena dela nejdrive v `qanto_cz`, potom se po overeni prenasi do sekundarnich projektu.

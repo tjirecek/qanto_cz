@@ -3,7 +3,7 @@
 - Primary qanto_cz: /Users/tjirecek/mamp/qanto_cz
 - Secondary QRS_QANTO_CZ: /Users/tjirecek/mamp/qrs-qanto_cz
 - Secondary QANTOPLUS_CZ: /Users/tjirecek/mamp/qantoplus_cz
-- Generated: 2026-06-27 00:27:49
+- Generated: 2026-06-27 00:32:41
 - Scope: shared/admin baseline only; project files are classified or scanned, not synchronization candidates.
 
 ## Overview
@@ -11,15 +11,15 @@
 | Secondary | Area | Type | Files | SAME | DIFF | ONLY_PRIMARY | ONLY_SECONDARY | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | QANTOPLUS_CZ | Shared admin assets | SHARED_ADMIN | 4 | 4 | 0 | 0 | 0 | Shared admin assets outside /secure, e.g. secure.css and sec_*.js. |
-| QANTOPLUS_CZ | Shared/System candidates | SHARED_SYSTEM | 70 | 70 | 0 | 0 | 0 | Shared/admin baseline inside repository structure. |
+| QANTOPLUS_CZ | Shared/System candidates | SHARED_SYSTEM | 69 | 69 | 0 | 0 | 0 | Shared/admin baseline inside repository structure. |
 | QRS_QANTO_CZ | Shared admin assets | SHARED_ADMIN | 4 | 4 | 0 | 0 | 0 | Shared admin assets outside /secure, e.g. secure.css and sec_*.js. |
-| QRS_QANTO_CZ | Shared/System candidates | SHARED_SYSTEM | 70 | 69 | 1 | 0 | 0 | Shared/admin baseline inside repository structure. |
+| QRS_QANTO_CZ | Shared/System candidates | SHARED_SYSTEM | 69 | 69 | 0 | 0 | 0 | Shared/admin baseline inside repository structure. |
 
 ## Open Shared/Admin Differences
 
 | Secondary | Area | Status | Path | Difference |
 | --- | --- | --- | --- | --- |
-| QRS_QANTO_CZ | Shared/System candidates | DIFF | `functions/settings.php` | Exists in both projects but content differs; manual review required. |
+| SAME | - | - | - | Zadne otevrene shared/admin rozdily. |
 
 ## secure/functions Classification Rules
 
@@ -32,6 +32,12 @@
 | `secure/functions/*.php` ostatni | SHARED_SYSTEM | Ostatni soubory primo v secure/functions jsou shared/admin kandidati. |
 | `secure/functions/ajax/rep_*` | PROJECT_AJAX | Projektove AJAX endpointy; neporovnavat jako shared/admin. |
 | `secure/functions/ajax/*.php` ostatni | SHARED_SYSTEM | Ostatni AJAX endpointy jsou shared/admin kandidati. |
+
+## Frontend Routing Decisions
+
+| Path | Type | Decision |
+| --- | --- | --- |
+| `functions/settings.php` | FRONTEND_PROJECT_ROUTING | Projektovy frontend routing; QRS muze smerovat na `/cz/main`, verejne weby na `/cz`. Neporovnavat jako shared/admin. |
 
 ## Asset Decisions
 
@@ -69,7 +75,7 @@
 
 | Area / Path | Finding |
 | --- | --- |
-| Shared/System candidates | 1 otevrenych rozdilu proti sekundarnim projektum; review pred prenosem. |
+| Shared/System candidates | Shared/system kandidati jsou shodni proti sekundarnim projektum. |
 | Shared admin assets | Shared admin assety jsou shodne proti sekundarnim projektum. |
 
 ## Interpretation Rules

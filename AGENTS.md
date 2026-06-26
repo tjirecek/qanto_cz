@@ -44,6 +44,7 @@ Do tohoto projektu nepatří:
 - `mm_project.php`
 - projektové importy/exporty
 - frontend QANTOPLUS/QRS moduly
+- frontend routing v `functions/settings.php` (`/cz` vs `/cz/main` je projektové rozhodnutí)
 - projektové DB tabulky s prefixem `rep_`
 
 ## Databáze
