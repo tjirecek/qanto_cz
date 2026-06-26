@@ -1,0 +1,25 @@
+ErrorDocument 404 "https://www.qanto.cz"
+ErrorDocument 403 "https://www.qanto.cz"
+
+php_value upload_max_filesize 100M
+php_value max_execution_time 800
+php_value post_max_size 100M
+php_value max_input_time 100
+php_value memory_limit 120M
+
+php_flag  display_errors on
+php_flag  display_startup_errors on
+php_value error_reporting 32767
+php_flag  log_errors on
+
+RewriteEngine on
+
+# Local shared admin domain.
+RewriteCond %{HTTP_HOST} ^qanto\.local(:[0-9]+)?$ [NC]
+RewriteRule ^$ /secure/ [R=302,L]
+
+# Production canonical host placeholder for the shared admin source project.
+RewriteCond %{HTTP_HOST} ^(www\.)?qanto\.cz$ [NC]
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} !^www\.qanto\.cz$ [NC]
+RewriteRule (.*) https://www.qanto.cz%{REQUEST_URI} [L,R=301]

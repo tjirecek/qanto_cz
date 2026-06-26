@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-label="Slovenská vlajka">
+  <rect width="900" height="200" fill="#fff"/>
+  <rect width="900" height="200" y="200" fill="#0b4ea2"/>
+  <rect width="900" height="200" y="400" fill="#ee1c25"/>
+  <path d="M250 142h182v174c0 91-91 135-91 135s-91-44-91-135Z" fill="#ee1c25" stroke="#fff" stroke-width="28"/>
+  <path d="M341 185v174M284 240h114M302 296h78" stroke="#fff" stroke-width="32" stroke-linecap="square"/>
+  <path d="M250 334c33-22 61-22 91 0 30-22 58-22 91 0-17 73-91 117-91 117s-74-44-91-117Z" fill="#0b4ea2"/>
+</svg>

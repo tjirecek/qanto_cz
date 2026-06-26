@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-label="Česká vlajka">
+  <rect width="900" height="300" y="0" fill="#fff"/>
+  <rect width="900" height="300" y="300" fill="#d7141a"/>
+  <path d="M0 0 450 300 0 600Z" fill="#11457e"/>
+</svg>

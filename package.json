@@ -1,0 +1,11 @@
+{
+  "name": "qanto-cz-shared-admin",
+  "private": true,
+  "scripts": {
+    "lint:css": "stylelint \"assets/css/**/*.css\""
+  },
+  "devDependencies": {
+    "stylelint": "^16.24.0",
+    "stylelint-config-standard": "^39.0.1"
+  }
+}
