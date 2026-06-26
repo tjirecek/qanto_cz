@@ -26,7 +26,7 @@ if ($limit === 0 || $count <= $limit) {
             <i class="fas fa-plus-circle fa-sm text-white-50"></i>
         </a>
 
-        <?php if ((admin_session_prava()) == 1): ?>
+        <?php if (admin_session_prava() === 1): ?>
             <a href="index.php?section=01&amp;page=02&amp;sec_page=03&amp;limit=9999&amp;valid=0"
                class="btn btn-sm btn-danger shadow-sm d-none d-sm-inline-block">
                 zobrazit nevalidní záznamy
