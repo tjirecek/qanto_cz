@@ -25,13 +25,13 @@ if ($limit === 0 || $count <= $limit) {
     <h1 class="h3 mb-0 text-gray-800">Výpis systémových proměnných</h1>
 
     <div class="d-flex flex-wrap gap-2">
-        <a href="index.php?section=02&amp;page=02&amp;sec_page=02&amp;show=1"
+        <a href="index.php?section=09&amp;page=02&amp;sec_page=02&amp;show=1"
            class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
             přidat systémovou proměnnou <i class="bi bi-plus-circle ms-1"></i>
         </a>
 
         <?php if ((int)admin_session_prava() === 1): ?>
-            <a href="index.php?section=02&amp;page=02&amp;sec_page=02&amp;limit=9999&amp;valid=0"
+            <a href="index.php?section=09&amp;page=02&amp;sec_page=02&amp;limit=9999&amp;valid=0"
                class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm">
                 zobrazit nevalidní záznamy <i class="bi bi-slash-circle ms-1"></i>
             </a>
@@ -93,7 +93,7 @@ if ($limit === 0 || $count <= $limit) {
         <span class="d-none d-sm-inline-block ms-2">načteno <?= (int)$limit; ?> záznamů</span>
 
         <?php if ($defaultLimit <= $count): ?>
-            <a href="index.php?section=02&amp;page=02&amp;sec_page=02&amp;limit=0"
+            <a href="index.php?section=09&amp;page=02&amp;sec_page=02&amp;limit=0"
                class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                 načíst všechny záznamy (<?= (int)$count; ?>) <i class="bi bi-arrow-repeat ms-1"></i>
             </a>
@@ -114,10 +114,10 @@ if ($limit === 0 || $count <= $limit) {
                 <tr>
                     <th>ID</th>
                     <th>Typ</th>
-                    <th class="text-filter autocomplete">Name</th>
-                    <th class="text-filter autocomplete">Popis</th>
+                    <th class="text-filter dt-autocomplete">Name</th>
+                    <th class="text-filter dt-autocomplete">Popis</th>
                     <th>Hodnota</th>
-                    <th class="text-filter autocomplete">Textová hodnota</th>
+                    <th class="text-filter dt-autocomplete">Textová hodnota</th>
                     <th class="no-sort no-filter">Upravit</th>
                     <th class="no-sort no-filter">Smazat</th>
                 </tr>

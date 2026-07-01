@@ -127,39 +127,6 @@ try {
 }
 ?>
 
-<style>
-    .migrations-table-wrap {
-        width: 100%;
-        max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .migrations-table {
-        min-width: 1280px;
-    }
-
-    .migrations-table .migration-file {
-        font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-        font-size: .82rem;
-    }
-
-    .migrations-table .migration-note {
-        max-width: 260px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .migrations-run-form {
-        min-width: 280px;
-    }
-
-    .migrations-backup-path {
-        word-break: break-all;
-    }
-</style>
-
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <div>
         <h1 class="h3 mb-1 text-gray-800">DB migrace</h1>
@@ -273,7 +240,7 @@ try {
         </div>
 
         <div class="card-body">
-            <div class="migrations-table-wrap">
+            <div class="table-responsive">
                 <table class="table table-striped table-hover table-bordered table-sm align-middle migrations-table">
                     <thead class="table-dark align-middle">
                     <tr>

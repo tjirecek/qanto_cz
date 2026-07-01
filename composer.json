@@ -1,0 +1,14 @@
+{
+    "name": "qanto/qanto-cz-admin",
+    "description": "Shared administration dependencies for qanto_cz.",
+    "license": "proprietary",
+    "require": {
+        "phpoffice/phpspreadsheet": "^5.8"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.0",
+            "php-64bit": "8.2.0"
+        }
+    }
+}

@@ -79,6 +79,15 @@ $showInactiveUrl = pobocky_page_url($type, ['limit' => 9999, 'valid' => 0]);
 $showActiveUrl = pobocky_page_url($type, ['limit' => $defaultLimit, 'valid' => 1]);
 $showAllUrl = pobocky_page_url($type, ['limit' => 0, 'valid' => $valid]);
 $addUrl = pobocky_page_url($type, ['show' => 1, 'limit' => $loadedCount, 'valid' => $valid]);
+$hasOpenForm = in_array($show, [1, 2], true);
+$tableClasses = $hasOpenForm
+    ? 'table table-striped table-hover table-bordered table-sm align-middle w-100 js-datatable'
+    : 'table table-striped table-hover table-bordered table-sm align-middle w-100 js-datatable';
+$tableWrapClasses = 'table-responsive';
+$stateKey = $hasOpenForm
+    ? 'pobocky-' . $type . '-detail-v2'
+    : 'pobocky-' . $type . '-compact-v7';
+$filterPlacement = 'header';
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -178,48 +187,41 @@ $addUrl = pobocky_page_url($type, ['show' => 1, 'limit' => $loadedCount, 'valid'
     </div>
 
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="<?= htmlspecialchars($tableWrapClasses, ENT_QUOTES) ?>">
             <table
-                class="table table-striped table-hover table-bordered table-sm js-datatable align-middle w-100"
+                class="<?= htmlspecialchars($tableClasses, ENT_QUOTES) ?>"
                 id="DataTablePobocky_<?= htmlspecialchars($type, ENT_QUOTES) ?>"
-                data-order='[[ 1, "asc" ], [ 0, "desc" ]]'
+                data-state-key="<?= htmlspecialchars($stateKey, ENT_QUOTES) ?>"
+                data-column-filters="1"
+                data-column-filter-placement="<?= htmlspecialchars($filterPlacement, ENT_QUOTES) ?>"
+                data-order='[[ 0, "asc" ], [ 2, "asc" ]]'
                 data-page-length='100'
             >
                 <thead class="table-dark align-middle">
                 <tr>
-                    <th class="no-filter">ID</th>
-                    <th class="text-filter autocomplete">Pořadí</th>
-                    <th class="text-filter autocomplete">Středisko</th>
-                    <th class="text-filter autocomplete">Název CZ</th>
-                    <th class="text-filter autocomplete">Název EN</th>
-                    <th class="text-filter autocomplete">Mobil</th>
-                    <th class="text-filter autocomplete">E-mail</th>
+                    <th class="no-filter">Pořadí</th>
+                    <th class="text-filter dt-autocomplete">Středisko</th>
+                    <th class="text-filter dt-autocomplete">Název CZ</th>
+                    <th class="text-filter dt-autocomplete">E-mail</th>
                     <th class="text-filter">Adresa</th>
-                    <th class="text-filter autocomplete">Vedoucí</th>
-                    <th class="text-filter autocomplete">Galerie</th>
+                    <th class="text-filter dt-autocomplete">Vedoucí</th>
                     <th class="no-filter">Valid</th>
-                    <th class="text-filter autocomplete">Upraveno</th>
-                    <th class="no-sort no-filter">Upravit</th>
-                    <th class="no-sort no-filter">Smazat</th>
+                    <th class="no-filter">Upraveno</th>
+                    <th class="no-sort no-filter">Akce</th>
                 </tr>
                 </thead>
 
                 <tfoot class="table-light">
                 <tr>
-                    <th>ID</th>
                     <th>Pořadí</th>
                     <th>Středisko</th>
                     <th>Název CZ</th>
-                    <th>Název EN</th>
-                    <th>Mobil</th>
                     <th>E-mail</th>
                     <th>Adresa</th>
                     <th>Vedoucí</th>
-                    <th>Galerie</th>
                     <th>Valid</th>
                     <th>Upraveno</th>
-                    <th>Upravit</th>
-                    <th>Smazat</th>
+                    <th>Akce</th>
                 </tr>
                 </tfoot>
 

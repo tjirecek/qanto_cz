@@ -79,6 +79,8 @@ declare(strict_types=1);
                 id="nazev_cz"
                 class="form-control"
                 value="<?= htmlspecialchars((string)($formValues['nazev_cz'] ?? ''), ENT_QUOTES) ?>"
+                data-translate-source="nazev"
+                data-translate-format="text"
                 required
             >
         </div>
@@ -91,6 +93,7 @@ declare(strict_types=1);
                 id="nazev_en"
                 class="form-control"
                 value="<?= htmlspecialchars((string)($formValues['nazev_en'] ?? ''), ENT_QUOTES) ?>"
+                data-translate-target="nazev"
             >
         </div>
 
@@ -160,14 +163,23 @@ declare(strict_types=1);
     </div>
 
     <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" data-admin-translate="cs-en" data-translate-status-target=".pobocky-translate-status">
+                    <i class="bi bi-translate me-1"></i> přeložit aktuální CZ
+                </button>
+                <span class="small text-muted pobocky-translate-status"></span>
+            </div>
+        </div>
+
         <div class="col-lg-6">
             <label for="sluzby_cz" class="form-label">Služby CZ</label>
-            <textarea name="sluzby_cz" id="sluzby_cz" class="form-control js-tinymce" rows="8" data-tinymce-height="280"><?= (string)($formValues['sluzby_cz'] ?? '') ?></textarea>
+            <textarea name="sluzby_cz" id="sluzby_cz" class="form-control js-tinymce" rows="8" data-tinymce-height="280" data-translate-source="sluzby" data-translate-format="html"><?= (string)($formValues['sluzby_cz'] ?? '') ?></textarea>
         </div>
 
         <div class="col-lg-6">
             <label for="sluzby_en" class="form-label">Služby EN</label>
-            <textarea name="sluzby_en" id="sluzby_en" class="form-control js-tinymce" rows="8" data-tinymce-height="280"><?= (string)($formValues['sluzby_en'] ?? '') ?></textarea>
+            <textarea name="sluzby_en" id="sluzby_en" class="form-control js-tinymce" rows="8" data-tinymce-height="280" data-translate-target="sluzby"><?= (string)($formValues['sluzby_en'] ?? '') ?></textarea>
         </div>
     </div>
 

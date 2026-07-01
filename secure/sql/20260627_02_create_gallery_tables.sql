@@ -1,0 +1,56 @@
+CREATE TABLE IF NOT EXISTS galerie_typ (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    poradi INT NOT NULL DEFAULT 0,
+    nazev_cz VARCHAR(256) NOT NULL DEFAULT '',
+    nazev_en VARCHAR(256) NOT NULL DEFAULT '',
+    popis_cz TEXT NULL,
+    popis_en TEXT NULL,
+    valid TINYINT(1) NOT NULL DEFAULT 1,
+    user_i VARCHAR(100) NOT NULL DEFAULT '',
+    user_u VARCHAR(100) NOT NULL DEFAULT '',
+    ts_i TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ts_u TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_galerie_typ_valid_poradi (valid, poradi, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
+
+CREATE TABLE IF NOT EXISTS galerie (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    nazev_cz VARCHAR(256) NOT NULL DEFAULT '',
+    nazev_en VARCHAR(256) NOT NULL DEFAULT '',
+    datum DATE NULL,
+    galerie_typ INT UNSIGNED NULL,
+    popis_cz LONGTEXT NULL,
+    popis_en LONGTEXT NULL,
+    valid TINYINT(1) NOT NULL DEFAULT 1,
+    user_i VARCHAR(100) NOT NULL DEFAULT '',
+    user_u VARCHAR(100) NOT NULL DEFAULT '',
+    ts_i TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ts_u TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_galerie_valid_datum (valid, datum, id),
+    KEY idx_galerie_typ (galerie_typ),
+    CONSTRAINT fk_galerie_typ FOREIGN KEY (galerie_typ) REFERENCES galerie_typ (id) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
+
+CREATE TABLE IF NOT EXISTS galerie_photo (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    poradi INT NOT NULL DEFAULT 0,
+    galerie_id INT UNSIGNED NOT NULL,
+    nazev_cz VARCHAR(256) NOT NULL DEFAULT '',
+    nazev_en VARCHAR(256) NOT NULL DEFAULT '',
+    soubor VARCHAR(255) NOT NULL DEFAULT '',
+    mime_type VARCHAR(80) NOT NULL DEFAULT '',
+    width INT UNSIGNED NOT NULL DEFAULT 0,
+    height INT UNSIGNED NOT NULL DEFAULT 0,
+    filesize INT UNSIGNED NOT NULL DEFAULT 0,
+    valid TINYINT(1) NOT NULL DEFAULT 1,
+    user_i VARCHAR(100) NOT NULL DEFAULT '',
+    user_u VARCHAR(100) NOT NULL DEFAULT '',
+    ts_i TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ts_u TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_galerie_photo_gallery_order (galerie_id, valid, poradi, id),
+    KEY idx_galerie_photo_file (galerie_id, soubor),
+    CONSTRAINT fk_galerie_photo_gallery FOREIGN KEY (galerie_id) REFERENCES galerie (id) ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;

@@ -131,24 +131,100 @@ function news_typ_edit ($id, $nazev_cz, $nazev_en, $poradi, $popis_cz, $popis_en
 }
 
 //funkce pro vymazani typu novinky
-function news_typ_delete ($id): void
+function news_typ_delete($id): void
 {
     global $pdo;
 
     $pdo->exec("SET NAMES utf8");
-    $sql = 'UPDATE news_typ SET valid = 0 WHERE id = :id';
+    $sql = 'UPDATE news_typ SET valid = 0, user_u = :user_u WHERE id = :id';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':id' => (int)$id,
+        ':user_u' => admin_session_user(),
+    ]);
+}
 
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':id' => (int)$id]);
+function news_typ_get(int $id): ?array
+{
+    global $pdo;
 
-        echo '<a href="#" class="btn btn-success btn-icon-split">
-        <span class="icon text-white-50"><i class="fas fa-check"></i></span><span class="text">Typ novinky byl smazán</span></a>';
-    } catch (PDOException $e) {
-        echo '<a href="#" class="btn btn-warning btn-icon-split">
-            <span class="icon text-white-50"><i class="fas fa-exclamation-triangle"></i></span><span class="text">Typ novinky nebyl smazán</span></a>';
-        echo $e->getMessage();
+    $stmt = $pdo->prepare('SELECT * FROM news_typ WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? $row : null;
+}
+
+function news_typ_all(int $valid = 1, int $limit = 0): array
+{
+    global $pdo;
+
+    $sql = 'SELECT * FROM news_typ WHERE valid = :valid ORDER BY poradi ASC, id ASC';
+    if ($limit > 0) {
+        $sql .= ' LIMIT :limit';
     }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':valid', $valid, PDO::PARAM_INT);
+    if ($limit > 0) {
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    }
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function news_typ_save(array $data, ?int $id = null): int
+{
+    global $pdo;
+
+    $user = admin_session_user();
+    $payload = [
+        ':poradi' => (int)($data['poradi'] ?? 0),
+        ':nazev_cz' => trim((string)($data['nazev_cz'] ?? '')),
+        ':nazev_en' => trim((string)($data['nazev_en'] ?? '')),
+        ':popis_cz' => trim((string)($data['popis_cz'] ?? '')),
+        ':popis_en' => trim((string)($data['popis_en'] ?? '')),
+        ':color' => trim((string)($data['color'] ?? '')),
+        ':user_u' => $user,
+    ];
+
+    if ($payload[':nazev_cz'] === '') {
+        throw new InvalidArgumentException('Název CZ je povinný.');
+    }
+
+    if ($id === null) {
+        $stmt = $pdo->prepare('INSERT INTO news_typ
+            (poradi, nazev_cz, nazev_en, popis_cz, popis_en, color, user_i, user_u)
+            VALUES (:poradi, :nazev_cz, :nazev_en, :popis_cz, :popis_en, :color, :user_i, :user_u)');
+        $payload[':user_i'] = $user;
+        $stmt->execute($payload);
+
+        return (int)$pdo->lastInsertId();
+    }
+
+    $payload[':id'] = $id;
+    $payload[':valid'] = isset($data['valid']) ? 1 : 0;
+    $stmt = $pdo->prepare('UPDATE news_typ
+        SET poradi = :poradi,
+            nazev_cz = :nazev_cz,
+            nazev_en = :nazev_en,
+            popis_cz = :popis_cz,
+            popis_en = :popis_en,
+            color = :color,
+            valid = :valid,
+            user_u = :user_u
+        WHERE id = :id');
+    $stmt->execute($payload);
+
+    return $id;
+}
+
+function news_typ_next_order(): int
+{
+    global $pdo;
+
+    return (int)$pdo->query('SELECT COALESCE(MAX(poradi), 0) + 1 FROM news_typ')->fetchColumn();
 }
 
 //funkce pro vypis typu novinek do formulare
@@ -169,37 +245,146 @@ function news_typ_option_form ($select): void
     }
 }
 
-//funkce pro pridani nove novinky
-function news_add ($datum, $news_typ, $nazev_cz, $text_cz, $galerie_id, $visible, $soubor): void
+function news_visible_from_post(array $data): int
+{
+    $cz = isset($data['visible_cz']);
+    $en = isset($data['visible_en']);
+
+    if ($cz && $en) {
+        return 1;
+    }
+
+    if ($cz) {
+        return 2;
+    }
+
+    if ($en) {
+        return 3;
+    }
+
+    return 0;
+}
+
+function news_visible_checked(int $visible): array
+{
+    return [
+        'cz' => in_array($visible, [1, 2], true),
+        'en' => in_array($visible, [1, 3], true),
+    ];
+}
+
+function news_url_generate(string $title, string $date): string
+{
+    $date = preg_match('~^\d{4}-\d{2}-\d{2}$~', $date) ? $date : date('Y-m-d');
+    $slug = trim((string)text_str($title), '-');
+    if ($slug === '') {
+        $slug = 'novinka';
+    }
+
+    return $date . '-' . $slug;
+}
+
+function news_url_unique(string $url, string $lang = 'cz', ?int $ignoreId = null): string
 {
     global $pdo;
 
-    $url_cz = text_str($nazev_cz).'-'.$datum;
+    $column = $lang === 'en' ? 'url_en' : 'url_cz';
+    $base = trim((string)text_str($url), '-');
+    if ($base === '') {
+        $base = 'novinka';
+    }
+
+    $candidate = $base;
+    $suffix = 2;
+    do {
+        $sql = "SELECT id FROM news WHERE {$column} = :url";
+        $params = [':url' => $candidate];
+        if ($ignoreId !== null) {
+            $sql .= ' AND id != :id';
+            $params[':id'] = $ignoreId;
+        }
+        $sql .= ' LIMIT 1';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $exists = (bool)$stmt->fetchColumn();
+
+        if ($exists) {
+            $candidate = $base . '-' . $suffix;
+            $suffix++;
+        }
+    } while ($exists);
+
+    return $candidate;
+}
+
+//funkce pro pridani nove novinky
+function news_add (
+    string $datum,
+    int $news_typ,
+    string $nazev_cz,
+    string $perex_cz,
+    string $text_cz,
+    int $galerie_id,
+    int $visible,
+    string $soubor,
+    string $url_cz = '',
+    string $seo_title_cz = '',
+    string $seo_description_cz = '',
+    array $tagIds = [],
+    string $nazev_en = '',
+    string $perex_en = '',
+    string $text_en = '',
+    string $url_en = '',
+    string $seo_title_en = '',
+    string $seo_description_en = ''
+): int
+{
+    global $pdo;
+
+    $url_cz = news_url_unique($url_cz !== '' ? $url_cz : news_url_generate($nazev_cz, $datum), 'cz');
+    $url_en = trim($url_en) !== ''
+        ? news_url_unique($url_en, 'en')
+        : (trim($nazev_en) !== '' ? news_url_unique(news_url_generate($nazev_en, $datum), 'en') : '');
     $qn_user = admin_session_user();
     $pdo->exec("SET NAMES utf8");
 
-    $sql = 'INSERT INTO news (datum, url_cz, news_typ, nazev_cz, text_cz, galerie_id, visible, news_ico, user_i, user_u)
-            VALUES (:datum, :url_cz, :news_typ, :nazev_cz, :text_cz, :galerie_id, :visible, :news_ico, :user_i, :user_u)';
+    $sql = 'INSERT INTO news
+                (datum, url_cz, url_en, news_typ, nazev_cz, nazev_en, perex_cz, perex_en, text_cz, text_en,
+                 seo_title_cz, seo_title_en, seo_description_cz, seo_description_en, galerie_id, visible, news_ico, user_i, user_u)
+            VALUES
+                (:datum, :url_cz, :url_en, :news_typ, :nazev_cz, :nazev_en, :perex_cz, :perex_en, :text_cz, :text_en,
+                 :seo_title_cz, :seo_title_en, :seo_description_cz, :seo_description_en, :galerie_id, :visible, :news_ico, :user_i, :user_u)';
 
     try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             ':datum'      => $datum,
             ':url_cz'     => $url_cz,
-            ':news_typ'   => (int)$news_typ,
+            ':url_en'     => $url_en,
+            ':news_typ'   => $news_typ,
             ':nazev_cz'   => $nazev_cz,
+            ':nazev_en'   => $nazev_en,
+            ':perex_cz'   => $perex_cz,
+            ':perex_en'   => $perex_en,
             ':text_cz'    => $text_cz,
+            ':text_en'    => $text_en,
+            ':seo_title_cz' => $seo_title_cz,
+            ':seo_title_en' => $seo_title_en,
+            ':seo_description_cz' => $seo_description_cz,
+            ':seo_description_en' => $seo_description_en,
             ':galerie_id' => (int)$galerie_id,
             ':visible'    => (int)$visible,
             ':news_ico'   => $soubor,
             ':user_i'     => $qn_user,
             ':user_u'     => $qn_user,
         ]);
+        $newsId = (int)$pdo->lastInsertId();
+        news_tags_save_for_news($newsId, $tagIds);
     } catch (PDOException $e) {
         echo '<a href="#" class="btn btn-warning btn-icon-split">
                 <span class="icon text-white-50"><i class="fas fa-exclamation-triangle"></i></span><span class="text">Novinka nebyla vložena</span></a>';
         echo $e->getMessage();
-        return;
+        return 0;
     }
 
     if($soubor <> ""):
@@ -223,6 +408,90 @@ function news_add ($datum, $news_typ, $nazev_cz, $text_cz, $galerie_id, $visible
     $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]1";
     echo "<script type='text/javascript'>document.location.href='$url';</script>";
     echo '<META HTTP-EQUIV="refresh" content="0;URL=' . $url . '">';
+
+    return $newsId;
+}
+
+function news_edit_multilang(
+    int $id,
+    string $datum,
+    int $news_typ,
+    array $data,
+    int $galerie_id,
+    int $visible,
+    int $valid,
+    string $soubor,
+    array $tagIds = []
+): void {
+    global $pdo;
+
+    $qn_user = admin_session_user();
+    $nazevCz = trim((string)($data['nazev_cz'] ?? ''));
+    $nazevEn = trim((string)($data['nazev_en'] ?? ''));
+    $urlCz = trim((string)($data['url_cz'] ?? ''));
+    $urlEn = trim((string)($data['url_en'] ?? ''));
+
+    $urlCz = news_url_unique($urlCz !== '' ? $urlCz : news_url_generate($nazevCz, $datum), 'cz', $id);
+    $urlEn = $urlEn !== ''
+        ? news_url_unique($urlEn, 'en', $id)
+        : ($nazevEn !== '' ? news_url_unique(news_url_generate($nazevEn, $datum), 'en', $id) : '');
+
+    $sql = 'UPDATE news SET
+                url_cz = :url_cz,
+                url_en = :url_en,
+                datum = :datum,
+                news_typ = :news_typ,
+                nazev_cz = :nazev_cz,
+                nazev_en = :nazev_en,
+                perex_cz = :perex_cz,
+                perex_en = :perex_en,
+                text_cz = :text_cz,
+                text_en = :text_en,
+                seo_title_cz = :seo_title_cz,
+                seo_title_en = :seo_title_en,
+                seo_description_cz = :seo_description_cz,
+                seo_description_en = :seo_description_en,
+                galerie_id = :galerie_id,
+                visible = :visible,
+                valid = :valid,
+                ' . ($soubor !== '' ? 'news_ico = :news_ico,' : '') . '
+                user_u = :user_u
+            WHERE id = :id';
+
+    try {
+        $params = [
+            ':url_cz' => $urlCz,
+            ':url_en' => $urlEn,
+            ':datum' => $datum,
+            ':news_typ' => $news_typ,
+            ':nazev_cz' => $nazevCz,
+            ':nazev_en' => $nazevEn,
+            ':perex_cz' => (string)($data['perex_cz'] ?? ''),
+            ':perex_en' => (string)($data['perex_en'] ?? ''),
+            ':text_cz' => (string)($data['text_cz'] ?? ''),
+            ':text_en' => (string)($data['text_en'] ?? ''),
+            ':seo_title_cz' => trim((string)($data['seo_title_cz'] ?? '')),
+            ':seo_title_en' => trim((string)($data['seo_title_en'] ?? '')),
+            ':seo_description_cz' => trim((string)($data['seo_description_cz'] ?? '')),
+            ':seo_description_en' => trim((string)($data['seo_description_en'] ?? '')),
+            ':galerie_id' => $galerie_id,
+            ':visible' => $visible,
+            ':valid' => $valid,
+            ':user_u' => $qn_user,
+            ':id' => $id,
+        ];
+        if ($soubor !== '') {
+            $params[':news_ico'] = $soubor;
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        news_tags_save_for_news($id, $tagIds);
+    } catch (PDOException $e) {
+        echo '<a href="#" class="btn btn-warning btn-icon-split">
+                <span class="icon text-white-50"><i class="fas fa-exclamation-triangle"></i></span><span class="text">Novinka nebyla uložena</span></a>';
+        echo $e->getMessage();
+    }
 }
 
 //funkce pro zjisteni max id v novinkach
@@ -258,12 +527,29 @@ function news_photo_add (): array|string|null
 }
 
 //funkce pro editaci novinky
-function news_edit ($id, $datum, $news_typ, $nazev, $text, $galerie_id, $visible, $lang, $url, $valid, $soubor): void
+function news_edit (
+    int $id,
+    string $datum,
+    int $news_typ,
+    string $nazev,
+    string $perex,
+    string $text,
+    int $galerie_id,
+    int $visible,
+    string $lang,
+    string $url,
+    int $valid,
+    string $soubor,
+    string $seo_title = '',
+    string $seo_description = '',
+    array $tagIds = []
+): void
 {
     global $pdo;
 
     $qn_user = admin_session_user();
     $pdo->exec("SET NAMES utf8");
+    $url = news_url_unique($url !== '' ? $url : news_url_generate($nazev, $datum), $lang, $id);
 
     if($lang == "cz"):
         $sql = 'UPDATE news SET
@@ -271,7 +557,10 @@ function news_edit ($id, $datum, $news_typ, $nazev, $text, $galerie_id, $visible
                     datum = :datum,
                     news_typ = :news_typ,
                     nazev_cz = :nazev,
+                    perex_cz = :perex,
                     text_cz = :text,
+                    seo_title_cz = :seo_title,
+                    seo_description_cz = :seo_description,
                     galerie_id = :galerie_id,
                     visible = :visible,
                     valid = :valid,
@@ -285,7 +574,10 @@ function news_edit ($id, $datum, $news_typ, $nazev, $text, $galerie_id, $visible
                     datum = :datum,
                     news_typ = :news_typ,
                     nazev_en = :nazev,
+                    perex_en = :perex,
                     text_en = :text,
+                    seo_title_en = :seo_title,
+                    seo_description_en = :seo_description,
                     galerie_id = :galerie_id,
                     visible = :visible,
                     valid = :valid,
@@ -305,7 +597,10 @@ function news_edit ($id, $datum, $news_typ, $nazev, $text, $galerie_id, $visible
             ':datum'      => $datum,
             ':news_typ'   => (int)$news_typ,
             ':nazev'      => $nazev,
+            ':perex'      => $perex,
             ':text'       => $text,
+            ':seo_title'  => $seo_title,
+            ':seo_description' => $seo_description,
             ':galerie_id' => (int)$galerie_id,
             ':visible'    => (int)$visible,
             ':valid'      => (int)$valid,
@@ -317,6 +612,7 @@ function news_edit ($id, $datum, $news_typ, $nazev, $text, $galerie_id, $visible
         }
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
+        news_tags_save_for_news($id, $tagIds);
     } catch (PDOException $e) {
         echo '<a href="#" class="btn btn-warning btn-icon-split">
                 <span class="icon text-white-50"><i class="fas fa-exclamation-triangle"></i></span><span class="text">Typ novinek nebyl uložen</span></a>';
@@ -356,10 +652,15 @@ function news_vypis ($limit, $valid): void
     $pdo->exec("SET NAMES utf8");
 
     $sql = 'SELECT n.id, n.url_cz, n.nazev_cz, n.datum, n.news_ico, n.news_typ, n.galerie_id, n.visible,
-                   nt.nazev_cz as typ, n.info_send
+                   n.info_send, n.valid, n.ts_u, n.user_u, nt.nazev_cz as typ,
+                   GROUP_CONCAT(CONCAT(t.nazev_cz, "::", t.color) ORDER BY t.poradi ASC, t.nazev_cz ASC SEPARATOR "||") AS tag_names
             FROM news n
-            JOIN news_typ nt ON nt.id = n.news_typ
+            LEFT JOIN news_typ nt ON nt.id = n.news_typ
+            LEFT JOIN news_tag_rel tr ON tr.news_id = n.id
+            LEFT JOIN news_tag t ON t.id = tr.tag_id AND t.valid = 1
             WHERE n.valid = :valid
+            GROUP BY n.id, n.url_cz, n.nazev_cz, n.datum, n.news_ico, n.news_typ, n.galerie_id, n.visible,
+                     n.info_send, n.valid, n.ts_u, n.user_u, nt.nazev_cz
             ORDER BY n.datum DESC, n.id DESC
             LIMIT :limit';
 
@@ -379,33 +680,45 @@ function news_vypis ($limit, $valid): void
                 <i class="fas fa-icons"></i></a>';
         endif;
 
-        $galerie_id = ((int)$dev["galerie_id"] === 0) ? 'NE' : $dev["galerie_id"];
-
-        if($dev["visible"] == 0):       $visible = 'NE';
-        elseif($dev["visible"] == 1):   $visible = "CZ/EN";
-        elseif($dev["visible"] == 2):   $visible = "CZ";
-        elseif($dev["visible"] == 3):   $visible = "EN";
-        endif;
+        $galerie_id = ((int)$dev["galerie_id"] === 0) ? 'NE' : (string)$dev["galerie_id"];
+        $visible = match ((int)$dev["visible"]) {
+            1 => 'CZ/EN',
+            2 => 'CZ',
+            3 => 'EN',
+            default => 'NE',
+        };
 
         $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/cz/index/news/".$dev["url_cz"];
         $info_send = ($dev["info_send"]== '0000-00-00' || $dev["info_send"] === null) ? "NE" : format_date_www($dev["info_send"]);
+        $tagNamesRaw = trim((string)($dev['tag_names'] ?? ''));
+        $tagItems = $tagNamesRaw === '' ? [] : explode('||', $tagNamesRaw);
+        $tagsHtml = $tagItems === []
+            ? '<span class="text-muted small">bez štítku</span>'
+            : implode(' ', array_map(static function ($item): string {
+                [$tag, $class] = array_pad(explode('::', (string)$item, 2), 2, '');
+                return '<span class="badge ' . htmlspecialchars(news_tag_badge_class($class), ENT_QUOTES, 'UTF-8') . '">'
+                    . htmlspecialchars((string)$tag, ENT_QUOTES, 'UTF-8')
+                    . '</span>';
+            }, $tagItems));
 
         echo '
         <tr>
             <td>'.$dev["id"].'</td>
-            <td>'.stripslashes($dev["typ"]).'</td>
-            <td>'.stripslashes($dev["nazev_cz"]).'</td>
+            <td>'.htmlspecialchars((string)($dev["typ"] ?? ''), ENT_QUOTES, 'UTF-8').'</td>
+            <td>'.htmlspecialchars((string)$dev["nazev_cz"], ENT_QUOTES, 'UTF-8').'</td>
+            <td>'.$tagsHtml.'</td>
             <td>'.format_date_www($dev["datum"]).'</td>
             <td>'.$news_ico.'</td>
             <td>'.$galerie_id.'</td>
-            <td>'.$visible.'</td>
+            <td><span class="badge text-bg-primary">'.$visible.'</span></td>
             <td>'.$info_send.'</td>
+            <td class="text-center">
+                '.(((int)$dev['valid'] === 1) ? '<span class="badge text-bg-success">ANO</span>' : '<span class="badge text-bg-secondary">NE</span>').'
+            </td>
+            <td>'.format_datetime_www((string)$dev["ts_u"]).'<br><small class="text-muted">'.htmlspecialchars((string)$dev["user_u"], ENT_QUOTES, 'UTF-8').'</small></td>
             <td class="text-center">
                 <a class="btn btn-primary btn-circle btn-sm" href="'.$url.'" target="_blank">
                 <i class="bi bi-box-arrow-up-right"></i></i></a></td>
-            <td class="text-center">
-                <a class="btn btn-primary btn-circle btn-sm" href="index.php?section=01&amp;page=01&amp;sec_page=02&amp;edit='.$dev['id'].'&amp;limit='.$limit.'&amp;lang=en&amp;show=2">
-                <i class="bi bi-pencil"></i></a></td>
             <td class="text-center">
                 <a class="btn btn-success btn-circle btn-sm" href="index.php?section=01&amp;page=01&amp;sec_page=02&amp;edit='.$dev['id'].'&amp;limit='.$limit.'&amp;show=2">
                 <i class="bi bi-pencil"></i></a></td>
@@ -651,9 +964,206 @@ function news_copytoen ($id): void
     }
 }
 
-function news_typ_count ($valid): int
+function news_tag_get(int $id): ?array
 {
     global $pdo;
+
+    $stmt = $pdo->prepare('SELECT * FROM news_tag WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? $row : null;
+}
+
+function news_tags_all(int $valid = 1, int $limit = 0): array
+{
+    global $pdo;
+
+    $sql = 'SELECT * FROM news_tag WHERE valid = :valid ORDER BY poradi ASC, nazev_cz ASC, id ASC';
+    if ($limit > 0) {
+        $sql .= ' LIMIT :limit';
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':valid', $valid, PDO::PARAM_INT);
+    if ($limit > 0) {
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    }
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function news_tag_count(?int $valid = null): int
+{
+    global $pdo;
+
+    if ($valid === null) {
+        return (int)$pdo->query('SELECT COUNT(*) FROM news_tag')->fetchColumn();
+    }
+
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM news_tag WHERE valid = :valid');
+    $stmt->execute([':valid' => $valid]);
+
+    return (int)$stmt->fetchColumn();
+}
+
+function news_tag_next_order(): int
+{
+    global $pdo;
+
+    return (int)$pdo->query('SELECT COALESCE(MAX(poradi), 0) + 1 FROM news_tag')->fetchColumn();
+}
+
+function news_tag_save(array $data, ?int $id = null): int
+{
+    global $pdo;
+
+    $user = admin_session_user();
+    $nazevCz = trim((string)($data['nazev_cz'] ?? ''));
+    if ($nazevCz === '') {
+        throw new InvalidArgumentException('Název CZ je povinný.');
+    }
+
+    $slugCz = trim((string)($data['slug_cz'] ?? ''));
+    if ($slugCz === '') {
+        $slugCz = (string)text_str($nazevCz);
+    }
+    $slugEn = trim((string)($data['slug_en'] ?? ''));
+    if ($slugEn === '' && trim((string)($data['nazev_en'] ?? '')) !== '') {
+        $slugEn = (string)text_str((string)$data['nazev_en']);
+    }
+
+    $payload = [
+        ':poradi' => (int)($data['poradi'] ?? 0),
+        ':nazev_cz' => $nazevCz,
+        ':nazev_en' => trim((string)($data['nazev_en'] ?? '')),
+        ':slug_cz' => $slugCz,
+        ':slug_en' => $slugEn,
+        ':color' => trim((string)($data['color'] ?? '')),
+        ':user_u' => $user,
+    ];
+
+    if ($id === null) {
+        $stmt = $pdo->prepare('INSERT INTO news_tag
+            (poradi, nazev_cz, nazev_en, slug_cz, slug_en, color, user_i, user_u)
+            VALUES (:poradi, :nazev_cz, :nazev_en, :slug_cz, :slug_en, :color, :user_i, :user_u)');
+        $payload[':user_i'] = $user;
+        $stmt->execute($payload);
+
+        return (int)$pdo->lastInsertId();
+    }
+
+    $payload[':id'] = $id;
+    $payload[':valid'] = isset($data['valid']) ? 1 : 0;
+    $stmt = $pdo->prepare('UPDATE news_tag
+        SET poradi = :poradi,
+            nazev_cz = :nazev_cz,
+            nazev_en = :nazev_en,
+            slug_cz = :slug_cz,
+            slug_en = :slug_en,
+            color = :color,
+            valid = :valid,
+            user_u = :user_u
+        WHERE id = :id');
+    $stmt->execute($payload);
+
+    return $id;
+}
+
+function news_tag_delete(int $id): void
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('UPDATE news_tag SET valid = 0, user_u = :user_u WHERE id = :id');
+    $stmt->execute([
+        ':id' => $id,
+        ':user_u' => admin_session_user(),
+    ]);
+}
+
+function news_tag_ids_for_news(int $newsId): array
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT tag_id FROM news_tag_rel WHERE news_id = :news_id ORDER BY tag_id ASC');
+    $stmt->execute([':news_id' => $newsId]);
+
+    return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
+}
+
+function news_tag_names_for_news(int $newsId): array
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT t.nazev_cz
+        FROM news_tag_rel r
+        JOIN news_tag t ON t.id = r.tag_id
+        WHERE r.news_id = :news_id AND t.valid = 1
+        ORDER BY t.poradi ASC, t.nazev_cz ASC');
+    $stmt->execute([':news_id' => $newsId]);
+
+    return $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+}
+
+function news_tag_badge_class(string $class): string
+{
+    $class = trim($class);
+    if ($class === '') {
+        return 'text-bg-light border';
+    }
+
+    $classes = preg_split('~\s+~', $class) ?: [];
+    $safeClasses = array_filter($classes, static function (string $item): bool {
+        return (bool)preg_match('~^[a-zA-Z0-9_-]+$~', $item);
+    });
+
+    return $safeClasses === [] ? 'text-bg-light border' : implode(' ', $safeClasses);
+}
+
+function news_tags_save_for_news(int $newsId, array $tagIds): void
+{
+    global $pdo;
+
+    $tagIds = array_values(array_unique(array_filter(array_map('intval', $tagIds), static fn (int $id): bool => $id > 0)));
+
+    $ownTransaction = !$pdo->inTransaction();
+    if ($ownTransaction) {
+        $pdo->beginTransaction();
+    }
+    try {
+        $delete = $pdo->prepare('DELETE FROM news_tag_rel WHERE news_id = :news_id');
+        $delete->execute([':news_id' => $newsId]);
+
+        if ($tagIds !== []) {
+            $insert = $pdo->prepare('INSERT INTO news_tag_rel (news_id, tag_id, user_i) VALUES (:news_id, :tag_id, :user_i)');
+            foreach ($tagIds as $tagId) {
+                $insert->execute([
+                    ':news_id' => $newsId,
+                    ':tag_id' => $tagId,
+                    ':user_i' => admin_session_user(),
+                ]);
+            }
+        }
+
+        if ($ownTransaction) {
+            $pdo->commit();
+        }
+    } catch (Throwable $e) {
+        if ($ownTransaction && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+}
+
+function news_typ_count (?int $valid = null): int
+{
+    global $pdo;
+    if ($valid === null) {
+        return (int)$pdo->query('SELECT COUNT(*) FROM news_typ')->fetchColumn();
+    }
+
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM news_typ WHERE valid = :valid');
     $stmt->execute([':valid' => (int)$valid]);
     return (int)$stmt->fetchColumn();

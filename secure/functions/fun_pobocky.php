@@ -68,7 +68,7 @@ function pobocky_page_url(string $type, array $params = []): string
     $query = array_merge(
         [
             'section' => '01',
-            'page' => '03',
+            'page' => '04',
             'sec_page' => $secPage,
         ],
         $params
@@ -829,14 +829,14 @@ function pobocky_delete(PDO $pdo, int $id, string $type): void
     ]);
 }
 
-function pobocky_vypis(PDO $pdo, int $limit, int $valid, string $type): void
+function pobocky_vypis(PDO $pdo, int $limit, int $valid, string $type, bool $truncateCells = true): void
 {
     $normalized = pobocky_normalize_type($type);
     $sqlLimit = ($limit === 0) ? 999999 : max(1, $limit);
 
     $stmt = $pdo->prepare(
         'SELECT
-            id, poradi, stredisko, galerie_id, nazev_cz, nazev_en, mobil, email, adresa,
+            id, poradi, stredisko, nazev_cz, email, adresa,
             vedouci, valid, user_u, ts_u
          FROM pobocky
          WHERE typ = :typ AND valid = :valid
@@ -862,28 +862,29 @@ function pobocky_vypis(PDO $pdo, int $limit, int $valid, string $type): void
         ]);
 
         $address = trim((string)($row['adresa'] ?? ''));
-        $address = $address !== '' ? nl2br(htmlspecialchars($address, ENT_QUOTES)) : '';
+        $addressEscaped = htmlspecialchars($address, ENT_QUOTES);
         $validBadge = ((int)($row['valid'] ?? 0) === 1)
             ? '<span class="badge text-bg-success">ANO</span>'
             : '<span class="badge text-bg-secondary">NE</span>';
 
         echo '<tr>';
-        echo '<td>' . (int)$row['id'] . '</td>';
         echo '<td>' . (int)($row['poradi'] ?? 0) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($row['stredisko'] ?? ''), ENT_QUOTES) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($row['nazev_cz'] ?? ''), ENT_QUOTES) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($row['nazev_en'] ?? ''), ENT_QUOTES) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($row['mobil'] ?? ''), ENT_QUOTES) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($row['email'] ?? ''), ENT_QUOTES) . '</td>';
-        echo '<td>' . $address . '</td>';
-        echo '<td>' . htmlspecialchars((string)($row['vedouci'] ?? ''), ENT_QUOTES) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($row['galerie_id'] ?? ''), ENT_QUOTES) . '</td>';
+        $cellClass = $truncateCells ? ' class="text-truncate"' : '';
+        echo '<td' . $cellClass . ' title="' . htmlspecialchars((string)($row['stredisko'] ?? ''), ENT_QUOTES) . '">' . htmlspecialchars((string)($row['stredisko'] ?? ''), ENT_QUOTES) . '</td>';
+        echo '<td' . $cellClass . ' title="' . htmlspecialchars((string)($row['nazev_cz'] ?? ''), ENT_QUOTES) . '">' . htmlspecialchars((string)($row['nazev_cz'] ?? ''), ENT_QUOTES) . '</td>';
+        echo '<td' . $cellClass . ' title="' . htmlspecialchars((string)($row['email'] ?? ''), ENT_QUOTES) . '">' . htmlspecialchars((string)($row['email'] ?? ''), ENT_QUOTES) . '</td>';
+        echo '<td' . $cellClass . ' title="' . $addressEscaped . '">' . $addressEscaped . '</td>';
+        echo '<td' . $cellClass . ' title="' . htmlspecialchars((string)($row['vedouci'] ?? ''), ENT_QUOTES) . '">' . htmlspecialchars((string)($row['vedouci'] ?? ''), ENT_QUOTES) . '</td>';
         echo '<td class="text-center">' . $validBadge . '</td>';
         echo '<td>' .
             htmlspecialchars((string)format_datetime_www((string)($row['ts_u'] ?? '')), ENT_QUOTES) .
             '<br><small class="text-muted">' . htmlspecialchars((string)($row['user_u'] ?? ''), ENT_QUOTES) . '</small></td>';
-        echo '<td class="text-center"><a class="btn btn-success btn-circle btn-sm" href="' . htmlspecialchars($editUrl, ENT_QUOTES) . '"><i class="bi bi-pencil"></i></a></td>';
-        echo '<td class="text-center"><a class="btn btn-danger btn-circle btn-sm" href="' . htmlspecialchars($deleteUrl, ENT_QUOTES) . '" onclick="return confirm(\'Opravdu smazat tento zaznam?\')"><i class="bi bi-trash"></i></a></td>';
+        echo '<td class="text-center">';
+        echo '<div class="d-inline-flex gap-1">';
+        echo '<a class="btn btn-success btn-circle btn-sm" href="' . htmlspecialchars($editUrl, ENT_QUOTES) . '"><i class="bi bi-pencil"></i></a>';
+        echo '<a class="btn btn-danger btn-circle btn-sm" href="' . htmlspecialchars($deleteUrl, ENT_QUOTES) . '" onclick="return confirm(\'Opravdu smazat tento zaznam?\')"><i class="bi bi-trash"></i></a>';
+        echo '</div>';
+        echo '</td>';
         echo '</tr>';
     }
 }

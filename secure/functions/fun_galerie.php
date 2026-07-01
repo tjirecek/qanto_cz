@@ -1,520 +1,786 @@
 <?php
-// PDO verze (původně 3.1.17 - mysqli syntaxe)
+declare(strict_types=1);
 
-//funkce pro pridani typu galerie
-function galerie_typ_add ($nazev_cz, $nazev_en, $poradi, $popis_cz, $popis_en)
+function galerie_media_root(): string
 {
-    global $pdo;
+    return ROOT_DIR . '/media/galerie';
+}
 
-    $pdo->exec("SET NAMES utf8");
+function galerie_gallery_dir(int $galleryId): string
+{
+    return galerie_media_root() . '/' . $galleryId . '-galerie';
+}
 
-    $sql = 'INSERT INTO galerie_typ (poradi, nazev_cz, nazev_en, popis_cz, popis_en)
-            VALUES (:poradi, :nazev_cz, :nazev_en, :popis_cz, :popis_en)';
+function galerie_gallery_small_dir(int $galleryId): string
+{
+    return galerie_gallery_dir($galleryId) . '/small';
+}
 
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':poradi'   => (int)$poradi,
-            ':nazev_cz' => $nazev_cz,
-            ':nazev_en' => $nazev_en,
-            ':popis_cz' => $popis_cz,
-            ':popis_en' => $popis_en
-        ]);
+function galerie_media_url(int $galleryId, string $file, bool $small = false): string
+{
+    $base = defined('BASE_URL') ? BASE_URL : '/';
+    $path = 'media/galerie/' . $galleryId . '-galerie/' . ($small ? 'small/' : '') . ltrim($file, '/');
+    return rtrim((string)$base, '/') . '/' . $path;
+}
 
-        echo '<span class="warning">Typ galerie byl úspěšně vytvořen</span><br />';
-        unset ($_POST['add']);
-    } catch (PDOException $e) {
-        echo '<span class="warning">Typ galerie nebyl vytvořen</span><br />';
-        echo $e->getMessage();
+function galerie_e(mixed $value): string
+{
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
+function galerie_user(): string
+{
+    return function_exists('admin_session_user') ? admin_session_user() : 'system';
+}
+
+function galerie_int_or_null(mixed $value): ?int
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    $int = (int)$value;
+    return $int > 0 ? $int : null;
+}
+
+function galerie_date_db(?string $date): ?string
+{
+    $date = trim((string)$date);
+    if ($date === '') {
+        return null;
+    }
+
+    if (preg_match('~^\d{4}-\d{2}-\d{2}$~', $date) === 1) {
+        return $date;
+    }
+
+    if (function_exists('format_date_db')) {
+        return format_date_db($date);
+    }
+
+    return null;
+}
+
+function galerie_date_form(?string $date): string
+{
+    $date = trim((string)$date);
+    if ($date === '' || $date === '0000-00-00') {
+        return date('Y-m-d');
+    }
+
+    return substr($date, 0, 10);
+}
+
+function galerie_datetime_www(mixed $date): string
+{
+    $date = trim((string)$date);
+    if ($date === '' || $date === '0000-00-00 00:00:00') {
+        return '';
+    }
+
+    return function_exists('format_datetime_www') ? (string)format_datetime_www($date) : $date;
+}
+
+function galerie_setting_int(string $name, int $default): int
+{
+    if (!function_exists('sp_hodnota')) {
+        return $default;
+    }
+
+    $value = (int)(sp_hodnota($name) ?? 0);
+    return $value > 0 ? $value : $default;
+}
+
+function galerie_image_quality(): int
+{
+    return max(1, min(100, galerie_setting_int('galerie_image_quality', 85)));
+}
+
+function galerie_orig_width_limit(): int
+{
+    return galerie_setting_int('galerie_orig_width', 1920);
+}
+
+function galerie_orig_height_limit(): int
+{
+    return galerie_setting_int('galerie_orig_height', 1920);
+}
+
+function galerie_thumb_width_limit(): int
+{
+    return galerie_setting_int('galerie_thumb_width', 480);
+}
+
+function galerie_thumb_height_limit(): int
+{
+    return galerie_setting_int('galerie_thumb_height', 480);
+}
+
+function galerie_ensure_directories(int $galleryId): void
+{
+    foreach ([galerie_media_root(), galerie_gallery_dir($galleryId), galerie_gallery_small_dir($galleryId)] as $dir) {
+        if (is_dir($dir)) {
+            continue;
+        }
+
+        if (!mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new RuntimeException('Nepodarilo se vytvorit adresar: ' . $dir);
+        }
     }
 }
 
-//funkce pro vypis typu galerie
-function galerie_typ_vypis ()
+function galerie_bind_limit(PDOStatement $stmt, int $limit): void
 {
-    global $pdo;
-
-    $pdo->exec("SET NAMES utf8");
-
-    $sql = 'SELECT id, nazev_cz, poradi FROM galerie_typ WHERE valid = 1 ORDER BY poradi';
-    $stmt = $pdo->query($sql);
-
-    while ($dev = $stmt->fetch(PDO::FETCH_NUM))
-    {
-        $id = $dev[0];
-        $nazev_cz = stripslashes($dev[1]);
-        $poradi = $dev[2];
-
-        echo '<tr>' . "\n";
-        echo '<td>'.$id.'</td>' . "\n";
-        echo '<td>'.$nazev_cz.'</td>' . "\n";
-        echo '<td>'.$poradi.'</td>' . "\n";
-        echo '<td class="text-center"><a href="index.php?section=01&amp;page=05&amp;sec_page=03&amp;edit='.$id.'"><img src="images/edit.gif" alt="Upravit" /></a></td>' . "\n";
-        echo '<td class="text-center"><a href="index.php?section=01&amp;page=05&amp;sec_page=03&amp;del='.$id.'"><img src="images/del.gif" alt="Smazat" /></a></td>' . "\n";
-        echo '</tr>' . "\n";
-    }
-    echo '</table>';
-}
-
-//funkce pro editaci typu galerie
-function galerie_typ_edit ($id, $nazev_cz, $nazev_en, $poradi, $popis_cz, $popis_en)
-{
-    global $pdo;
-
-    $pdo->exec("SET NAMES utf8");
-
-    $sql = 'UPDATE galerie_typ SET
-                poradi = :poradi,
-                nazev_cz = :nazev_cz,
-                nazev_en = :nazev_en,
-                popis_cz = :popis_cz,
-                popis_en = :popis_en
-            WHERE id = :id';
-
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':poradi'   => (int)$poradi,
-            ':nazev_cz' => $nazev_cz,
-            ':nazev_en' => $nazev_en,
-            ':popis_cz' => $popis_cz,
-            ':popis_en' => $popis_en,
-            ':id'       => (int)$id
-        ]);
-
-        echo '<span class="warning">Typ galerie byl úspěšně změněn</span><br />';
-        unset ($_POST['add']);
-    } catch (PDOException $e) {
-        echo '<span class="warning">Typ galerie nebyl změněn</span><br />';
-        echo $e->getMessage();
+    if ($limit > 0) {
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     }
 }
 
-//funkce pro vymazani galerie
-function galerie_typ_delete ($id)
+function galerie_types_count(int $valid = 1): int
 {
     global $pdo;
 
-    $pdo->exec("SET NAMES utf8");
-    $sql = 'UPDATE galerie_typ SET valid = 0 WHERE id = :id';
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM galerie_typ WHERE valid = :valid');
+    $stmt->execute([':valid' => $valid]);
 
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':id' => (int)$id]);
-        echo '<span class="warning">Typ galerie s ID = '.$id.' byl smazán.</span>';
-    } catch (PDOException $e) {
-        echo '<span class="warning">Typ galerie nebyl vymazán</span><br />';
-        echo $e->getMessage();
+    return (int)$stmt->fetchColumn();
+}
+
+function galerie_types_all(bool $onlyValid = true, int $limit = 0, int $valid = 1): array
+{
+    global $pdo;
+
+    $params = [];
+    $sql = 'SELECT * FROM galerie_typ';
+    if ($onlyValid) {
+        $sql .= ' WHERE valid = :valid';
+        $params[':valid'] = $valid;
+    }
+    $sql .= ' ORDER BY poradi ASC, id ASC';
+    if ($limit > 0) {
+        $sql .= ' LIMIT :limit';
+    }
+
+    $stmt = $pdo->prepare($sql);
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, (int)$value, PDO::PARAM_INT);
+    }
+    galerie_bind_limit($stmt, $limit);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function galerie_type_get(int $id): ?array
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT * FROM galerie_typ WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? $row : null;
+}
+
+function galerie_typ_option_form(int $selected = 0): void
+{
+    echo '<option value="0">Bez typu</option>';
+    foreach (galerie_types_all() as $type) {
+        $id = (int)$type['id'];
+        $sel = $id === $selected ? ' selected' : '';
+        echo '<option value="' . $id . '"' . $sel . '>' . galerie_e($type['nazev_cz'] ?? '') . '</option>';
     }
 }
 
-//funkce pro pridani nove galerie a vytvoreni adresaru pro ukladani fotografii
-function galerie_add ($nazev_cz, $nazev_en, $datum, $galerie_typ, $popis_cz, $popis_en)
+function galerie_type_save(array $data, ?int $id = null): int
 {
     global $pdo;
 
-    $datum = format_date_db($datum);
+    $user = galerie_user();
+    $payload = [
+        ':poradi' => (int)($data['poradi'] ?? 0),
+        ':nazev_cz' => trim((string)($data['nazev_cz'] ?? '')),
+        ':nazev_en' => trim((string)($data['nazev_en'] ?? '')),
+        ':popis_cz' => trim((string)($data['popis_cz'] ?? '')),
+        ':popis_en' => trim((string)($data['popis_en'] ?? '')),
+        ':user_u' => $user,
+    ];
 
-    $pdo->exec("SET NAMES utf8");
+    if ($id === null) {
+        $stmt = $pdo->prepare('INSERT INTO galerie_typ (poradi, nazev_cz, nazev_en, popis_cz, popis_en, user_i, user_u)
+            VALUES (:poradi, :nazev_cz, :nazev_en, :popis_cz, :popis_en, :user_i, :user_u)');
+        $payload[':user_i'] = $user;
+        $stmt->execute($payload);
+        return (int)$pdo->lastInsertId();
+    }
 
-    // Předpoklad: galerie.id je AUTO_INCREMENT
-    $sql = 'INSERT INTO galerie (nazev_cz, nazev_en, datum, galerie_typ, popis_cz, popis_en)
-            VALUES (:nazev_cz, :nazev_en, :datum, :galerie_typ, :popis_cz, :popis_en)';
+    $payload[':id'] = $id;
+    $payload[':valid'] = isset($data['valid']) ? 1 : 0;
+    $stmt = $pdo->prepare('UPDATE galerie_typ
+        SET poradi = :poradi, nazev_cz = :nazev_cz, nazev_en = :nazev_en, popis_cz = :popis_cz, popis_en = :popis_en, valid = :valid, user_u = :user_u
+        WHERE id = :id');
+    $stmt->execute($payload);
 
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':nazev_cz'    => $nazev_cz,
-            ':nazev_en'    => $nazev_en,
-            ':datum'       => $datum,
-            ':galerie_typ' => (int)$galerie_typ,
-            ':popis_cz'    => $popis_cz,
-            ':popis_en'    => $popis_en
-        ]);
+    return $id;
+}
 
+function galerie_type_delete(int $id): void
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('UPDATE galerie_typ SET valid = 0, user_u = :user_u WHERE id = :id');
+    $stmt->execute([':user_u' => galerie_user(), ':id' => $id]);
+}
+
+function galerie_count(?int $typeId = null, int $valid = 1): int
+{
+    global $pdo;
+
+    $params = [':valid' => $valid];
+    $where = 'valid = :valid';
+    if ($typeId !== null && $typeId > 0) {
+        $where .= ' AND galerie_typ = :type_id';
+        $params[':type_id'] = $typeId;
+    }
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM galerie WHERE $where");
+    $stmt->execute($params);
+
+    return (int)$stmt->fetchColumn();
+}
+
+function galerie_all(?int $typeId = null, int $valid = 1, int $limit = 0): array
+{
+    global $pdo;
+
+    $params = [':valid' => $valid];
+    $where = 'g.valid = :valid';
+    if ($typeId !== null && $typeId > 0) {
+        $where .= ' AND g.galerie_typ = :type_id';
+        $params[':type_id'] = $typeId;
+    }
+
+    $stmt = $pdo->prepare("SELECT g.*, gt.nazev_cz AS typ_nazev,
+            (SELECT COUNT(*) FROM galerie_photo gp WHERE gp.galerie_id = g.id AND gp.valid = 1) AS photo_count
+        FROM galerie g
+        LEFT JOIN galerie_typ gt ON gt.id = g.galerie_typ
+        WHERE $where
+        ORDER BY g.datum DESC, g.id DESC" . ($limit > 0 ? ' LIMIT :limit' : ''));
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, (int)$value, PDO::PARAM_INT);
+    }
+    galerie_bind_limit($stmt, $limit);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function galerie_get(int $id): ?array
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT * FROM galerie WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? $row : null;
+}
+
+function galerie_save(array $data, ?int $id = null): int
+{
+    global $pdo;
+
+    $user = galerie_user();
+    $payload = [
+        ':nazev_cz' => trim((string)($data['nazev_cz'] ?? '')),
+        ':nazev_en' => trim((string)($data['nazev_en'] ?? '')),
+        ':datum' => galerie_date_db((string)($data['datum'] ?? '')),
+        ':galerie_typ' => galerie_int_or_null($data['galerie_typ'] ?? null),
+        ':popis_cz' => (string)($data['popis_cz'] ?? ''),
+        ':popis_en' => (string)($data['popis_en'] ?? ''),
+        ':user_u' => $user,
+    ];
+
+    if ($id === null) {
+        $stmt = $pdo->prepare('INSERT INTO galerie (nazev_cz, nazev_en, datum, galerie_typ, popis_cz, popis_en, user_i, user_u)
+            VALUES (:nazev_cz, :nazev_en, :datum, :galerie_typ, :popis_cz, :popis_en, :user_i, :user_u)');
+        $payload[':user_i'] = $user;
+        $stmt->execute($payload);
         $id = (int)$pdo->lastInsertId();
+        galerie_ensure_directories($id);
+        return $id;
+    }
 
-        echo '<span class="warning">Galerie byla úspěšně vytvořena</span><br />';
-        unset ($_POST['add']);
-    } catch (PDOException $e) {
-        echo '<span class="warning">Galerie nebyla vytvořena</span><br />';
-        echo $e->getMessage();
+    $payload[':id'] = $id;
+    $payload[':valid'] = isset($data['valid']) ? 1 : 0;
+    $stmt = $pdo->prepare('UPDATE galerie
+        SET nazev_cz = :nazev_cz, nazev_en = :nazev_en, datum = :datum, galerie_typ = :galerie_typ,
+            popis_cz = :popis_cz, popis_en = :popis_en, valid = :valid, user_u = :user_u
+        WHERE id = :id');
+    $stmt->execute($payload);
+    galerie_ensure_directories($id);
+
+    return $id;
+}
+
+function galerie_delete(int $id): void
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('UPDATE galerie SET valid = 0, user_u = :user_u WHERE id = :id');
+    $stmt->execute([':user_u' => galerie_user(), ':id' => $id]);
+}
+
+function galerie_photos_count(int $galleryId, int $valid = 1): int
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM galerie_photo WHERE galerie_id = :gallery_id AND valid = :valid');
+    $stmt->execute([':gallery_id' => $galleryId, ':valid' => $valid]);
+
+    return (int)$stmt->fetchColumn();
+}
+
+function galerie_photos(int $galleryId, int $valid = 1, int $limit = 0): array
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT * FROM galerie_photo WHERE galerie_id = :gallery_id AND valid = :valid ORDER BY poradi ASC, id ASC' . ($limit > 0 ? ' LIMIT :limit' : ''));
+    $stmt->bindValue(':gallery_id', $galleryId, PDO::PARAM_INT);
+    $stmt->bindValue(':valid', $valid, PDO::PARAM_INT);
+    galerie_bind_limit($stmt, $limit);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function galerie_photo_get(int $id): ?array
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT * FROM galerie_photo WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? $row : null;
+}
+
+function galerie_next_photo_order(int $galleryId): int
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT COALESCE(MAX(poradi), 0) + 1 FROM galerie_photo WHERE galerie_id = :gallery_id');
+    $stmt->execute([':gallery_id' => $galleryId]);
+
+    return (int)$stmt->fetchColumn();
+}
+
+function galerie_photo_save_meta(int $photoId, array $data): void
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('UPDATE galerie_photo
+        SET poradi = :poradi, nazev_cz = :nazev_cz, nazev_en = :nazev_en, valid = :valid, user_u = :user_u
+        WHERE id = :id');
+    $stmt->execute([
+        ':poradi' => (int)($data['poradi'] ?? 0),
+        ':nazev_cz' => trim((string)($data['nazev_cz'] ?? '')),
+        ':nazev_en' => trim((string)($data['nazev_en'] ?? '')),
+        ':valid' => isset($data['valid']) ? 1 : 0,
+        ':user_u' => galerie_user(),
+        ':id' => $photoId,
+    ]);
+}
+
+function galerie_photo_save_order(int $galleryId, array $photoIds): int
+{
+    global $pdo;
+
+    $ids = [];
+    foreach ($photoIds as $photoId) {
+        $id = (int)$photoId;
+        if ($id > 0 && !in_array($id, $ids, true)) {
+            $ids[] = $id;
+        }
+    }
+
+    if ($ids === []) {
+        return 0;
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare('UPDATE galerie_photo SET poradi = :poradi, user_u = :user_u WHERE id = :id AND galerie_id = :gallery_id');
+        $order = 1;
+        $updated = 0;
+        foreach ($ids as $id) {
+            $stmt->execute([
+                ':poradi' => $order,
+                ':user_u' => galerie_user(),
+                ':id' => $id,
+                ':gallery_id' => $galleryId,
+            ]);
+            $updated += $stmt->rowCount();
+            $order++;
+        }
+        $pdo->commit();
+
+        return $updated;
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
+function galerie_photo_delete(int $photoId, bool $deleteFiles = false): void
+{
+    global $pdo;
+
+    $photo = galerie_photo_get($photoId);
+    if ($photo === null) {
         return;
     }
 
-    umask(0000);
-    if(@mkdir('../_images/_galerie/'.$id.'-galerie', 0777)):
-        echo '<span class="warning">Adresář "'.$id.'-galerie" pro ukládání fotek byl úspěšně vytvořen</span><br />';
-    else:
-        echo '<span class="warning">Adresář pro ukládání fotek nebyl vytvořen</span><br />';
-    endif;
+    // Standard admin delete is a recoverable soft-delete. Physical cleanup must be an explicit maintenance action.
+    if ($deleteFiles) {
+        $galleryId = (int)$photo['galerie_id'];
+        $file = basename((string)$photo['soubor']);
+        @unlink(galerie_gallery_dir($galleryId) . '/' . $file);
+        @unlink(galerie_gallery_small_dir($galleryId) . '/' . $file);
+    }
 
-    umask(0000);
-    if(@mkdir('../_images/_galerie/'.$id.'-galerie/small', 0777)):
-        echo '<span class="warning">Adresář "'.$id.'-galerie/small" pro náhledy byl úspěšně vytvořen</span><br />';
-    else:
-        echo '<span class="warning">Adresář pro náhledy nebyl vytvořen</span><br />';
-    endif;
+    $stmt = $pdo->prepare('UPDATE galerie_photo SET valid = 0, user_u = :user_u WHERE id = :id');
+    $stmt->execute([':user_u' => galerie_user(), ':id' => $photoId]);
 }
 
-//funkce pro editaci galerie
-function galerie_edit ($id, $nazev_cz, $nazev_en, $datum, $galerie_typ, $popis_cz, $popis_en)
+function galerie_photo_file_has_valid_reference(int $galleryId, string $file): bool
 {
     global $pdo;
 
-    $datum = format_date_db($datum);
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM galerie_photo WHERE galerie_id = :gallery_id AND soubor = :soubor AND valid = 1');
+    $stmt->execute([
+        ':gallery_id' => $galleryId,
+        ':soubor' => $file,
+    ]);
 
-    $pdo->exec("SET NAMES utf8");
-
-    $sql = 'UPDATE galerie SET
-                nazev_cz = :nazev_cz,
-                nazev_en = :nazev_en,
-                datum = :datum,
-                galerie_typ = :galerie_typ,
-                popis_cz = :popis_cz,
-                popis_en = :popis_en
-            WHERE id = :id';
-
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':nazev_cz'    => $nazev_cz,
-            ':nazev_en'    => $nazev_en,
-            ':datum'       => $datum,
-            ':galerie_typ' => (int)$galerie_typ,
-            ':popis_cz'    => $popis_cz,
-            ':popis_en'    => $popis_en,
-            ':id'          => (int)$id
-        ]);
-
-        echo '<span class="warning">Galerie byla úspěšně aktualizována</span>';
-        unset ($_POST['add']);
-    } catch (PDOException $e) {
-        echo '<span class="warning">Galerie nebyla aktualizována</span><br />';
-        echo $e->getMessage();
-    }
+    return (int)$stmt->fetchColumn() > 0;
 }
 
-//funkce pro vypis galerie s filtrovanim
-function galerie_vypis ($str, $galerie_typ)
+function galerie_invalid_photo_files_delete(int $galleryId): array
 {
-    global $pdo;
-    require_once('../_functions/pager.class.php');
+    $result = [
+        'photos' => 0,
+        'files_deleted' => 0,
+        'files_missing' => 0,
+        'files_skipped' => 0,
+        'errors' => [],
+    ];
 
-    $pdo->exec("SET NAMES utf8");
+    $handled = [];
+    foreach (galerie_photos($galleryId, 0) as $photo) {
+        $result['photos']++;
 
-    // POZOR: Pager pravděpodobně vykonává SQL interně (možná přes mysqli).
-    // Pokud bude potřeba, přepíšeme pager na PDO.
-    if ((int)$galerie_typ === 0):
-        $sql = 'SELECT id, nazev_cz, datum, galerie_typ FROM galerie WHERE valid = 1 ORDER BY datum DESC, id DESC';
-    else:
-        $sql = 'SELECT id, nazev_cz, datum, galerie_typ FROM galerie WHERE galerie_typ = '.(int)$galerie_typ.' AND valid = 1 ORDER BY datum DESC, id DESC';
-    endif;
+        $file = basename((string)($photo['soubor'] ?? ''));
+        if ($file === '' || isset($handled[$file])) {
+            continue;
+        }
+        $handled[$file] = true;
 
-    $pager = new Pager($sql, 'str');
-    $pager->PageSize = sp_hodnota('admin_galerie_pocet');
-    $pager->PagerAlign = "center";
-    $pager->SeoPrefix = "index.php?section=01&amp;page=05&amp;sec_page=02";
-    $pager->DataBind();
+        if (galerie_photo_file_has_valid_reference($galleryId, $file)) {
+            $result['files_skipped']++;
+            continue;
+        }
 
-    while ($dev = $pager->GetOne())
-    {
-        $id = (int)$dev->id;
-        $nazev_cz = stripslashes($dev->nazev_cz);
-        $datum = format_date_www($dev->datum);
-        $galerie_typ_id = (int)$dev->galerie_typ;
+        foreach ([galerie_gallery_dir($galleryId) . '/' . $file, galerie_gallery_small_dir($galleryId) . '/' . $file] as $path) {
+            if (!is_file($path)) {
+                $result['files_missing']++;
+                continue;
+            }
 
-        // typ galerie
-        $stmt1 = $pdo->prepare('SELECT nazev_cz FROM galerie_typ WHERE id = :id AND valid = 1');
-        $stmt1->execute([':id' => $galerie_typ_id]);
-        $galerie_typ_nazev = (string)$stmt1->fetchColumn();
-
-        // počet fotek
-        $stmt2 = $pdo->prepare('SELECT COUNT(*) FROM galerie_photo WHERE galerie_id = :gid');
-        $stmt2->execute([':gid' => $id]);
-        $dev2 = (int)$stmt2->fetchColumn();
-
-        echo '<tr>' . "\n";
-        echo '<td>'.$id.'</td>' . "\n";
-        echo '<td>'.$datum.'</td>' . "\n";
-        echo '<td>'.$nazev_cz.'</td>' . "\n";
-        echo '<td>'.$galerie_typ_nazev.'</td>' . "\n";
-        echo '<td>'.$dev2.'</td>' . "\n";
-        echo '<td class="text-center"><a href="index.php?section=01&amp;page=05&amp;sec_page=06&amp;view='.$id.'"><img src="images/view.gif" alt="Zobrazit" /></a></td>' . "\n";
-        echo '<td class="text-center"><a href="index.php?section=01&amp;page=05&amp;sec_page=04&amp;edit='.$id.'"><img src="images/edit.gif" alt="Upravit" /></a></td>' . "\n";
-        echo '<td class="text-center"><a href="index.php?section=01&amp;page=05&amp;sec_page=05&amp;add_foto='.$id.'"><img src="images/add.gif" alt="Přidat" /></a></td>' . "\n";
-        echo '<td class="text-center"><a href="index.php?section=01&amp;page=05&amp;sec_page=02&amp;del='.$id.'"><img src="images/del.gif" alt="Smazat" /></a></td>' . "\n";
-        echo '</tr>' . "\n";
+            if (@unlink($path)) {
+                $result['files_deleted']++;
+            } else {
+                $result['errors'][] = 'Soubor se nepodarilo smazat: ' . $path;
+            }
+        }
     }
-    echo '</table>';
 
-    $firstLastMode = new FirstLastPagerMode();
-    $pager->AddPagerMode($firstLastMode);
-    $skipperMode = new SkipperPagerMode();
-    $pager->AddPagerMode($skipperMode);
-    $neighbourMode = new NeighbourPagerMode();
-    $neighbourMode->NeighbourPagesCount = 3;
-    $pager->AddPagerMode($neighbourMode);
-    $pager->DrawPager();
+    return $result;
 }
 
-//funkce pro znevalidneni galerie (neni smazana)
-function galerie_delete ($id)
+function galerie_safe_filename(string $name): string
 {
-    global $pdo;
+    $info = pathinfo($name);
+    $base = text_str((string)($info['filename'] ?? 'foto'));
+    $ext = strtolower((string)($info['extension'] ?? 'jpg'));
+    $ext = $ext === 'jpeg' ? 'jpg' : $ext;
 
-    $pdo->exec("SET NAMES utf8");
-
-    $sql = 'UPDATE galerie SET valid = 0 WHERE id = :id';
-
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':id' => (int)$id]);
-        echo '<span class="warning">Galerie s ID = '.$id.' byla smazána.</span>';
-    } catch (PDOException $e) {
-        echo '<span class="warning">Galerie nebyla vymazána</span><br />';
-        echo $e->getMessage();
+    if ($base === '') {
+        $base = 'foto';
     }
+
+    return $base . '.' . $ext;
 }
 
-//funkce pro pridani fotografie ke galerii
-function galerie_photo_add ($galerie_id, $nazev_cz, $nazev_en)
+function galerie_unique_filename(int $galleryId, string $filename): string
 {
-    global $pdo;
+    $info = pathinfo($filename);
+    $base = (string)($info['filename'] ?? 'foto');
+    $ext = strtolower((string)($info['extension'] ?? 'jpg'));
+    $candidate = $base . '.' . $ext;
+    $i = 1;
 
-    $galerie_id = (int)$galerie_id;
-
-    if(isset($_POST['soubor'])): $soubor = $_POST['soubor']; else: $soubor = ""; endif;
-
-    $dir_original = '../_images/_galerie/'.$galerie_id.'-galerie/';
-    $dir_small    = '../_images/_galerie/'.$galerie_id.'-galerie/small/';
-
-    $pdo->exec("SET NAMES utf8");
-
-    // zjisti poradi
-    $stmt1 = $pdo->prepare('SELECT MAX(poradi) FROM galerie_photo WHERE galerie_id = :gid');
-    $stmt1->execute([':gid' => $galerie_id]);
-    $maxPoradi = $stmt1->fetchColumn();
-    $poradi = ($maxPoradi === null) ? 1 : ((int)$maxPoradi + 1);
-
-    if ($_FILES["soubor"]["error"] == UPLOAD_ERR_NO_FILE):
-        $soubor = "není připojen";
-        return "";
-    endif;
-
-    $soubor_str = text_str($_FILES['soubor']['name']);
-    if(move_uploaded_file($_FILES["soubor"]["tmp_name"], $dir_original.$soubor_str )):
-        copy($dir_original.$soubor_str, $dir_small.$soubor_str);
-    else:
-        echo "Nastala chyba, zkuste upload znova";
-        return "";
-    endif;
-
-    $sql = 'INSERT INTO galerie_photo (galerie_id, nazev_cz, nazev_en, poradi, soubor)
-            VALUES (:gid, :nazev_cz, :nazev_en, :poradi, :soubor)';
-
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':gid'      => $galerie_id,
-            ':nazev_cz' => $nazev_cz,
-            ':nazev_en' => $nazev_en,
-            ':poradi'   => (int)$poradi,
-            ':soubor'   => $soubor_str
-        ]);
-
-        echo '<span class="warning">Název a údaje byly uloženy</span><br />';
-    } catch (PDOException $e) {
-        echo '<span class="warning">Název a údaje nebyly uloženy</span><br />';
-        echo $e->getMessage();
-    }
-
-    return $soubor_str;
-}
-
-//funkce pro vytvoreni fotografie
-function create_thumbnail($file_in, $max_x = 0, $max_y = 0)
-{
-    list($width, $height) = getimagesize($file_in);
-    if (!$width || !$height) {
-        return array(0, 0);
-    }
-    if ($max_x && $width > $max_x) {
-        $height = round($height * $max_x / $width);
-        $width = $max_x;
-    }
-    if ($max_y && $height > $max_y) {
-        $width = round($width * $max_y / $height);
-        $height = $max_y;
-    }
-    return array($width, $height);
-}
-
-//funkce pro zmenseni fotografie a ulozeni
-function image_resize($file_in, $width, $height)
-{
-    list($origwidth, $origheight) = getimagesize($file_in);
-
-    $image_p = imagecreatetruecolor($width, $height);
-    $image = imagecreatefromjpeg($file_in);
-    imagecopyresampled($image_p, $image, 0, 0, 0, 0, $width, $height, $origwidth, $origheight);
-
-    if(imagejpeg($image_p, $file_in, sp_hodnota('galerie_image_quality'))):
-        echo 'Obrázek '.$file_in.' vložen <br />';
-    else:
-        echo 'Obrázek '.$file_in.' nebyl vložen <br />';
-    endif;
-}
-
-//funkce pro nahled fotogalerie s obrazky
-function galerie_view ($galerie_id)
-{
-    global $pdo;
-
-    $pdo->exec("SET NAMES utf8");
-
-    $sql = 'SELECT id, nazev_cz, nazev_en, soubor, poradi
-            FROM galerie_photo
-            WHERE galerie_id = :gid
-            ORDER BY poradi, id';
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':gid' => (int)$galerie_id]);
-
-    while ($dev = $stmt->fetch(PDO::FETCH_NUM))
-    {
-        $id = $dev[0];
-        $nazev_cz = stripslashes($dev[1]);
-        $nazev_en = stripslashes($dev[2]);
-        $soubor = $dev[3];
-        $poradi = $dev[4];
-
-        echo '<div class="img">';
-        echo '<span class="popisek"><strong>'.$poradi.'</strong> - '.$soubor.'</span>' . "\n";
-        echo '<img src="../_images/_galerie/'.$galerie_id.'-galerie/small/'.$soubor.'" alt="'.$nazev_cz.'" />' . "\n";
-        echo "<br />\n";
-        echo '<span class="popisek">'.$nazev_cz.'</span>' . "\n";
-        echo '<span class="popisek">'.$nazev_en.'</span>' . "\n";
-        echo '<a href="index.php?section=01&amp;page=05&amp;sec_page=06&amp;view='.$galerie_id.'&amp;photo_del='.$id.'">DELETE</a>' . "\n";
-        echo '<a href="index.php?section=01&amp;page=05&amp;sec_page=06&amp;view='.$galerie_id.'&amp;photo_edit='.$id.'">EDIT</a>';
-        echo '</div>';
-    }
-}
-
-//funkce pro smazani fotografie
-function galerie_photo_delete ($id_photo, $galerie_id)
-{
-    global $pdo;
-
-    $id_photo = (int)$id_photo;
-    $galerie_id = (int)$galerie_id;
-
-    $pdo->exec("SET NAMES utf8");
-
-    $stmt = $pdo->prepare('SELECT soubor FROM galerie_photo WHERE id = :id');
-    $stmt->execute([':id' => $id_photo]);
-    $soubor = (string)$stmt->fetchColumn();
-    $soubor = stripslashes($soubor);
-
-    $delete_photo = @unlink('../_images/_galerie/'.$galerie_id.'-galerie/'.$soubor);
-    $delete_photo_small = @unlink('../_images/_galerie/'.$galerie_id.'-galerie/small/'.$soubor);
-
-    if ($delete_photo):
-        echo '<span class="warning">Originál obrázku smazán</span><br />';
-    endif;
-    if ($delete_photo_small):
-        echo '<span class="warning">Thumbnail obrázku smazán</span><br />';
-    endif;
-
-    $sql = 'DELETE FROM galerie_photo WHERE id = :id';
-
-    try {
-        $stmt2 = $pdo->prepare($sql);
-        $stmt2->execute([':id' => $id_photo]);
-        echo '<span class="warning">Fotografie s ID = '.$id_photo.' byla smazána.</span>';
-    } catch (PDOException $e) {
-        echo '<span class="warning">Fotografie z DB nebyla vymazána</span><br />';
-        echo $e->getMessage();
-    }
-}
-
-//funkce pro upravu popisku u fotografie
-function galerie_photo_edit ($id, $nazev_cz, $nazev_en, $poradi)
-{
-    global $pdo;
-
-    $pdo->exec("SET NAMES utf8");
-
-    $sql = 'UPDATE galerie_photo
-            SET nazev_cz = :nazev_cz, nazev_en = :nazev_en, poradi = :poradi
-            WHERE id = :id';
-
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':nazev_cz' => $nazev_cz,
-            ':nazev_en' => $nazev_en,
-            ':poradi'   => (int)$poradi,
-            ':id'       => (int)$id
-        ]);
-
-        echo '<span class="warning">Popisek byl aktualizován</span><br />';
-    } catch (PDOException $e) {
-        echo '<span class="warning">Popisek nebyl aktualizován</span><br />';
-        echo $e->getMessage();
-    }
-}
-
-//funkce pro editaci fotografie (přepočet pořadí)
-function galerie_photo_poradi_update ($galerie)
-{
-    global $pdo;
-
-    $galerie = (int)$galerie;
-
-    $pdo->exec("SET NAMES utf8");
-
-    $sql = 'SELECT id, soubor FROM galerie_photo WHERE galerie_id = :gid ORDER BY soubor';
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':gid' => $galerie]);
-
-    $i = 0;
-    while ($dev = $stmt->fetch(PDO::FETCH_NUM)) {
+    while (is_file(galerie_gallery_dir($galleryId) . '/' . $candidate)) {
+        $candidate = $base . '-' . $i . '.' . $ext;
         $i++;
-        $id = (int)$dev[0];
-
-        $stmtU = $pdo->prepare('UPDATE galerie_photo SET poradi = :poradi WHERE id = :id');
-        $stmtU->execute([':poradi' => $i, ':id' => $id]);
     }
 
-    echo '<span class="warning">Pořadí bylo aktualizováno</span>';
+    return $candidate;
 }
 
-//funkce pro odstraneni duplicit v galerii
-function galerie_photo_duplicity_delete ($galerie)
+function galerie_allowed_upload(string $path): array
+{
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = (string)$finfo->file($path);
+    $map = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+    ];
+
+    if (!isset($map[$mime])) {
+        throw new RuntimeException('Nepodporovany format obrazku: ' . $mime . '. Povoleno je JPG, PNG a WebP.');
+    }
+
+    if ($mime === 'image/webp' && (!function_exists('imagewebp') || !function_exists('imagecreatefromwebp'))) {
+        throw new RuntimeException('Server nema podporu pro WebP v GD.');
+    }
+
+    return [$mime, $map[$mime]];
+}
+
+function galerie_load_image(string $path, string $mime): GdImage
+{
+    $image = match ($mime) {
+        'image/jpeg' => imagecreatefromjpeg($path),
+        'image/png' => imagecreatefrompng($path),
+        'image/webp' => imagecreatefromwebp($path),
+        default => false,
+    };
+
+    if (!$image instanceof GdImage) {
+        throw new RuntimeException('Obrazek se nepodarilo nacist.');
+    }
+
+    if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+        $exif = @exif_read_data($path);
+        $orientation = is_array($exif) ? (int)($exif['Orientation'] ?? 0) : 0;
+        if ($orientation === 3) {
+            $image = imagerotate($image, 180, 0);
+        } elseif ($orientation === 6) {
+            $image = imagerotate($image, -90, 0);
+        } elseif ($orientation === 8) {
+            $image = imagerotate($image, 90, 0);
+        }
+    }
+
+    return $image;
+}
+
+function galerie_resize_to_file(string $sourcePath, string $targetPath, string $mime, int $maxWidth, int $maxHeight): array
+{
+    $source = galerie_load_image($sourcePath, $mime);
+    $sourceWidth = imagesx($source);
+    $sourceHeight = imagesy($source);
+
+    $ratio = min($maxWidth / $sourceWidth, $maxHeight / $sourceHeight, 1);
+    $targetWidth = max(1, (int)round($sourceWidth * $ratio));
+    $targetHeight = max(1, (int)round($sourceHeight * $ratio));
+
+    $target = imagecreatetruecolor($targetWidth, $targetHeight);
+    if (in_array($mime, ['image/png', 'image/webp'], true)) {
+        imagealphablending($target, false);
+        imagesavealpha($target, true);
+        $transparent = imagecolorallocatealpha($target, 0, 0, 0, 127);
+        imagefilledrectangle($target, 0, 0, $targetWidth, $targetHeight, $transparent);
+    }
+
+    imagecopyresampled($target, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $sourceWidth, $sourceHeight);
+
+    $quality = galerie_image_quality();
+    $saved = match ($mime) {
+        'image/jpeg' => imagejpeg($target, $targetPath, $quality),
+        'image/png' => imagepng($target, $targetPath, 6),
+        'image/webp' => imagewebp($target, $targetPath, $quality),
+        default => false,
+    };
+
+    imagedestroy($source);
+    imagedestroy($target);
+
+    if (!$saved) {
+        throw new RuntimeException('Obrazek se nepodarilo ulozit: ' . $targetPath);
+    }
+
+    return [$targetWidth, $targetHeight, filesize($targetPath) ?: 0];
+}
+
+function galerie_insert_photo(int $galleryId, string $file, array $meta): int
 {
     global $pdo;
 
-    $galerie = (int)$galerie;
+    $title = trim((string)($meta['title'] ?? pathinfo($file, PATHINFO_FILENAME)));
+    $order = (int)($meta['poradi'] ?? galerie_next_photo_order($galleryId));
+    $user = galerie_user();
 
-    $pdo->exec("SET NAMES utf8");
+    $stmt = $pdo->prepare('INSERT INTO galerie_photo
+        (galerie_id, poradi, nazev_cz, nazev_en, soubor, mime_type, width, height, filesize, user_i, user_u)
+        VALUES (:galerie_id, :poradi, :nazev_cz, :nazev_en, :soubor, :mime_type, :width, :height, :filesize, :user_i, :user_u)');
+    $stmt->execute([
+        ':galerie_id' => $galleryId,
+        ':poradi' => $order,
+        ':nazev_cz' => $title,
+        ':nazev_en' => '',
+        ':soubor' => $file,
+        ':mime_type' => (string)($meta['mime_type'] ?? ''),
+        ':width' => (int)($meta['width'] ?? 0),
+        ':height' => (int)($meta['height'] ?? 0),
+        ':filesize' => (int)($meta['filesize'] ?? 0),
+        ':user_i' => $user,
+        ':user_u' => $user,
+    ]);
 
-    // MySQL varianta mazání duplicit (gp1 join gp2) - přepsaná na exec s parametrem
-    $sql = 'DELETE gp1
-            FROM galerie_photo gp1, galerie_photo gp2
-            WHERE gp1.id > gp2.id
-              AND gp1.soubor = gp2.soubor
-              AND gp1.galerie_id = :gid
-              AND gp2.galerie_id = :gid';
+    return (int)$pdo->lastInsertId();
+}
 
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':gid' => $galerie]);
+function galerie_upload_photos(int $galleryId, array $files): array
+{
+    galerie_ensure_directories($galleryId);
 
-        echo '<span class="warning">Duplicity byly úspěšně odstraněny.</span><br />';
-    } catch (PDOException $e) {
-        echo '<span class="warning">Duplicity nebyly odstraněny.</span><br />';
-        echo $e->getMessage();
+    $results = ['ok' => [], 'error' => []];
+    $names = $files['name'] ?? [];
+    $count = is_array($names) ? count($names) : 0;
+    $order = galerie_next_photo_order($galleryId);
+
+    for ($i = 0; $i < $count; $i++) {
+        $error = (int)($files['error'][$i] ?? UPLOAD_ERR_NO_FILE);
+        if ($error === UPLOAD_ERR_NO_FILE) {
+            continue;
+        }
+
+        $originalName = (string)($files['name'][$i] ?? '');
+        $tmpName = (string)($files['tmp_name'][$i] ?? '');
+
+        try {
+            if ($error !== UPLOAD_ERR_OK) {
+                throw new RuntimeException('Upload chyba ' . $error . '.');
+            }
+
+            if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+                throw new RuntimeException('Dočasný soubor uploadu není dostupný.');
+            }
+
+            [$mime, $ext] = galerie_allowed_upload($tmpName);
+            $safeName = galerie_safe_filename($originalName);
+            $safeName = preg_replace('~\.[a-z0-9]+$~', '.' . $ext, $safeName) ?: ('foto.' . $ext);
+            $file = galerie_unique_filename($galleryId, $safeName);
+            $originalPath = galerie_gallery_dir($galleryId) . '/' . $file;
+            $thumbPath = galerie_gallery_small_dir($galleryId) . '/' . $file;
+
+            [$width, $height, $filesize] = galerie_resize_to_file(
+                $tmpName,
+                $originalPath,
+                $mime,
+                galerie_orig_width_limit(),
+                galerie_orig_height_limit()
+            );
+            galerie_resize_to_file(
+                $originalPath,
+                $thumbPath,
+                $mime,
+                galerie_thumb_width_limit(),
+                galerie_thumb_height_limit()
+            );
+
+            galerie_insert_photo($galleryId, $file, [
+                'poradi' => $order,
+                'title' => pathinfo($originalName, PATHINFO_FILENAME),
+                'mime_type' => $mime,
+                'width' => $width,
+                'height' => $height,
+                'filesize' => $filesize,
+            ]);
+            $results['ok'][] = $originalName;
+            $order++;
+        } catch (Throwable $e) {
+            $results['error'][] = $originalName . ': ' . $e->getMessage();
+        }
+    }
+
+    return $results;
+}
+
+function galerie_regenerate_thumbnails(int $galleryId): array
+{
+    $results = ['ok' => 0, 'error' => []];
+    galerie_ensure_directories($galleryId);
+
+    foreach (galerie_photos($galleryId) as $photo) {
+        $file = basename((string)$photo['soubor']);
+        $originalPath = galerie_gallery_dir($galleryId) . '/' . $file;
+        $thumbPath = galerie_gallery_small_dir($galleryId) . '/' . $file;
+
+        try {
+            if (!is_file($originalPath)) {
+                throw new RuntimeException('Soubor neexistuje: ' . $file);
+            }
+
+            [$mime] = galerie_allowed_upload($originalPath);
+            galerie_resize_to_file(
+                $originalPath,
+                $thumbPath,
+                $mime,
+                galerie_thumb_width_limit(),
+                galerie_thumb_height_limit()
+            );
+            $results['ok']++;
+        } catch (Throwable $e) {
+            $results['error'][] = $file . ': ' . $e->getMessage();
+        }
+    }
+
+    return $results;
+}
+
+function galerie_photo_poradi_update(int $galleryId): void
+{
+    global $pdo;
+
+    $stmt = $pdo->prepare('SELECT id FROM galerie_photo WHERE galerie_id = :gallery_id AND valid = 1 ORDER BY soubor ASC, id ASC');
+    $stmt->execute([':gallery_id' => $galleryId]);
+
+    $order = 1;
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) ?: [] as $photoId) {
+        $update = $pdo->prepare('UPDATE galerie_photo SET poradi = :poradi WHERE id = :id');
+        $update->execute([':poradi' => $order, ':id' => (int)$photoId]);
+        $order++;
     }
 }
-?>
+
+function galerie_photo_duplicity_delete(int $galleryId): int
+{
+    global $pdo;
+
+    $sql = 'UPDATE galerie_photo gp1
+        INNER JOIN galerie_photo gp2
+            ON gp1.id > gp2.id
+            AND gp1.soubor = gp2.soubor
+            AND gp1.galerie_id = gp2.galerie_id
+            AND gp2.valid = 1
+        SET gp1.valid = 0, gp1.user_u = :user_u
+        WHERE gp1.galerie_id = :gallery_id AND gp1.valid = 1';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':user_u' => galerie_user(), ':gallery_id' => $galleryId]);
+
+    return $stmt->rowCount();
+}

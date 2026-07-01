@@ -108,7 +108,7 @@ $currentYear = (int)date('Y');
 
     <div class="d-flex flex-wrap gap-2">
         <?php if ($tableExists): ?>
-            <a href="index.php?section=02&amp;page=02&amp;sec_page=07&amp;show=1"
+            <a href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=1"
                class="btn btn-sm btn-primary shadow-sm">
                 Přidat změnu <i class="bi bi-plus-circle"></i>
             </a>
@@ -227,7 +227,7 @@ $currentYear = (int)date('Y');
                     <button type="submit" class="btn btn-primary">
                         <?= $editing ? 'Uložit změnu' : 'Vložit změnu' ?>
                     </button>
-                    <a href="index.php?section=02&amp;page=02&amp;sec_page=07" class="btn btn-outline-secondary">Zpět na přehled</a>
+                    <a href="index.php?section=09&amp;page=02&amp;sec_page=07" class="btn btn-outline-secondary">Zpět na přehled</a>
                 </div>
             </form>
         </div>
@@ -288,7 +288,7 @@ $currentYear = (int)date('Y');
                             <td><?= (int)($row['priority'] ?? 0) ?></td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a class="btn btn-outline-primary" href="index.php?section=02&amp;page=02&amp;sec_page=07&amp;show=2&amp;edit=<?= (int)$row['id'] ?>">
+                                    <a class="btn btn-outline-primary" href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=2&amp;edit=<?= (int)$row['id'] ?>">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <form method="post" class="d-inline" onsubmit="return confirm('Skrýt tuto změnu z aktivní evidence?');">

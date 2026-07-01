@@ -58,28 +58,6 @@ $sections = [
 ];
 ?>
 
-<style>
-    .cron-list-table {
-        min-width: 1120px;
-        table-layout: fixed;
-    }
-    .cron-list-table th:nth-child(1) { width: 230px; }
-    .cron-list-table th:nth-child(2) { width: 360px; }
-    .cron-list-table th:nth-child(3) { width: 170px; }
-    .cron-list-table th:nth-child(4) { width: auto; }
-    .cron-path {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-        font-size: .78rem;
-        line-height: 1.35;
-        overflow-wrap: anywhere;
-        word-break: break-word;
-        user-select: all;
-    }
-    .cron-address-label {
-        min-width: 42px;
-    }
-</style>
-
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Cron</h1>
 

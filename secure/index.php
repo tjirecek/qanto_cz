@@ -11,7 +11,26 @@ error_reporting(E_ALL);
 
 require_once SEC_DIR . '/functions/mysql_connect.php';
 require_once SEC_DIR . '/functions/fun_default.php';
+
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+$requestMethod = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+if ($requestPath === '/secure' && in_array($requestMethod, ['GET', 'HEAD'], true)) {
+    $queryString = trim((string)($_SERVER['QUERY_STRING'] ?? ''));
+    header('Location: /secure/' . ($queryString !== '' ? '?' . $queryString : ''), true, 301);
+    exit;
+}
+
 require_once SEC_DIR . '/functions/pages_include.php';
+
+$adminJsVersion = 0;
+foreach (glob(ROOT_DIR . '/assets/js/sec/*.js') ?: [] as $adminJsFile) {
+    if (is_file($adminJsFile)) {
+        $adminJsVersion = max($adminJsVersion, (int)filemtime($adminJsFile));
+    }
+}
+if ($adminJsVersion <= 0) {
+    $adminJsVersion = time();
+}
 
 ?>
 <!DOCTYPE html>
@@ -20,23 +39,31 @@ require_once SEC_DIR . '/functions/pages_include.php';
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Shared administrace Qanto">
+    <meta name="description" content="administrace Qanto">
     <meta name="author" content="Qanto admin">
     <meta name="generator" content="TM">
-    <title>Administrace | qanto.cz shared</title>
+    <title>Admin | qanto.cz</title>
     <link rel="icon" href="/img/design/logo_qanto.webp" sizes="192x192" />
 
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
 
     <link href="<?= asset_version(BASE_URL . 'assets/lib/bootstrap/css/bootstrap.min.css'); ?>" rel="stylesheet" />
     <link href="<?= asset_version('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css'); ?>" rel="stylesheet" >
-    <link rel="stylesheet" href="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.3.5/b-3.2.5/datatables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/v/bs5/dt-2.3.5/b-3.2.5/datatables.min.css">
     <link href="<?= asset_version(BASE_URL . 'assets/css/secure.css'); ?>" rel="stylesheet" type="text/css">
+    <?php if (is_file(ROOT_DIR . '/assets/css/sec_rep_secure.css')): ?>
+        <link href="<?= asset_version(BASE_URL . 'assets/css/sec_rep_secure.css'); ?>" rel="stylesheet" type="text/css">
+    <?php endif; ?>
 
     <script src="<?= asset_version(BASE_URL . 'assets/lib/tinymce/tinymce.min.js') ?>" referrerpolicy="origin"></script>
 </head>
 
-<body class="bg-light">
+<body class="bg-light"
+      data-admin-section="<?= htmlspecialchars((string)($section ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+      data-admin-page="<?= htmlspecialchars((string)($page ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+      data-admin-sec-page="<?= htmlspecialchars((string)($sec_page ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+      data-admin-js-base="<?= htmlspecialchars(BASE_URL . 'assets/js/sec/', ENT_QUOTES, 'UTF-8') ?>"
+      data-admin-js-version="<?= (int)$adminJsVersion ?>">
 <?php
 require_once SEC_DIR . '/functions/admin_login.php';
 $uName = admin_session_user_name();
@@ -45,8 +72,8 @@ $uName = admin_session_user_name();
 <nav class="navbar navbar-dark bg-dark sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
-            <img src="/img/design/logo_qanto_light.webp" alt="Qanto admin" class="admin-navbar-logo" style="height:32px">
-            <span class="d-none d-md-inline">shared administrace qanto.cz</span>
+            <img src="/img/design/logo_qanto_light.webp" alt="Qanto admin" class="admin-navbar-logo">
+            <span class="d-none d-md-inline">administrace qanto.cz</span>
         </a>
 
         <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar">
@@ -84,6 +111,8 @@ $uName = admin_session_user_name();
                 <hr class="my-2">
                 <?php include SEC_DIR . '/inc/menu/mm_all.php'; ?>
                 <hr class="my-2">
+                <?php include SEC_DIR . '/inc/menu/mm_project.php'; ?>
+                <hr class="my-2">
                 <?php include SEC_DIR . '/inc/menu/mm_system.php'; ?>
             </nav>
 
@@ -104,6 +133,8 @@ $uName = admin_session_user_name();
                     <?php include SEC_DIR . '/inc/menu/mm_dashboard.php'; ?>
                     <hr class="my-2">
                     <?php include SEC_DIR . '/inc/menu/mm_all.php'; ?>
+                    <hr class="my-2">
+                    <?php include SEC_DIR . '/inc/menu/mm_project.php'; ?>
                     <hr class="my-2">
                     <?php include SEC_DIR . '/inc/menu/mm_system.php'; ?>
                 </nav>
@@ -146,12 +177,13 @@ $uName = admin_session_user_name();
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="<?= asset_version(BASE_URL . 'assets/lib/bootstrap/js/bootstrap.bundle.min.js'); ?>"></script>
-<script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.3.5/b-3.2.5/datatables.min.js"></script>
+<script src="https://cdn.datatables.net/v/bs5/dt-2.3.5/b-3.2.5/datatables.min.js"></script>
 <script src="<?= asset_version(BASE_URL . 'assets/js/sec_datatables_cs.js'); ?>"></script>
 <script src="<?= asset_version(BASE_URL . 'assets/js/sec_datatables.js'); ?>"></script>
 <script src="<?= asset_version(BASE_URL . 'assets/js/sec_tinymce.js'); ?>"></script>
+<script src="<?= asset_version(BASE_URL . 'assets/js/sec/admin.js'); ?>"></script>
 
 </body>
 </html>

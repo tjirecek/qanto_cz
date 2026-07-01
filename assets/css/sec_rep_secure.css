@@ -1,0 +1,21 @@
+/* Project admin styles for qanto.cz */
+
+.text-bg-qanto-markety {
+    color: #a85f00 !important;
+    background-color: #fff1dc !important;
+}
+
+.text-bg-qanto-velkoobchod {
+    color: #54771d !important;
+    background-color: #edf5df !important;
+}
+
+.text-bg-qanto {
+    color: #202020 !important;
+    background-color: #f1f1f1 !important;
+}
+
+.text-bg-qantoplus {
+    color: #13212a !important;
+    background-color: #f49300 !important;
+}

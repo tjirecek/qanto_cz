@@ -15,26 +15,32 @@ $MENU_ID_PREFIX = $MENU_ID_PREFIX ?? 'nav';
 $collapseNewsId  = $MENU_ID_PREFIX . '_collapseNews';
 $collapseTextyId = $MENU_ID_PREFIX . '_collapseTexty';
 $collapseContactsId = $MENU_ID_PREFIX . '_collapseContacts';
+$collapseGalleryId = $MENU_ID_PREFIX . '_collapseGallery';
+$collapseContactFormId = $MENU_ID_PREFIX . '_collapseContactForm';
 
 $isNewsOpen   = ($section === "01" && $page === "01");
 $isStaticOpen = ($section === "01" && $page === "02");
-$isContactsOpen = ($section === "01" && $page === "03");
+$isContactsOpen = ($section === "01" && $page === "04");
+$isGalleryOpen = ($section === "01" && $page === "03");
+$isContactFormOpen = ($section === "01" && $page === "05");
 
 $newsListActive   = ($section==="01" && $page==="01" && $sec_page==="02" && empty($_GET['show']));
-$newsAddActive    = ($section==="01" && $page==="01" && $sec_page==="02" && (string)($_GET['show'] ?? '') === '1');
 $newsTypesActive  = ($section==="01" && $page==="01" && $sec_page==="03");
+$newsTagsActive   = ($section==="01" && $page==="01" && $sec_page==="04");
 $newsUsersActive  = ($section==="01" && $page==="01" && $sec_page==="05");
 
 $statTextsActive  = ($section==="01" && $page==="02" && $sec_page==="02" && empty($_GET['show']));
-$statTextsAdd     = ($section==="01" && $page==="02" && $sec_page==="02" && (string)($_GET['show'] ?? '') === '1');
 $statExprActive   = ($section==="01" && $page==="02" && $sec_page==="03" && empty($_GET['show']));
-$statExprAdd      = ($section==="01" && $page==="02" && $sec_page==="03" && (string)($_GET['show'] ?? '') === '1');
 
-$contactsStoresActive  = ($section==="01" && $page==="03" && $sec_page==="01");
-$marketsActive         = ($section==="01" && $page==="03" && $sec_page==="02");
-$wholesaleActive       = ($section==="01" && $page==="03" && $sec_page==="03");
-$representativesAct    = ($section==="01" && $page==="03" && $sec_page==="04");
-$openingHoursActive    = ($section==="01" && $page==="03" && $sec_page==="05");
+$contactsStoresActive  = ($section==="01" && $page==="04" && $sec_page==="01");
+$marketsActive         = ($section==="01" && $page==="04" && $sec_page==="02");
+$wholesaleActive       = ($section==="01" && $page==="04" && $sec_page==="03");
+$representativesAct    = ($section==="01" && $page==="04" && $sec_page==="04");
+$openingHoursActive    = ($section==="01" && $page==="04" && $sec_page==="05");
+
+$galleryListActive = ($section==="01" && $page==="03" && $sec_page==="01");
+$galleryTypesActive = ($section==="01" && $page==="03" && $sec_page==="04");
+$contactFormActive = ($section==="01" && $page==="05" && $sec_page==="01");
 ?>
 
 <div class="text-uppercase small fw-semibold text-muted mt-2 mb-1">Hlavní menu</div>
@@ -47,7 +53,7 @@ $openingHoursActive    = ($section==="01" && $page==="03" && $sec_page==="05");
    aria-expanded="<?= $isNewsOpen ? 'true' : 'false' ?>"
    aria-controls="<?= $collapseNewsId ?>">
     <i class="bi bi-newspaper me-2"></i>
-    <span>Novinky</span>
+    <span>01 Novinky</span>
     <i class="bi bi-chevron-down ms-auto small"></i>
 </a>
 
@@ -56,11 +62,11 @@ $openingHoursActive    = ($section==="01" && $page==="03" && $sec_page==="05");
         <a class="nav-link py-1 <?= $newsListActive ? 'active' : '' ?>"
            href="index.php?section=01&amp;page=01&amp;sec_page=02">Výpis novinek</a>
 
-        <a class="nav-link py-1 <?= $newsAddActive ? 'active' : '' ?>"
-           href="index.php?section=01&amp;page=01&amp;sec_page=02&amp;show=1">Přidat novinku</a>
-
         <a class="nav-link py-1 <?= $newsTypesActive ? 'active' : '' ?>"
            href="index.php?section=01&amp;page=01&amp;sec_page=03">Typy novinek</a>
+
+        <a class="nav-link py-1 <?= $newsTagsActive ? 'active' : '' ?>"
+           href="index.php?section=01&amp;page=01&amp;sec_page=04">Štítky novinek</a>
 
         <a class="nav-link py-1 <?= $newsUsersActive ? 'active' : '' ?>"
            href="index.php?section=01&amp;page=01&amp;sec_page=05">Uživatelé newsletteru</a>
@@ -75,7 +81,7 @@ $openingHoursActive    = ($section==="01" && $page==="03" && $sec_page==="05");
    aria-expanded="<?= $isStaticOpen ? 'true' : 'false' ?>"
    aria-controls="<?= $collapseTextyId ?>">
     <i class="bi bi-card-text me-2"></i>
-    <span>Statické texty, výrazy</span>
+    <span>02 Statické texty</span>
     <i class="bi bi-chevron-down ms-auto small"></i>
 </a>
 
@@ -84,14 +90,30 @@ $openingHoursActive    = ($section==="01" && $page==="03" && $sec_page==="05");
         <a class="nav-link py-1 <?= $statTextsActive ? 'active' : '' ?>"
            href="index.php?section=01&amp;page=02&amp;sec_page=02">Výpis statických textů</a>
 
-        <a class="nav-link py-1 <?= $statTextsAdd ? 'active' : '' ?>"
-           href="index.php?section=01&amp;page=02&amp;sec_page=02&amp;show=1">Přidat statický text</a>
-
         <a class="nav-link py-1 <?= $statExprActive ? 'active' : '' ?>"
            href="index.php?section=01&amp;page=02&amp;sec_page=03">Výpis statických výrazů</a>
+    </div>
+</div>
 
-        <a class="nav-link py-1 <?= $statExprAdd ? 'active' : '' ?>"
-           href="index.php?section=01&amp;page=02&amp;sec_page=03&amp;show=1">Přidat statický výraz</a>
+<!-- FOTOGALERIE -->
+<a class="nav-link d-flex align-items-center <?= $isGalleryOpen ? 'active' : '' ?>"
+   href="#<?= $collapseGalleryId ?>"
+   data-bs-toggle="collapse"
+   role="button"
+   aria-expanded="<?= $isGalleryOpen ? 'true' : 'false' ?>"
+   aria-controls="<?= $collapseGalleryId ?>">
+    <i class="bi bi-images me-2"></i>
+    <span>03 Fotogalerie</span>
+    <i class="bi bi-chevron-down ms-auto small"></i>
+</a>
+
+<div class="collapse <?= $isGalleryOpen ? 'show' : '' ?>" id="<?= $collapseGalleryId ?>">
+    <div class="nav flex-column ms-4">
+        <a class="nav-link py-1 <?= $galleryListActive ? 'active' : '' ?>"
+           href="index.php?section=01&amp;page=03&amp;sec_page=01">Výpis fotogalerií</a>
+
+        <a class="nav-link py-1 <?= $galleryTypesActive ? 'active' : '' ?>"
+           href="index.php?section=01&amp;page=03&amp;sec_page=04">Typy galerií</a>
     </div>
 </div>
 
@@ -103,21 +125,40 @@ $openingHoursActive    = ($section==="01" && $page==="03" && $sec_page==="05");
    aria-expanded="<?= $isContactsOpen ? 'true' : 'false' ?>"
    aria-controls="<?= $collapseContactsId ?>">
     <i class="bi bi-person-lines-fill me-2"></i>
-    <span>Kontakty</span>
+    <span>04 Kontakty</span>
     <i class="bi bi-chevron-down ms-auto small"></i>
 </a>
 
 <div class="collapse <?= $isContactsOpen ? 'show' : '' ?>" id="<?= $collapseContactsId ?>">
     <div class="nav flex-column ms-4">
         <a class="nav-link py-1 <?= $contactsStoresActive ? 'active' : '' ?>"
-           href="index.php?section=01&amp;page=03&amp;sec_page=01">Prodejny</a>
+           href="index.php?section=01&amp;page=04&amp;sec_page=01">Prodejny</a>
         <a class="nav-link py-1 <?= $marketsActive ? 'active' : '' ?>"
-           href="index.php?section=01&amp;page=03&amp;sec_page=02">Markety</a>
+           href="index.php?section=01&amp;page=04&amp;sec_page=02">Markety</a>
         <a class="nav-link py-1 <?= $wholesaleActive ? 'active' : '' ?>"
-           href="index.php?section=01&amp;page=03&amp;sec_page=03">Velkoobchody</a>
+           href="index.php?section=01&amp;page=04&amp;sec_page=03">Velkoobchody</a>
         <a class="nav-link py-1 <?= $representativesAct ? 'active' : '' ?>"
-           href="index.php?section=01&amp;page=03&amp;sec_page=04">Obchodní zástupci</a>
+           href="index.php?section=01&amp;page=04&amp;sec_page=04">Obchodní zástupci</a>
         <a class="nav-link py-1 <?= $openingHoursActive ? 'active' : '' ?>"
-           href="index.php?section=01&amp;page=03&amp;sec_page=05">Otevírací doby</a>
+           href="index.php?section=01&amp;page=04&amp;sec_page=05">Otevírací doby</a>
+    </div>
+</div>
+
+<!-- NAPIŠTE NÁM -->
+<a class="nav-link d-flex align-items-center <?= $isContactFormOpen ? 'active' : '' ?>"
+   href="#<?= $collapseContactFormId ?>"
+   data-bs-toggle="collapse"
+   role="button"
+   aria-expanded="<?= $isContactFormOpen ? 'true' : 'false' ?>"
+   aria-controls="<?= $collapseContactFormId ?>">
+    <i class="bi bi-envelope-paper me-2"></i>
+    <span>05 Napište nám</span>
+    <i class="bi bi-chevron-down ms-auto small"></i>
+</a>
+
+<div class="collapse <?= $isContactFormOpen ? 'show' : '' ?>" id="<?= $collapseContactFormId ?>">
+    <div class="nav flex-column ms-4">
+        <a class="nav-link py-1 <?= $contactFormActive ? 'active' : '' ?>"
+           href="index.php?section=01&amp;page=05&amp;sec_page=01">Výpis zpráv</a>
     </div>
 </div>

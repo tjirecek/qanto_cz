@@ -26,6 +26,7 @@ $routes = [
         '01' => [
             '02' => 'pages/news/news_vypis',
             '03' => 'pages/news/news_typ',
+            '04' => 'pages/news/news_tag',
             '05' => 'pages/news/news_users',
             '06' => 'pages/news/news_info_send',
         ],
@@ -33,15 +34,26 @@ $routes = [
             '02' => 'pages/stattexty/stattexty_vypis',
             '03' => 'pages/stattexty/statvyrazy_vypis',
         ],
-        '03' => [
+        '04' => [
             '01' => 'pages/kontakty/prodejny',
             '02' => 'pages/kontakty/markety',
             '03' => 'pages/kontakty/velkoobchody',
             '04' => 'pages/kontakty/obchodni_zastupci',
             '05' => 'pages/kontakty/oteviraci_doby',
         ],
+        '03' => [
+            '01' => 'pages/galerie/galerie_vypis',
+            '02' => 'pages/galerie/galerie_vypis',
+            '03' => 'pages/galerie/galerie_vypis',
+            '04' => 'pages/galerie/galerie_vypis',
+            '05' => 'pages/galerie/galerie_vypis',
+            '06' => 'pages/galerie/galerie_vypis',
+        ],
+        '05' => [
+            '01' => 'pages/napiste_nam/napiste_nam_vypis',
+        ],
     ],
-    '02' => [
+    '09' => [
         '_menu' => 'mm_system',
         '01' => [
             '02' => 'settings/users_vypis',

@@ -4,9 +4,9 @@ Skript `scripts/compare_shared_admin.sh` porovnava shared administraci z `qanto_
 
 ## Projekty
 
-- Primarni zdroj: `/Users/tjirecek/mamp/qanto_cz`
-- Sekundarni projekt: `/Users/tjirecek/mamp/qrs-qanto_cz`
-- Sekundarni projekt: `/Users/tjirecek/mamp/qantoplus_cz`
+- Primarni zdroj: `/Users/tjirecek/www_dev/qanto_cz`
+- Sekundarni projekt: `/Users/tjirecek/www_dev/qrs-qanto_cz`
+- Sekundarni projekt: `/Users/tjirecek/www_dev/qantoplus_cz`
 
 Primarni projekt je vzdy repozitar, ve kterem je skript spusten. V tomto projektu je to `qanto_cz`.
 
@@ -21,8 +21,8 @@ scripts/compare_shared_admin.sh
 Porovnani proti vybranym sekundarnim projektum:
 
 ```bash
-scripts/compare_shared_admin.sh /Users/tjirecek/mamp/qrs-qanto_cz
-scripts/compare_shared_admin.sh /Users/tjirecek/mamp/qrs-qanto_cz /Users/tjirecek/mamp/qantoplus_cz
+scripts/compare_shared_admin.sh /Users/tjirecek/www_dev/qrs-qanto_cz
+scripts/compare_shared_admin.sh /Users/tjirecek/www_dev/qrs-qanto_cz /Users/tjirecek/www_dev/qantoplus_cz
 ```
 
 Ulozeni reportu:
@@ -41,10 +41,17 @@ Skript porovnava pouze shared/admin kandidaty:
 - `secure/inc/settings/`
 - `secure/inc/pages/news/`
 - `secure/inc/pages/stattexty/`
+- `secure/inc/pages/galerie/`
 - `secure/inc/pages/kontakty/`
+- `secure/inc/pages/napiste_nam/`
 - `assets/css/secure.css`
 - `assets/js/sec_*`
+- `assets/js/sec/*`
 - vybrane sdilene helpery ve `functions/`
+
+Agendove admin skripty v `assets/js/sec/*` se nenacitaji primo ze stranek. `secure/index.php` nacita pouze `assets/js/sec/admin.js`, ktery podle aktualni admin routy a DOM prvku pripoji potrebne moduly.
+
+Sdilene admin styly patri do `assets/css/secure.css`. Shared/admin PHP soubory nemaji obsahovat inline `<style>` bloky ani `style=""` atributy. Pred pridanim vlastniho CSS vzdy nejdrive over, zda staci Bootstrap komponenta nebo utility tridy; vlastni CSS pridej az pri realne potrebe. Po uprave CSS spust `npm run lint:css`. Inline CSS v HTML e-mailovych sablonach je povolena vyjimka kvuli podpore e-mail klientu.
 
 Projektove soubory nejsou synchronizacni kandidati:
 
@@ -53,6 +60,7 @@ Projektove soubory nejsou synchronizacni kandidati:
 - `secure/functions/ajax/rep_*`
 - `functions/settings.php`
 - `secure/index.php`
+- `secure/inc/dashboard/*`
 - `secure/inc/pages/rep_*`
 - `assets/js/rep_*`
 - `assets/js/sec_rep_*`
@@ -69,7 +77,7 @@ Projektove soubory nejsou synchronizacni kandidati:
 
 `secure/inc/settings/cron_vypis.php` je shared UI pro vypis cron uloh. Skutecny projektovy seznam cronu je v `secure/functions/fun_rep_cron.php`, ktery musi poskytovat spolecne API `app_cron_http_base_url()` a `app_cron_jobs()`.
 
-`secure/index.php` je projektovy admin shell. Obsahuje branding, logo/favicon, footer, volitelne projektove menu `mm_project.php`, projektove admin CSS `sec_rep_*` a muze mit rozdilny default dashboard. Shared reseni je mozne az po refaktoru na spolecnou sablonu a projektovou konfiguraci.
+`secure/index.php` je projektovy admin shell. Obsahuje branding, logo/favicon, footer, volitelne projektove menu `mm_project.php`, projektove admin CSS `sec_rep_*` a muze mit rozdilny default dashboard. Obsah dashboardu v `secure/inc/dashboard/*` je projektovy. Shared je pouze polozka menu `mm_dashboard.php` a obecny routing fallback. Shared reseni admin shellu/dashboardu je mozne az po refaktoru na spolecnou sablonu a projektovou konfiguraci.
 
 `functions/settings.php` je projektovy frontend routing. QRS muze kanonicky smerovat na `/cz/main`, zatimco verejne weby mohou smerovat na `/cz`; tento rozdil se nepovazuje za shared/admin rozdil.
 

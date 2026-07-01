@@ -95,21 +95,26 @@ function stattexty_vypis($limit, $valid): void
 
     while ($dev = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $galerie_id = ($dev["galerie_id"] == 0) ? 'NE' : $dev["galerie_id"];
+        $validBadge = ((int)($dev['valid'] ?? 0) === 1)
+            ? '<span class="badge text-bg-success">ANO</span>'
+            : '<span class="badge text-bg-secondary">NE</span>';
+
         echo '<tr>
-            <td>'.$dev["id"].'</td>
+            <td>'.(int)$dev["id"].'</td>
             <td>'.htmlspecialchars($dev["nazev_cz"], ENT_QUOTES, 'UTF-8').'</td>
             <td>'.htmlspecialchars((string)($dev["code"] ?? ''), ENT_QUOTES, 'UTF-8').'</td>
-            <td>'.$dev["col"].'</td>
-            <td>'.$galerie_id.'</td>
-            <td class="text-center">
-                <a class="btn btn-primary btn-circle btn-sm" href="index.php?section=01&amp;page=02&amp;sec_page=02&amp;edit='.$dev['id'].'&amp;limit='.$limit.'&amp;lang=en&amp;show=2">
-                <i class="bi bi-pencil"></i></a></td>
+            <td>'.(int)$dev["col"].'</td>
+            <td>'.htmlspecialchars((string)$galerie_id, ENT_QUOTES, 'UTF-8').'</td>
+            <td class="text-center">'.$validBadge.'</td>
+            <td>'.
+                htmlspecialchars((string)format_datetime_www((string)($dev['ts_u'] ?? '')), ENT_QUOTES, 'UTF-8') .
+                '<br><small class="text-muted">' . htmlspecialchars((string)($dev['user_u'] ?? ''), ENT_QUOTES, 'UTF-8') . '</small></td>
             <td class="text-center">
                 <a class="btn btn-success btn-circle btn-sm" href="index.php?section=01&amp;page=02&amp;sec_page=02&amp;edit='.$dev['id'].'&amp;limit='.$limit.'&amp;show=2">
-                <i class="bi bi-pencil"></i></td>
+                <i class="bi bi-pencil"></i></a></td>
             <td class="text-center">
-                <a class="btn btn-danger btn-circle btn-sm" href="index.php?section=01&amp;page=02&amp;sec_page=02&amp;del='.$dev['id'].'&amp;limit='.$limit.'">
-                <i class="bi bi-trash"></i></td>
+                <a class="btn btn-danger btn-circle btn-sm" href="index.php?section=01&amp;page=02&amp;sec_page=02&amp;del='.$dev['id'].'&amp;limit='.$limit.'" data-confirm="Opravdu smazat statický text?">
+                <i class="bi bi-trash"></i></a></td>
         </tr>';
     }
 }
@@ -170,6 +175,63 @@ function stattexty_edit($id, $code, $nazev, $text, $galerie_id, $col, $lang, $va
         $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]1";
         echo "<script type='text/javascript'>document.location.href='$url';</script>";
         echo '<META HTTP-EQUIV="refresh" content="0;URL=' . $url . '">';
+    } catch (PDOException $e) {
+        echo '<a href="#" class="btn btn-warning btn-icon-split">
+                <span class="icon text-white-50"><i class="fas fa-exclamation-triangle"></i></span><span class="text">Statický text nebyl uložen</span></a>';
+        echo $e->getMessage();
+    }
+}
+
+function stattexty_edit_multilang(
+    int $id,
+    string $code,
+    string $nazevCz,
+    string $nazevEn,
+    string $textCz,
+    string $textEn,
+    int $galerieId,
+    int $col,
+    int $valid
+): void {
+    global $pdo;
+
+    $qn_user = admin_session_user();
+    $code = trim($code);
+    if (!stattexty_code_is_valid($code)) {
+        stattexty_code_error();
+        return;
+    }
+    if (stattexty_code_exists($code, $id)) {
+        stattexty_code_duplicate_error();
+        return;
+    }
+
+    $sql = 'UPDATE stat_texty SET
+                code = :code,
+                nazev_cz = :nazev_cz,
+                nazev_en = :nazev_en,
+                text_cz = :text_cz,
+                text_en = :text_en,
+                galerie_id = :galerie_id,
+                col = :col,
+                valid = :valid,
+                user_u = :user_u
+            WHERE id = :id';
+
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            ':code' => $code,
+            ':nazev_cz' => $nazevCz,
+            ':nazev_en' => $nazevEn,
+            ':text_cz' => $textCz,
+            ':text_en' => $textEn,
+            ':galerie_id' => $galerieId,
+            ':col' => $col,
+            ':valid' => $valid,
+            ':user_u' => $qn_user,
+            ':id' => $id,
+        ]);
     } catch (PDOException $e) {
         echo '<a href="#" class="btn btn-warning btn-icon-split">
                 <span class="icon text-white-50"><i class="fas fa-exclamation-triangle"></i></span><span class="text">Statický text nebyl uložen</span></a>';
@@ -276,17 +338,25 @@ function statvyrazy_vypis($limit, $valid): void
     $stmt->execute();
 
     while ($dev = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $validBadge = ((int)($dev['valid'] ?? 0) === 1)
+            ? '<span class="badge text-bg-success">ANO</span>'
+            : '<span class="badge text-bg-secondary">NE</span>';
+
         echo '<tr>
-            <td>'.$dev["id"].'</td>
+            <td>'.(int)$dev["id"].'</td>
             <td>'.htmlspecialchars((string)($dev["code"] ?? ''), ENT_QUOTES, 'UTF-8').'</td>
             <td>'.htmlspecialchars(statvyrazy_preview((string)($dev["cz"] ?? '')), ENT_QUOTES, 'UTF-8').'</td>
             <td>'.htmlspecialchars(statvyrazy_preview((string)($dev["en"] ?? '')), ENT_QUOTES, 'UTF-8').'</td>
+            <td class="text-center">'.$validBadge.'</td>
+            <td>'.
+                htmlspecialchars((string)format_datetime_www((string)($dev['ts_u'] ?? '')), ENT_QUOTES, 'UTF-8') .
+                '<br><small class="text-muted">' . htmlspecialchars((string)($dev['user_u'] ?? ''), ENT_QUOTES, 'UTF-8') . '</small></td>
             <td class="text-center">
                 <a class="btn btn-success btn-circle btn-sm" href="index.php?section=01&amp;page=02&amp;sec_page=03&amp;edit='.$dev['id'].'&amp;limit='.$limit.'&amp;show=2">
                 <i class="bi bi-pencil"></i></a></td>
             <td class="text-center">
-                <a class="btn btn-danger btn-circle btn-sm" href="index.php?section=01&amp;page=02&amp;sec_page=03&amp;del='.$dev['id'].'&amp;limit='.$limit.'">
-                <i class="bi bi-trash"></i></td>
+                <a class="btn btn-danger btn-circle btn-sm" href="index.php?section=01&amp;page=02&amp;sec_page=03&amp;del='.$dev['id'].'&amp;limit='.$limit.'" data-confirm="Opravdu smazat statický výraz?">
+                <i class="bi bi-trash"></i></a></td>
         </tr>';
     }
 }
@@ -349,20 +419,28 @@ function statvyrazy_edit($id, $code, $cz, $en, $valid): void
     }
 }
 
-function stattexty_count($valid)
+function stattexty_count(?int $valid = null): int
 {
     global $pdo;
-    $sql = 'SELECT COUNT(*) FROM stat_texty WHERE valid = :valid';
-    $stmt = $pdo->prepare($sql);
+    if ($valid === null) {
+        return (int)$pdo->query('SELECT COUNT(*) FROM stat_texty')->fetchColumn();
+    }
+
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM stat_texty WHERE valid = :valid');
     $stmt->execute([':valid' => $valid]);
-    return $stmt->fetchColumn();
+
+    return (int)$stmt->fetchColumn();
 }
 
-function statvyrazy_count($valid)
+function statvyrazy_count(?int $valid = null): int
 {
     global $pdo;
-    $sql = 'SELECT COUNT(*) FROM stat_vyrazy WHERE valid = :valid';
-    $stmt = $pdo->prepare($sql);
+    if ($valid === null) {
+        return (int)$pdo->query('SELECT COUNT(*) FROM stat_vyrazy')->fetchColumn();
+    }
+
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM stat_vyrazy WHERE valid = :valid');
     $stmt->execute([':valid' => $valid]);
-    return $stmt->fetchColumn();
+
+    return (int)$stmt->fetchColumn();
 }

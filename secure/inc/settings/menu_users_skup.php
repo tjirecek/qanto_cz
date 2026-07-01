@@ -42,7 +42,7 @@ if ($add > 0) menu_users_skup_add($add, $skup_id);
         </div>
 
         <?php if ((int)sp_hodnota('limit_menu-vypis') <= $count): ?>
-            <a href="index.php?section=02&amp;page=02&amp;sec_page=04&amp;skup_id=<?= (int)$skup_id ?>&amp;limit=0&amp;valid=<?= (int)$valid ?>"
+            <a href="index.php?section=09&amp;page=02&amp;sec_page=04&amp;skup_id=<?= (int)$skup_id ?>&amp;limit=0&amp;valid=<?= (int)$valid ?>"
                class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                 načíst všechny záznamy (<?= (int)$count ?>)
                 <i class="bi bi-arrow-repeat ms-1"></i>
@@ -64,8 +64,8 @@ if ($add > 0) menu_users_skup_add($add, $skup_id);
                 <tr>
                     <th>ID</th>
                     <th>Menu</th>
-                    <th class="text-filter autocomplete">Název</th>
-                    <th class="text-filter autocomplete">URL</th>
+                    <th class="text-filter dt-autocomplete">Název</th>
+                    <th class="text-filter dt-autocomplete">URL</th>
                     <th class="no-sort no-filter text-center">Přidat</th>
                     <th class="no-sort no-filter text-center">Smazat</th>
                 </tr>

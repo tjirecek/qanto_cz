@@ -37,85 +37,8 @@ if ($result !== '') {
     $ajaxUrl .= '?result=' . rawurlencode($result);
 }
 
-$baseUrl = 'index.php?section=02&amp;page=02&amp;sec_page=05';
+$baseUrl = 'index.php?section=09&amp;page=02&amp;sec_page=05';
 ?>
-
-<style>
-    .cron-log-card,
-    .cron-log-card .card-body {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        overflow-x: hidden;
-    }
-
-    .cron-log-table-wrap {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .cron-log-table-wrap .dataTables_wrapper {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0;
-    }
-
-    .cron-log-table-wrap table.dataTable {
-        width: 100% !important;
-        max-width: 100% !important;
-        table-layout: fixed;
-        margin: 0 !important;
-    }
-
-    .cron-log-table-wrap th,
-    .cron-log-table-wrap td {
-        max-width: 0;
-    }
-
-    .cron-log-table-wrap th:nth-child(1),
-    .cron-log-table-wrap td:nth-child(1) { width: 70px; }
-    .cron-log-table-wrap th:nth-child(2),
-    .cron-log-table-wrap td:nth-child(2) { width: 170px; }
-    .cron-log-table-wrap th:nth-child(3),
-    .cron-log-table-wrap td:nth-child(3) { width: 200px; }
-    .cron-log-table-wrap th:nth-child(4),
-    .cron-log-table-wrap td:nth-child(4) { width: 260px; }
-    .cron-log-table-wrap th:nth-child(5),
-    .cron-log-table-wrap td:nth-child(5) { width: 80px; }
-    .cron-log-table-wrap th:nth-child(6),
-    .cron-log-table-wrap td:nth-child(6) { width: 100px; }
-    .cron-log-table-wrap th:nth-child(7),
-    .cron-log-table-wrap td:nth-child(7),
-    .cron-log-table-wrap th:nth-child(8),
-    .cron-log-table-wrap td:nth-child(8) { width: 150px; }
-    .cron-log-table-wrap th:nth-child(9),
-    .cron-log-table-wrap td:nth-child(9) { width: 90px; }
-    .cron-log-table-wrap th:nth-child(10),
-    .cron-log-table-wrap td:nth-child(10) { width: 320px; }
-
-    .cron-log-table-wrap .cron-log-text {
-        display: block;
-        min-width: 0;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .cron-log-message-btn {
-        display: inline-block;
-        margin-top: 2px;
-    }
-
-    .cron-log-message-full {
-        white-space: pre-wrap;
-        word-break: break-word;
-    }
-</style>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Výpis cron logu</h1>
@@ -147,25 +70,7 @@ $baseUrl = 'index.php?section=02&amp;page=02&amp;sec_page=05';
     </div>
 </div>
 
-<script>
-document.addEventListener('click', function (event) {
-    var trigger = event.target.closest('.cron-log-message-btn');
-    if (!trigger) {
-        return;
-    }
 
-    event.preventDefault();
-
-    var body = document.getElementById('cronLogMessageModalBody');
-    var modalEl = document.getElementById('cronLogMessageModal');
-    if (!body || !modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
-        return;
-    }
-
-    body.textContent = trigger.getAttribute('data-message') || '';
-    bootstrap.Modal.getOrCreateInstance(modalEl).show();
-});
-</script>
 
 <div class="card shadow mb-4 cron-log-card">
     <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -203,15 +108,15 @@ document.addEventListener('click', function (event) {
                 <thead class="table-dark align-middle">
                 <tr>
                     <th class="no-filter">ID</th>
-                    <th class="text-filter autocomplete">Cron</th>
-                    <th class="text-filter autocomplete">Script</th>
-                    <th class="text-filter autocomplete">Zdroj</th>
+                    <th class="text-filter dt-autocomplete">Cron</th>
+                    <th class="text-filter dt-autocomplete">Script</th>
+                    <th class="text-filter dt-autocomplete">Zdroj</th>
                     <th class="no-filter">Počet</th>
                     <th class="no-filter">Výsledek</th>
-                    <th class="text-filter autocomplete">Start</th>
-                    <th class="text-filter autocomplete">Konec</th>
+                    <th class="text-filter dt-autocomplete">Start</th>
+                    <th class="text-filter dt-autocomplete">Konec</th>
                     <th class="no-filter">Trvání</th>
-                    <th class="text-filter autocomplete">Message</th>
+                    <th class="text-filter dt-autocomplete">Message</th>
                 </tr>
                 </thead>
 

@@ -24,13 +24,13 @@ if ($limit === 0 || $count <= $limit) {
     <h1 class="h3 mb-0 text-gray-800">Výpis skupin uživatelů</h1>
 
     <div class="d-flex flex-wrap gap-2">
-        <a href="index.php?section=02&amp;page=01&amp;sec_page=03&amp;show=1"
+        <a href="index.php?section=09&amp;page=01&amp;sec_page=03&amp;show=1"
            class="btn btn-sm btn-primary shadow-sm d-none d-sm-inline-block">
             přidat skupinu <i class="bi bi-plus-circle"></i>
         </a>
 
         <?php if ((int)admin_session_prava() === 1): ?>
-            <a href="index.php?section=02&amp;page=01&amp;sec_page=03&amp;limit=9999&amp;valid=0"
+            <a href="index.php?section=09&amp;page=01&amp;sec_page=03&amp;limit=9999&amp;valid=0"
                class="btn btn-sm btn-danger shadow-sm d-none d-sm-inline-block">
                 zobrazit nevalidní <i class="bi bi-arrow-repeat"></i>
             </a>
@@ -92,7 +92,7 @@ if ($limit === 0 || $count <= $limit) {
         <span class="d-none d-sm-inline-block">načteno <?= (int)$limit ?> záznamů</span>
 
         <?php if ((int)(sp_hodnota('limit_users-skup') ?? 25) <= $count): ?>
-            <a href="index.php?section=02&amp;page=01&amp;sec_page=03&amp;limit=0"
+            <a href="index.php?section=09&amp;page=01&amp;sec_page=03&amp;limit=0"
                class="btn btn-sm btn-primary shadow-sm d-none d-sm-inline-block">
                 načíst všechny (<?= (int)$count ?>)
                 <i class="bi bi-arrow-repeat"></i>
@@ -111,7 +111,7 @@ if ($limit === 0 || $count <= $limit) {
                 <thead class="table-dark align-middle">
                 <tr>
                     <th>ID</th>
-                    <th class="text-filter autocomplete">Název</th>
+                    <th class="text-filter dt-autocomplete">Název</th>
                     <th>Pořadí</th>
                     <th>Práva</th>
                     <th class="no-sort no-filter">Upravit</th>

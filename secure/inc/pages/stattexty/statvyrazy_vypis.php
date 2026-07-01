@@ -5,14 +5,24 @@ include "functions/fun_stattexty.php";
 global $pdo;
 
 // GET parametry
-$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : (int)sp_hodnota('limit_statvyrazy-vypis');
+$defaultLimit = (int)sp_hodnota('limit_statvyrazy-vypis');
+if ($defaultLimit <= 0) {
+    $defaultLimit = 500;
+}
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : $defaultLimit;
 $valid = isset($_GET['valid']) ? (int)$_GET['valid'] : 1;
 $show  = isset($_GET['show'])  ? (int)$_GET['show']  : 0;
 
 $count = (int)statvyrazy_count($valid);
+$countAll = (int)statvyrazy_count();
+$countValid = (int)statvyrazy_count(1);
 if ($limit === 0 || $count <= $limit) {
     $limit = $count;
 }
+$loadedCount = max(0, $limit);
+$showInactiveUrl = 'index.php?section=01&amp;page=02&amp;sec_page=03&amp;limit=9999&amp;valid=0';
+$showActiveUrl = 'index.php?section=01&amp;page=02&amp;sec_page=03&amp;limit=' . (int)$defaultLimit . '&amp;valid=1';
+$showAllUrl = 'index.php?section=01&amp;page=02&amp;sec_page=03&amp;limit=0&amp;valid=' . (int)$valid;
 ?>
 
 <!-- Vyrazy Heading -->
@@ -23,20 +33,23 @@ if ($limit === 0 || $count <= $limit) {
         <a href="index.php?section=01&amp;page=02&amp;sec_page=03&amp;show=1"
            class="btn btn-sm btn-primary shadow-sm d-none d-sm-inline-block">
             přidat statický výraz
-            <i class="fas fa-plus-circle fa-sm text-white-50"></i>
+            <i class="bi bi-plus-circle ms-1"></i>
         </a>
 
         <?php if (admin_session_prava() === 1): ?>
-            <a href="index.php?section=01&amp;page=02&amp;sec_page=03&amp;limit=9999&amp;valid=0"
-               class="btn btn-sm btn-danger shadow-sm d-none d-sm-inline-block">
-                zobrazit nevalidní záznamy
-                <i class="fas fa-circle-notch fa-sm text-white-50"></i>
-            </a>
+            <?php if ($valid === 1): ?>
+                <a href="<?= $showInactiveUrl ?>" class="btn btn-sm btn-danger shadow-sm d-none d-sm-inline-block">
+                    zobrazit nevalidní záznamy <i class="bi bi-slash-circle ms-1"></i>
+                </a>
+            <?php else: ?>
+                <a href="<?= $showActiveUrl ?>" class="btn btn-sm btn-outline-primary shadow-sm d-none d-sm-inline-block">
+                    zobrazit validní záznamy <i class="bi bi-arrow-repeat ms-1"></i>
+                </a>
+            <?php endif; ?>
         <?php endif; ?>
 
-        <a href="#" class="btn btn-sm btn-primary shadow-sm d-none d-sm-inline-block">
-            <i class="bi bi-download"></i>
-        </a>
+        <span class="btn btn-sm btn-light shadow-sm">vše: <?= number_format($countAll, 0, ',', ' ') ?></span>
+        <span class="btn btn-sm btn-outline-primary shadow-sm">aktivní: <?= number_format($countValid, 0, ',', ' ') ?></span>
     </div>
 </div>
 
@@ -90,34 +103,40 @@ if (isset($_GET['del'])) {
 
 <!-- DataTables Example -->
 <div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 fw-bold text-primary d-sm-inline">Statické výrazy</h6>
-        <span class="d-none d-sm-inline-block">načteno <?php echo (int)$limit; ?> záznamů</span>
+    <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+            <h6 class="m-0 fw-bold text-primary d-sm-inline">Statické výrazy</h6>
+            <span class="d-none d-sm-inline-block ms-2">načteno <?= number_format($loadedCount, 0, ',', ' ') ?> záznamů</span>
+            <span class="d-none d-sm-inline-block ms-2 text-muted">tabulka `stat_vyrazy`</span>
+        </div>
 
-        <?php if ((int)sp_hodnota('limit_statvyrazy-vypis') <= $count): ?>
-            <a href="index.php?section=01&amp;page=02&amp;sec_page=03&amp;limit=0"
-               class="btn btn-sm btn-primary shadow-sm d-none d-sm-inline-block">
-                načíst všechny záznamy (<?php echo (int)$count; ?>)
-                <i class="fas fa-circle-notch fa-sm text-white-50"></i>
-            </a>
-        <?php endif; ?>
+        <div class="d-flex flex-wrap gap-2">
+            <?php if ($count > $loadedCount): ?>
+                <a href="<?= $showAllUrl ?>" class="btn btn-sm btn-outline-secondary">
+                    načíst všechny záznamy (<?= number_format($count, 0, ',', ' ') ?>)
+                </a>
+            <?php endif; ?>
+        </div>
     </div>
 
     <div class="card-body">
         <div class="table-responsive">
-            <table data-order='[[ 1, "asc" ]]'
-                   data-page-length='100'
-                   class="table table-striped table-hover table-bordered"
-                   id="dataTable" width="100%" cellspacing="0">
+            <table
+                    data-order='[[ 1, "asc" ], [ 0, "desc" ]]'
+                    data-page-length='500'
+                    class="table table-striped table-hover table-bordered table-sm js-datatable align-middle w-100"
+                    id="DataTable">
 
-                <thead class="table-dark">
+                <thead class="table-dark align-middle">
                 <tr>
-                    <th>ID</th>
-                    <th>Kód</th>
-                    <th>CZ</th>
-                    <th>EN</th>
-                    <th>Upravit</th>
-                    <th>Smazat</th>
+                    <th class="no-filter">ID</th>
+                    <th class="text-filter dt-autocomplete">Kód</th>
+                    <th class="text-filter">CZ</th>
+                    <th class="text-filter">EN</th>
+                    <th class="no-filter">Valid</th>
+                    <th class="text-filter dt-autocomplete">Upraveno</th>
+                    <th class="no-sort no-filter">Upravit</th>
+                    <th class="no-sort no-filter">Smazat</th>
                 </tr>
                 </thead>
 
@@ -127,6 +146,8 @@ if (isset($_GET['del'])) {
                     <th>Kód</th>
                     <th>CZ</th>
                     <th>EN</th>
+                    <th>Valid</th>
+                    <th>Upraveno</th>
                     <th>Upravit</th>
                     <th>Smazat</th>
                 </tr>

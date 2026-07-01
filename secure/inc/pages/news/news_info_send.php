@@ -1,154 +1,198 @@
 <?php
 declare(strict_types=1);
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+require_once SEC_DIR . '/functions/fun_newsletter.php';
 
-global $pdo;
-
-$send = isset($_GET['send']) ? (int)$_GET['send'] : 0;
-if ($send <= 0) {
-    exit('Chybí parametr send.');
+$sendId = isset($_GET['send']) ? (int)$_GET['send'] : (int)($_POST['send'] ?? 0);
+if ($sendId <= 0) {
+    echo '<div class="alert alert-warning">Chybí parametr send.</div>';
+    return;
 }
 
-// --- načti novinku ---
-$stmt = $pdo->prepare("SELECT * FROM news WHERE id = :id LIMIT 1");
-$stmt->execute([':id' => $send]);
-$dev = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$dev) {
-    exit('Novinka nebyla nalezena.');
+$csrfToken = (string)admin_session_get('news_send_csrf_token', '');
+if ($csrfToken === '') {
+    $csrfToken = bin2hex(random_bytes(16));
+    admin_session_set('news_send_csrf_token', $csrfToken);
 }
 
-$year = date("Y");
-$predmet = 'Qanto novinky :: ' . (string)($dev["nazev_cz"] ?? '');
+$notice = '';
+$error = '';
+$sendResult = null;
 
-// Pozn.: text v DB máš typicky uložený jako HTML
-$textCz = (string)($dev["text_cz"] ?? '');
+try {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+        if (!hash_equals($csrfToken, (string)($_POST['csrf_token'] ?? ''))) {
+            throw new RuntimeException('Neplatný bezpečnostní token formuláře.');
+        }
 
-$body1 = '
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>Qanto :: newsletter</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</head>
-<body style="margin: 0; padding: 0;">
-<table align="center" border="0" cellpadding="0" cellspacing="0" width="700">
-  <tr>
-    <td align="center" bgcolor="#ffffff" style="padding: 0 0 0 0;">
-      <a href="https://' . $_SERVER["SERVER_NAME"] . '/secure/" style="font-family: Calibri, sans-serif; font-size: 12px;">Zobrazte si novinku v administraci</a>
-      <div style="width:700px;display:block;background:#1f2937;color:#ffffff;padding:24px 32px;box-sizing:border-box;font:700 28px Calibri,sans-serif;">
-        Qanto novinky
-      </div>
-    </td>
-  </tr>
-  <tr>
-    <td bgcolor="#ffffff" style="padding: 0px 20px 0px 20px; color: #4c4c4c; font-family: Calibri, sans-serif; font-size: 12px;"><br />
-      ' . $textCz . '
-    </td>
-  </tr>
-  <tr>
-    <td bgcolor="#ee4c50" style="padding: 0px 0px 20px 30px;">
-      <table border="0" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-          <td style="color: #ffffff; font-family: Calibri, sans-serif; font-size: 14px;">
-            &reg; Qanto :: Astur & Qanto s.r.o. ' . $year . '<br/>
-          </td>
-          <td align="right"></td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-</body>
-</html>
-';
-
-// --- PHPMailer include ---
-require_once "_scripts/phpmailer/src/Exception.php";
-require_once "_scripts/phpmailer/src/PHPMailer.php";
-require_once "_scripts/phpmailer/src/SMTP.php";
-
-// --- spočti počet odběratelů ---
-$stmtCnt = $pdo->query("SELECT COUNT(*) FROM news_users WHERE valid = 1 AND registered = 1");
-$totalEmails = (int)$stmtCnt->fetchColumn();
-
-$limitEmail = 5; // kolik BCC do jedné dávky
-$emailsSend = 0;
-$pocetDavek = (int)ceil($totalEmails / $limitEmail);
-
-$zprava = 'Newsletter byl úspěšně odeslán';
-
-for ($i = 0; $i < $pocetDavek; $i++) {
-    $offset = $i * $limitEmail;
-
-    // načti dávku emailů
-    $stmtBatch = $pdo->prepare("
-        SELECT email
-        FROM news_users
-        WHERE valid = 1 AND registered = 1
-        ORDER BY id
-        LIMIT :lim OFFSET :off
-    ");
-    $stmtBatch->bindValue(':lim', $limitEmail, PDO::PARAM_INT);
-    $stmtBatch->bindValue(':off', $offset, PDO::PARAM_INT);
-    $stmtBatch->execute();
-
-    $mail = new PHPMailer(true);
-    $mail->isSMTP();
-    $mail->Host = "smtpx.stable.cz";
-    $mail->SMTPAuth = true;
-    $mail->SMTPSecure = 'ssl';
-    $mail->Port = 465;
-
-    // TODO: přesuň do configu/env (ne do kódu)
-    $mail->Username = "qanto@qanto.cz";
-    $mail->Password = "a81OoxK7vyi16oK";
-
-    $mail->From = "no-reply@qanto.cz";
-    $mail->FromName = "Qanto";
-
-    // BCC
-    while ($row = $stmtBatch->fetch(PDO::FETCH_ASSOC)) {
-        $addresses = explode(';', (string)($row['email'] ?? ''));
-        foreach ($addresses as $address) {
-            $address = trim($address);
-            if ($address === '') {
-                continue;
-            }
-            if (!PHPMailer::validateAddress($address)) {
-                echo '<span class="none">Chybná adresa: ' . htmlspecialchars($address, ENT_QUOTES) . '.</span><br />';
-                continue;
-            }
-            $mail->addBCC($address);
+        if ((string)($_POST['action'] ?? '') === 'send_newsletter') {
+            $sendResult = newsletter_send_campaign($sendId);
+            $notice = 'Newsletter byl odeslán: ' . (int)$sendResult['sent'] . ' úspěšně, '
+                . (int)$sendResult['failed'] . ' chyb.';
         }
     }
-
-    $mail->isHTML(true);
-    $mail->Subject = $predmet;
-    $mail->Body = $body1;
-    $mail->AltBody = "";
-    $mail->CharSet = "utf-8";
-    $mail->addCustomHeader('X-CampaignID', '8lqzOS0AOmJypu1L5M7f');
-
-    if (!$mail->send()) {
-        echo '<span class="warning">Informace nebyla odeslána.</span><br />';
-        echo 'Error: ' . htmlspecialchars($mail->ErrorInfo, ENT_QUOTES);
-    } else {
-        $emailsSend++;
-    }
+} catch (Throwable $e) {
+    $error = $e->getMessage();
 }
 
-// --- update info_send ---
-$stmtUpd = $pdo->prepare("UPDATE news SET info_send = :dt WHERE id = :id");
-$stmtUpd->execute([
-    ':dt' => format_date_db(get_date()),
-    ':id' => $send,
-]);
+$news = newsletter_news_get($sendId);
+if (!is_array($news)) {
+    echo '<div class="alert alert-warning">Novinka nebyla nalezena.</div>';
+    return;
+}
 
-echo '<span class="warning">Počet e-mailů v kopii = ' . (int)$limitEmail .
-    '<br />' . htmlspecialchars($zprava, ENT_QUOTES) .
-    ' na tento počet dávek: ' . (int)$emailsSend .
-    '<br />Počet dávek, na který mělo být odesláno: ' . (int)$pocetDavek . '.</span><br />';
+$recipientCount = newsletter_delivery_recipients_count();
+$realRecipientCount = newsletter_active_recipients_count();
+$localBypassEmail = newsletter_local_bypass_email();
+$isLocalBypass = $localBypassEmail !== '';
+$subject = newsletter_subject($news);
+$previewHtml = '';
+$previewError = '';
+
+try {
+    $previewHtml = newsletter_body_html($news, null);
+} catch (Throwable $e) {
+    $previewError = $e->getMessage();
+}
+
+$infoSend = (string)($news['info_send'] ?? '');
+$infoSendText = ($infoSend === '' || $infoSend === '0000-00-00') ? 'NE' : format_date_www($infoSend);
+$visibleText = match ((int)($news['visible'] ?? 0)) {
+    1 => 'CZ/EN',
+    2 => 'CZ',
+    3 => 'EN',
+    default => 'NE / pouze administrace',
+};
+?>
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1 text-gray-800">Náhled newsletteru</h1>
+        <div class="text-muted small">Odeslání novinky přes Klerk proběhne až po potvrzení formuláře.</div>
+    </div>
+    <a href="index.php?section=01&amp;page=01&amp;sec_page=02" class="btn btn-sm btn-outline-secondary shadow-sm mt-3 mt-sm-0">
+        <i class="bi bi-arrow-left me-1"></i> zpět na novinky
+    </a>
+</div>
+
+<?php if ($notice !== ''): ?>
+    <div class="alert alert-success d-flex align-items-start" role="alert">
+        <i class="bi bi-check-circle me-2 mt-1"></i>
+        <div>
+            <div><?= newsletter_e($notice) ?></div>
+            <?php if (is_array($sendResult) && ($sendResult['errors'] ?? []) !== []): ?>
+                <details class="mt-2">
+                    <summary>Chyby odeslání</summary>
+                    <ul class="mb-0 mt-2">
+                        <?php foreach (array_slice((array)$sendResult['errors'], 0, 20) as $sendError): ?>
+                            <li><?= newsletter_e($sendError) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </details>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($error !== ''): ?>
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <div><?= newsletter_e($error) ?></div>
+    </div>
+<?php endif; ?>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-5">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Rekapitulace odeslání</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">ID novinky</dt>
+                    <dd class="col-sm-8"><?= (int)$sendId ?></dd>
+
+                    <dt class="col-sm-4">Název</dt>
+                    <dd class="col-sm-8"><?= newsletter_e($news['nazev_cz'] ?? '') ?></dd>
+
+                    <dt class="col-sm-4">Předmět</dt>
+                    <dd class="col-sm-8"><?= newsletter_e($subject) ?></dd>
+
+                    <dt class="col-sm-4">Zobrazení</dt>
+                    <dd class="col-sm-8"><span class="badge text-bg-primary"><?= newsletter_e($visibleText) ?></span></dd>
+
+                    <dt class="col-sm-4">Odesláno</dt>
+                    <dd class="col-sm-8"><?= newsletter_e($infoSendText) ?></dd>
+
+                    <dt class="col-sm-4">Příjemci</dt>
+                    <dd class="col-sm-8">
+                        <?php if ($isLocalBypass): ?>
+                            1 lokální testovací e-mail
+                            <div class="text-muted small">Skutečných aktivních odběratelů v DB: <?= (int)$realRecipientCount ?></div>
+                        <?php else: ?>
+                            <?= (int)$recipientCount ?> aktivních odběratelů
+                        <?php endif; ?>
+                    </dd>
+                </dl>
+
+                <hr>
+
+                <?php if ($isLocalBypass): ?>
+                    <div class="alert alert-warning">
+                        Lokální režim: newsletter se odešle pouze na
+                        <strong><?= newsletter_e($localBypassEmail) ?></strong>.
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($previewError !== ''): ?>
+                    <div class="alert alert-warning mb-0">
+                        Náhled nelze sestavit: <?= newsletter_e($previewError) ?>
+                    </div>
+                <?php elseif ($recipientCount <= 0): ?>
+                    <div class="alert alert-warning mb-0">
+                        Newsletter nelze odeslat, protože nejsou aktivní odběratelé.
+                    </div>
+                <?php else: ?>
+                    <form method="post">
+                        <input type="hidden" name="csrf_token" value="<?= newsletter_e($csrfToken) ?>">
+                        <input type="hidden" name="action" value="send_newsletter">
+                        <input type="hidden" name="send" value="<?= (int)$sendId ?>">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-send me-1"></i> <?= $isLocalBypass ? 'odeslat test newsletteru' : 'odeslat newsletter' ?>
+                        </button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-7">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Technické nastavení</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-0">
+                    <div><strong>Služba:</strong> Klerk SMTP</div>
+                    <div><strong>Hlavička kampaně:</strong> <code>X-CampaignID</code> z INI konfigurace</div>
+                    <div><strong>Odhlášení:</strong> každý příjemce dostane unikátní odkaz s <code>uid</code> a tokenem.</div>
+                    <div><strong>Skrytá novinka:</strong> položka se zobrazením „pouze administrace“ se může také odeslat.</div>
+                    <div><strong>Lokál:</strong> při zapnutém <code>mail_bypass_enabled</code> se posílá jen na testovací e-mail.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-primary">Náhled e-mailu</h6>
+    </div>
+    <div class="card-body">
+        <?php if ($previewHtml !== ''): ?>
+            <iframe class="newsletter-preview-frame" title="Náhled newsletteru" srcdoc="<?= newsletter_e($previewHtml) ?>"></iframe>
+        <?php else: ?>
+            <div class="alert alert-warning mb-0">Náhled není k dispozici.</div>
+        <?php endif; ?>
+    </div>
+</div>

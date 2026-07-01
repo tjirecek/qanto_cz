@@ -1,19 +1,19 @@
 # Shared Admin Compare
 
-- Primary qanto_cz: /Users/tjirecek/mamp/qanto_cz
-- Secondary QRS_QANTO_CZ: /Users/tjirecek/mamp/qrs-qanto_cz
-- Secondary QANTOPLUS_CZ: /Users/tjirecek/mamp/qantoplus_cz
-- Generated: 2026-06-27 00:32:41
+- Primary qanto_cz: /Users/tjirecek/www_dev/qanto_cz
+- Secondary QRS_QANTO_CZ: /Users/tjirecek/www_dev/qrs-qanto_cz
+- Secondary QANTOPLUS_CZ: /Users/tjirecek/www_dev/qantoplus_cz
+- Generated: 2026-06-27 23:54:37
 - Scope: shared/admin baseline only; project files are classified or scanned, not synchronization candidates.
 
 ## Overview
 
 | Secondary | Area | Type | Files | SAME | DIFF | ONLY_PRIMARY | ONLY_SECONDARY | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| QANTOPLUS_CZ | Shared admin assets | SHARED_ADMIN | 4 | 4 | 0 | 0 | 0 | Shared admin assets outside /secure, e.g. secure.css and sec_*.js. |
-| QANTOPLUS_CZ | Shared/System candidates | SHARED_SYSTEM | 69 | 69 | 0 | 0 | 0 | Shared/admin baseline inside repository structure. |
-| QRS_QANTO_CZ | Shared admin assets | SHARED_ADMIN | 4 | 4 | 0 | 0 | 0 | Shared admin assets outside /secure, e.g. secure.css and sec_*.js. |
-| QRS_QANTO_CZ | Shared/System candidates | SHARED_SYSTEM | 69 | 69 | 0 | 0 | 0 | Shared/admin baseline inside repository structure. |
+| QANTOPLUS_CZ | Shared admin assets | SHARED_ADMIN | 8 | 8 | 0 | 0 | 0 | Shared admin assets outside /secure, e.g. secure.css and sec_*.js. |
+| QANTOPLUS_CZ | Shared/System candidates | SHARED_SYSTEM | 72 | 72 | 0 | 0 | 0 | Shared/admin baseline inside repository structure. |
+| QRS_QANTO_CZ | Shared admin assets | SHARED_ADMIN | 8 | 8 | 0 | 0 | 0 | Shared admin assets outside /secure, e.g. secure.css and sec_*.js. |
+| QRS_QANTO_CZ | Shared/System candidates | SHARED_SYSTEM | 72 | 72 | 0 | 0 | 0 | Shared/admin baseline inside repository structure. |
 
 ## Open Shared/Admin Differences
 
@@ -48,6 +48,7 @@
 | `assets/js/rep_*` | FRONTEND_PROJECT | Frontend/project JS prefix. |
 | `assets/css/rep_*` | FRONTEND_PROJECT | Frontend/project CSS prefix. |
 | `assets/js/sec_*` | SHARED_ADMIN | Admin/shared JS prefix. |
+| `assets/js/sec/*` | SHARED_ADMIN | Admin/shared JS po agendach. |
 | `assets/css/default.css` | FRONTEND_PROJECT | Frontend/projektove CSS; nesynchronizovat automaticky. |
 | `assets/css/secure.css` | SHARED_ADMIN | Shared/admin CSS; ma zustat byte-identical napric projekty. |
 
@@ -61,8 +62,8 @@
 
 | Secondary | qanto_cz secure/inc/pages files | qanto_cz rep_* files | Secondary secure/inc/pages files | Secondary rep_* files |
 | --- | --- | --- | --- | --- |
-| QRS_QANTO_CZ | 25 | 0 | 67 | 39 |
-| QANTOPLUS_CZ | 25 | 0 | 38 | 13 |
+| QRS_QANTO_CZ | 29 | 1 | 67 | 39 |
+| QANTOPLUS_CZ | 29 | 1 | 41 | 13 |
 
 ## Application / Library Versions
 

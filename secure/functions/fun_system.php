@@ -164,12 +164,12 @@ function menu_vypis(int $limit, int $valid): void
                 <td>' . htmlspecialchars((string)$dev['nazev_cz']) . '</td>
                 <td>' . htmlspecialchars((string)$dev['url_cz']) . '</td>
                 <td class="text-center">
-                    <a class="btn btn-success btn-sm" href="index.php?section=02&amp;page=02&amp;sec_page=03&amp;edit=' . $id . '&amp;limit=' . $limit . '&amp;show=2" title="Upravit">
+                    <a class="btn btn-success btn-sm" href="index.php?section=09&amp;page=02&amp;sec_page=03&amp;edit=' . $id . '&amp;limit=' . $limit . '&amp;show=2" title="Upravit">
                         <i class="bi bi-pencil-square"></i>
                     </a>
                 </td>
                 <td class="text-center">
-                    <a class="btn btn-danger btn-sm" href="index.php?section=02&amp;page=02&amp;sec_page=03&amp;del=' . $id . '&amp;limit=' . $limit . '" title="Smazat">
+                    <a class="btn btn-danger btn-sm" href="index.php?section=09&amp;page=02&amp;sec_page=03&amp;del=' . $id . '&amp;limit=' . $limit . '" title="Smazat">
                         <i class="bi bi-trash"></i>
                     </a>
                 </td>
@@ -222,10 +222,10 @@ function menu_users_skup_vypis(int $skup_id, int $limit, int $valid): void
             $exists = (bool)$stmtCheck->fetchColumn();
 
             if (!$exists) {
-                $pridat = '<a class="btn btn-success btn-sm" href="index.php?section=02&amp;page=02&amp;sec_page=04&amp;add=' . $menu_id . '&amp;limit=' . $limit . '&amp;skup_id=' . $skup_id . '" title="Přidat oprávnění">
+                $pridat = '<a class="btn btn-success btn-sm" href="index.php?section=09&amp;page=02&amp;sec_page=04&amp;add=' . $menu_id . '&amp;limit=' . $limit . '&amp;skup_id=' . $skup_id . '" title="Přidat oprávnění">
                             <i class="bi bi-plus-circle"></i></a>';
             } else {
-                $smazat = '<a class="btn btn-danger btn-sm" href="index.php?section=02&amp;page=02&amp;sec_page=04&amp;del=' . $menu_id . '&amp;limit=' . $limit . '&amp;skup_id=' . $skup_id . '" title="Odebrat oprávnění">
+                $smazat = '<a class="btn btn-danger btn-sm" href="index.php?section=09&amp;page=02&amp;sec_page=04&amp;del=' . $menu_id . '&amp;limit=' . $limit . '&amp;skup_id=' . $skup_id . '" title="Odebrat oprávnění">
                             <i class="bi bi-trash"></i></a>';
             }
         }
@@ -405,12 +405,12 @@ function settings_vypis(int $limit, int $valid): void
             <td>' . htmlspecialchars((string)$dev['hodnota']) . '</td>
             <td>' . htmlspecialchars($textPreview, ENT_QUOTES, 'UTF-8') . '</td>
             <td class="text-center">
-                <a class="btn btn-success btn-sm" href="index.php?section=02&amp;page=02&amp;sec_page=02&amp;edit=' . $id . '&amp;limit=' . $limit . '&amp;show=2" title="Upravit">
+                <a class="btn btn-success btn-sm" href="index.php?section=09&amp;page=02&amp;sec_page=02&amp;edit=' . $id . '&amp;limit=' . $limit . '&amp;show=2" title="Upravit">
                     <i class="bi bi-pencil-square"></i>
                 </a>
             </td>
             <td class="text-center">
-                <a class="btn btn-danger btn-sm" href="index.php?section=02&amp;page=02&amp;sec_page=02&amp;del=' . $id . '&amp;limit=' . $limit . '" title="Smazat">
+                <a class="btn btn-danger btn-sm" href="index.php?section=09&amp;page=02&amp;sec_page=02&amp;del=' . $id . '&amp;limit=' . $limit . '" title="Smazat">
                     <i class="bi bi-trash"></i>
                 </a>
             </td>
@@ -575,12 +575,12 @@ function users_vypis(int $limit, int $valid): void
                 </form>
             </td>
             <td class="text-center">
-                <a class="btn btn-success btn-sm" href="index.php?section=02&amp;page=01&amp;sec_page=02&amp;edit=' . $id . '&amp;limit=' . $limit . '&amp;show=2" title="Upravit">
+                <a class="btn btn-success btn-sm" href="index.php?section=09&amp;page=01&amp;sec_page=02&amp;edit=' . $id . '&amp;limit=' . $limit . '&amp;show=2" title="Upravit">
                     <i class="bi bi-pencil-square"></i>
                 </a>
             </td>
             <td class="text-center">
-                <a class="btn btn-danger btn-sm" href="index.php?section=02&amp;page=01&amp;sec_page=02&amp;del=' . $id . '&amp;limit=' . $limit . '" title="Smazat">
+                <a class="btn btn-danger btn-sm" href="index.php?section=09&amp;page=01&amp;sec_page=02&amp;del=' . $id . '&amp;limit=' . $limit . '" title="Smazat">
                     <i class="bi bi-trash"></i>
                 </a>
             </td>
@@ -749,17 +749,17 @@ function users_skup_vypis(int $limit, int $valid): void
             <td>' . htmlspecialchars((string)$dev['nazev_cz']) . '</td>
             <td>' . (int)$dev['poradi'] . '</td>
             <td class="text-center">
-                <a class="btn btn-primary btn-sm" href="index.php?section=02&amp;page=02&amp;sec_page=04&amp;skup_id=' . $id . '" title="Nastavit oprávnění">
+                <a class="btn btn-primary btn-sm" href="index.php?section=09&amp;page=02&amp;sec_page=04&amp;skup_id=' . $id . '" title="Nastavit oprávnění">
                     <i class="bi bi-arrow-right-circle"></i>
                 </a>
             </td>
             <td class="text-center">
-                <a class="btn btn-success btn-sm" href="index.php?section=02&amp;page=01&amp;sec_page=03&amp;edit=' . $id . '&amp;limit=' . $limit . '&amp;show=2" title="Upravit">
+                <a class="btn btn-success btn-sm" href="index.php?section=09&amp;page=01&amp;sec_page=03&amp;edit=' . $id . '&amp;limit=' . $limit . '&amp;show=2" title="Upravit">
                     <i class="bi bi-pencil-square"></i>
                 </a>
             </td>
             <td class="text-center">
-                <a class="btn btn-danger btn-sm" href="index.php?section=02&amp;page=01&amp;sec_page=03&amp;del=' . $id . '&amp;limit=' . $limit . '" title="Smazat">
+                <a class="btn btn-danger btn-sm" href="index.php?section=09&amp;page=01&amp;sec_page=03&amp;del=' . $id . '&amp;limit=' . $limit . '" title="Smazat">
                     <i class="bi bi-trash"></i>
                 </a>
             </td>

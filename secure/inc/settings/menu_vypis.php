@@ -25,13 +25,13 @@ if ($del > 0) {
     <h1 class="h3 mb-0 text-gray-800">Výpis menu hlavního webu</h1>
 
     <div class="d-flex flex-wrap gap-2">
-        <a href="index.php?section=02&amp;page=02&amp;sec_page=03&amp;show=1"
+        <a href="index.php?section=09&amp;page=02&amp;sec_page=03&amp;show=1"
            class="btn btn-sm btn-primary shadow-sm d-none d-sm-inline-block">
             přidat menu hlavního webu <i class="bi bi-plus-circle ms-1"></i>
         </a>
 
         <?php if ((int)admin_session_prava() === 1): ?>
-            <a href="index.php?section=02&amp;page=02&amp;sec_page=03&amp;limit=9999&amp;valid=0"
+            <a href="index.php?section=09&amp;page=02&amp;sec_page=03&amp;limit=9999&amp;valid=0"
                class="btn btn-sm btn-danger shadow-sm d-none d-sm-inline-block">
                 zobrazit nevalidní záznamy <i class="bi bi-slash-circle ms-1"></i>
             </a>
@@ -92,7 +92,7 @@ if ($del > 0) {
         </div>
 
         <?php if ((int)sp_hodnota('limit_menu-vypis') <= $count): ?>
-            <a href="index.php?section=02&amp;page=02&amp;sec_page=03&amp;limit=0"
+            <a href="index.php?section=09&amp;page=02&amp;sec_page=03&amp;limit=0"
                class="btn btn-sm btn-primary shadow-sm d-none d-sm-inline-block">
                 načíst všechny záznamy (<?php echo (int)$count; ?>) <i class="bi bi-arrow-repeat ms-1"></i>
             </a>

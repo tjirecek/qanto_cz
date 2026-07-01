@@ -2,30 +2,53 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!window.tinymce) return;
 
     const editors = document.querySelectorAll('textarea.js-tinymce');
-    if (!editors.length) return;
+    if (!editors.length) {
+        window.QANTO_TINYMCE_READY = true;
+        window.dispatchEvent(new CustomEvent('qanto:tinymce-ready'));
+        return;
+    }
+
+    const notifyLayoutChange = function () {
+        window.dispatchEvent(new CustomEvent('qanto:layout-change'));
+    };
 
     const baseConfig = {
         language: 'cs',
         language_url: '/assets/lib/tinymce/langs/cs.js',
-        menubar: false,
+        menubar: 'file edit view insert format tools table help',
         branding: false,
         promotion: false,
         license_key: 'gpl',
 
         plugins: [
-            'anchor', 'autolink', 'charmap', 'code', 'emoticons', 'image', 'link', 'lists', 'media',
-            'searchreplace', 'table', 'visualblocks', 'wordcount', 'fullscreen', 'preview',
-            'file-manager'
+            'accordion', 'advlist', 'anchor', 'autolink', 'autosave', 'charmap', 'code', 'codesample',
+            'directionality', 'emoticons', 'fullscreen', 'help', 'image', 'importcss', 'insertdatetime',
+            'link', 'lists', 'media', 'nonbreaking', 'pagebreak', 'preview', 'quickbars', 'searchreplace',
+            'table', 'visualblocks', 'visualchars', 'wordcount', 'file-manager'
         ],
         toolbar:
-            'undo redo | blocks | bold italic underline | alignleft aligncenter alignright | ' +
-            'bullist numlist | link image media table | removeformat | code fullscreen',
+            'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | ' +
+            'forecolor backcolor | alignleft aligncenter alignright alignjustify | ' +
+            'bullist numlist outdent indent | link image media table | ' +
+            'charmap emoticons codesample | removeformat | preview code fullscreen',
+        toolbar_mode: 'sliding',
+        contextmenu: 'link image table',
+        image_advtab: true,
+        link_default_target: '_self',
+        content_style:
+            'body { background: #f8f9fa; padding: 12px 14px; } ' +
+            'body::before { color: #adb5bd; }',
+        table_toolbar:
+            'tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | ' +
+            'tableinsertcolbefore tableinsertcolafter tabledeletecol',
 
         // důležité: aby se do textarea propsal obsah i bez blur
         setup: function (editor) {
             editor.on('change keyup', function () {
                 editor.save();
             });
+
+            editor.on('init SkinLoaded ResizeEditor', notifyLayoutChange);
         },
 
         Flmngr: {
@@ -35,13 +58,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    const initPromises = [];
+
     editors.forEach(function (el) {
         const height = Number.parseInt(el.dataset.tinymceHeight || '', 10);
 
-        tinymce.init({
+        initPromises.push(Promise.resolve(tinymce.init({
             ...baseConfig,
             target: el,
             height: Number.isFinite(height) ? height : 360
-        });
+        })).then(notifyLayoutChange));
+    });
+
+    Promise.allSettled(initPromises).then(function () {
+        window.QANTO_TINYMCE_READY = true;
+        notifyLayoutChange();
+        window.dispatchEvent(new CustomEvent('qanto:tinymce-ready'));
     });
 });

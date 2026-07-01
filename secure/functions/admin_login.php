@@ -132,7 +132,7 @@ HTML;
     <div class="card shadow-lg border-0 rounded-4">
       <div class="card-body p-4">
         <div class="text-center mb-4">
-          <img src="{$logo}" class="img-fluid mb-3" style="max-height:80px" alt="Administrace">
+          <img src="{$logo}" class="img-fluid mb-3 admin-login-logo" alt="Administrace">
           <h5 class="fw-semibold text-secondary mb-0">Nastavení hesla administrace</h5>
         </div>
 
@@ -281,7 +281,7 @@ HTML;
       <div class="card-body p-4">
 
         <div class="text-center mb-4">
-          <img src="{$logo}" class="img-fluid mb-3" style="max-height:80px" alt="Administrace">
+          <img src="{$logo}" class="img-fluid mb-3 admin-login-logo" alt="Administrace">
           <h5 class="fw-semibold text-secondary">Administrace</h5>
         </div>
 

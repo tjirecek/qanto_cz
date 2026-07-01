@@ -20,7 +20,7 @@ if ($limit === 0 || $count <= $limit) {
 
     <div class="d-flex flex-wrap gap-2">
         <?php if ($defaultLimit <= $count): ?>
-            <a href="index.php?section=02&amp;page=01&amp;sec_page=05&amp;limit=0"
+            <a href="index.php?section=09&amp;page=01&amp;sec_page=05&amp;limit=0"
                class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                 načíst všechny záznamy (<?= (int)$count ?>)
                 <i class="bi bi-arrow-repeat ms-1"></i>
@@ -51,11 +51,11 @@ if ($limit === 0 || $count <= $limit) {
                 <thead class="table-dark align-middle">
                 <tr>
                     <th>ID</th>
-                    <th class="text-filter autocomplete">User</th>
-                    <th class="text-filter autocomplete">Skupina</th>
-                    <th class="text-filter autocomplete">IP</th>
+                    <th class="text-filter dt-autocomplete">User</th>
+                    <th class="text-filter dt-autocomplete">Skupina</th>
+                    <th class="text-filter dt-autocomplete">IP</th>
                     <th data-type="date">Date</th>
-                    <th class="text-filter autocomplete">Web</th>
+                    <th class="text-filter dt-autocomplete">Web</th>
                 </tr>
                 </thead>
 

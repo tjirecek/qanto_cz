@@ -108,19 +108,21 @@ if (isset($_GET['icon'])) {
 
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered table-sm js-datatable" data-order='[[ 0, "desc" ]]' data-page-length='100' id="DataTable">
+            <table class="table table-striped table-hover table-bordered table-sm js-datatable" data-order='[[ 4, "desc" ], [ 0, "desc" ]]' data-page-length='100' id="DataTable">
                 <thead class="table-dark align-middle">
                 <tr>
                     <th>ID</th>
                     <th>Typ</th>
                     <th class="no-filter">Název novinky</th>
+                    <th class="text-filter dt-autocomplete">Štítky</th>
                     <th data-type="date">Datum</th>
                     <th>Ikona</th>
                     <th>Galerie</th>
                     <th class="no-sort no-filter">View</th>
                     <th data-type="date" class="no-sort no-filter">Send</th>
+                    <th class="no-filter">Valid</th>
+                    <th data-type="date">Upraveno</th>
                     <th class="no-sort no-filter">Náhled</th>
-                    <th class="no-sort no-filter"><?php if (en_on() == 1): ?>EN<?php endif; ?></th>
                     <th class="no-sort no-filter">Upravit</th>
                     <th class="no-sort no-filter">Send</th>
                     <th class="no-sort no-filter">Ikona Del</th>
@@ -133,13 +135,15 @@ if (isset($_GET['icon'])) {
                     <th>ID</th>
                     <th>Typ</th>
                     <th>Název novinky</th>
+                    <th>Štítky</th>
                     <th>Datum</th>
                     <th>Ikona</th>
                     <th>Galerie</th>
                     <th>View</th>
                     <th>Send</th>
+                    <th>Valid</th>
+                    <th>Upraveno</th>
                     <th>Náhled</th>
-                    <th><?php if (en_on() == 1): ?>EN<?php endif; ?></th>
                     <th>Upravit</th>
                     <th>Send</th>
                     <th>Ikona Del</th>

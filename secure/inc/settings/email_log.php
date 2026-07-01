@@ -39,73 +39,8 @@ if ($status !== '') {
     $ajaxUrl .= '?status=' . rawurlencode($status);
 }
 
-$baseUrl = 'index.php?section=02&amp;page=02&amp;sec_page=09';
+$baseUrl = 'index.php?section=09&amp;page=02&amp;sec_page=09';
 ?>
-
-<style>
-    .email-log-card,
-    .email-log-card .card-body {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        overflow-x: hidden;
-    }
-
-    .email-log-table-wrap {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .email-log-table-wrap table.dataTable {
-        width: 100% !important;
-        table-layout: fixed;
-        margin: 0 !important;
-    }
-
-    .email-log-table-wrap th,
-    .email-log-table-wrap td {
-        max-width: 0;
-    }
-
-    .email-log-table-wrap th:nth-child(1),
-    .email-log-table-wrap td:nth-child(1) { width: 70px; }
-    .email-log-table-wrap th:nth-child(2),
-    .email-log-table-wrap td:nth-child(2) { width: 120px; }
-    .email-log-table-wrap th:nth-child(3),
-    .email-log-table-wrap td:nth-child(3) { width: 160px; }
-    .email-log-table-wrap th:nth-child(4),
-    .email-log-table-wrap td:nth-child(4) { width: 260px; }
-    .email-log-table-wrap th:nth-child(5),
-    .email-log-table-wrap td:nth-child(5) { width: 280px; }
-    .email-log-table-wrap th:nth-child(6),
-    .email-log-table-wrap td:nth-child(6) { width: 110px; }
-    .email-log-table-wrap th:nth-child(7),
-    .email-log-table-wrap td:nth-child(7) { width: 160px; }
-    .email-log-table-wrap th:nth-child(8),
-    .email-log-table-wrap td:nth-child(8) { width: 170px; }
-    .email-log-table-wrap th:nth-child(9),
-    .email-log-table-wrap td:nth-child(9) { width: 160px; }
-    .email-log-table-wrap th:nth-child(10),
-    .email-log-table-wrap td:nth-child(10) { width: 220px; }
-
-    .email-log-text {
-        display: block;
-        min-width: 0;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .email-log-detail-full {
-        white-space: pre-wrap;
-        word-break: break-word;
-    }
-</style>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Výpis e-mail logu</h1>
@@ -132,21 +67,7 @@ $baseUrl = 'index.php?section=02&amp;page=02&amp;sec_page=09';
     </div>
 </div>
 
-<script>
-document.addEventListener('click', function (event) {
-    var trigger = event.target.closest('.email-log-detail-btn');
-    if (!trigger) return;
 
-    event.preventDefault();
-
-    var body = document.getElementById('emailLogDetailModalBody');
-    var modalEl = document.getElementById('emailLogDetailModal');
-    if (!body || !modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
-
-    body.textContent = trigger.getAttribute('data-detail') || '';
-    bootstrap.Modal.getOrCreateInstance(modalEl).show();
-});
-</script>
 
 <div class="card shadow mb-4 email-log-card">
     <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -176,15 +97,15 @@ document.addEventListener('click', function (event) {
                 <thead class="table-dark align-middle">
                 <tr>
                     <th class="no-filter">ID</th>
-                    <th class="text-filter autocomplete">Kontext</th>
-                    <th class="text-filter autocomplete">Šablona</th>
-                    <th class="text-filter autocomplete">Příjemce</th>
-                    <th class="text-filter autocomplete">Předmět</th>
+                    <th class="text-filter dt-autocomplete">Kontext</th>
+                    <th class="text-filter dt-autocomplete">Šablona</th>
+                    <th class="text-filter dt-autocomplete">Příjemce</th>
+                    <th class="text-filter dt-autocomplete">Předmět</th>
                     <th class="no-filter">Stav</th>
-                    <th class="text-filter autocomplete">Vazba</th>
-                    <th class="text-filter autocomplete">Zařazeno</th>
-                    <th class="text-filter autocomplete">Odesláno</th>
-                    <th class="text-filter autocomplete">Provider / chyba</th>
+                    <th class="text-filter dt-autocomplete">Vazba</th>
+                    <th class="text-filter dt-autocomplete">Zařazeno</th>
+                    <th class="text-filter dt-autocomplete">Odesláno</th>
+                    <th class="text-filter dt-autocomplete">Provider / chyba</th>
                 </tr>
                 </thead>
 

@@ -33,13 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_password_reset_u
 }
 ?>
 
-<style>
-    .users-vypis-name-col {
-        min-width: 240px;
-        white-space: nowrap;
-    }
-</style>
-
 <!-- Users Heading -->
 <?php _admin_flash_render(); ?>
 
@@ -47,13 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_password_reset_u
     <h1 class="h3 mb-0 text-gray-800">Výpis uživatelských účtů</h1>
 
     <div class="d-flex flex-wrap gap-2">
-        <a href="index.php?section=02&amp;page=01&amp;sec_page=02&amp;show=1"
+        <a href="index.php?section=09&amp;page=01&amp;sec_page=02&amp;show=1"
            class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
             přidat uživatelský účet <i class="bi bi-plus-circle"></i>
         </a>
 
         <?php if (admin_session_prava() === 1): ?>
-            <a href="index.php?section=02&amp;page=01&amp;sec_page=02&amp;limit=9999&amp;valid=0"
+            <a href="index.php?section=09&amp;page=01&amp;sec_page=02&amp;limit=9999&amp;valid=0"
                class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm">
                 zobrazit nevalidní záznamy <i class="bi bi-arrow-repeat"></i>
             </a>
@@ -111,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_password_reset_u
         <span class="d-none d-sm-inline-block">načteno <?php echo (int)$limit; ?> záznamů</span>
 
         <?php if ((int)(sp_hodnota('limit_users-vypis') ?? 500) <= $count): ?>
-            <a href="index.php?section=02&amp;page=01&amp;sec_page=02&amp;limit=0"
+            <a href="index.php?section=09&amp;page=01&amp;sec_page=02&amp;limit=0"
                class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                 načíst všechny záznamy (<?php echo (int)$count; ?>)
                 <i class="bi bi-arrow-repeat"></i>
@@ -132,9 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_password_reset_u
                 <thead class="table-dark align-middle">
                 <tr>
                     <th>ID</th>
-                    <th class="no-sort text-filter autocomplete users-vypis-name-col">Jméno</th>
+                    <th class="no-sort text-filter dt-autocomplete users-vypis-name-col">Jméno</th>
                     <th>Login</th>
-                    <th class="text-filter autocomplete">E-mail</th>
+                    <th class="text-filter dt-autocomplete">E-mail</th>
                     <th class="no-sort no-filter">Reset hesla</th>
                     <th class="no-sort no-filter">Upravit</th>
                     <th class="no-sort no-filter">Smazat</th>

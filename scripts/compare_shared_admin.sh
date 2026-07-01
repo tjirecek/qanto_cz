@@ -10,8 +10,8 @@ Usage: $(basename "$0") [secondary-project-root ...]
 
 Compares shared admin candidate files from primary qanto_cz against secondary
 projects. When no secondary roots are passed, compares against:
-  /Users/tjirecek/mamp/qrs-qanto_cz
-  /Users/tjirecek/mamp/qantoplus_cz
+  /Users/tjirecek/www_dev/qrs-qanto_cz
+  /Users/tjirecek/www_dev/qantoplus_cz
 
 Primary project is always the repository containing this script:
   $PRIMARY_ROOT
@@ -27,8 +27,8 @@ if [[ "$#" -gt 0 ]]; then
   SECONDARY_ROOTS=("$@")
 else
   SECONDARY_ROOTS=(
-    "/Users/tjirecek/mamp/qrs-qanto_cz"
-    "/Users/tjirecek/mamp/qantoplus_cz"
+    "/Users/tjirecek/www_dev/qrs-qanto_cz"
+    "/Users/tjirecek/www_dev/qantoplus_cz"
   )
 fi
 
@@ -84,7 +84,7 @@ collect_asset_files() {
     (cd "$root" && find assets/css -maxdepth 1 -type f ! -name '.DS_Store' | sort)
   fi
   if [[ -d "$root/assets/js" ]]; then
-    (cd "$root" && find assets/js -maxdepth 1 -type f ! -name '.DS_Store' | sort)
+    (cd "$root" && find assets/js -type f ! -name '.DS_Store' | sort)
   fi
 }
 
@@ -129,10 +129,10 @@ is_project_path() {
 asset_class() {
   local rel="$1"
   case "$rel" in
-    assets/js/sec_rep_*|assets/css/sec_rep_*)
+    assets/js/sec_rep_*|assets/js/sec_rep_*/*|assets/css/sec_rep_*)
       printf 'PROJECT_ADMIN'
       ;;
-    assets/js/sec_*|assets/css/secure.css)
+    assets/js/sec/*|assets/js/sec_*|assets/css/secure.css)
       printf 'SHARED_ADMIN'
       ;;
     assets/js/rep_*|assets/css/rep_*|assets/css/default.css)
@@ -147,7 +147,7 @@ asset_class() {
 asset_is_decided() {
   local rel="$1"
   case "$rel" in
-    assets/js/sec_rep_*|assets/css/sec_rep_*|assets/js/rep_*|assets/css/rep_*|assets/js/sec_*|assets/css/default.css|assets/css/secure.css)
+    assets/js/sec_rep_*|assets/js/sec_rep_*/*|assets/css/sec_rep_*|assets/js/rep_*|assets/css/rep_*|assets/js/sec/*|assets/js/sec_*|assets/css/default.css|assets/css/secure.css)
       return 0
       ;;
     *)
@@ -193,7 +193,9 @@ shared_roots=(
   "secure/inc/settings"
   "secure/inc/pages/news"
   "secure/inc/pages/stattexty"
+  "secure/inc/pages/galerie"
   "secure/inc/pages/kontakty"
+  "secure/inc/pages/napiste_nam"
   "secure/scripts/apply_migration.php"
   "secure/lib/flmngr/flmngr.php"
 )
@@ -350,6 +352,7 @@ echo '| `assets/css/sec_rep_*` | PROJECT_ADMIN | Admin/project CSS prefix; vyhod
 echo '| `assets/js/rep_*` | FRONTEND_PROJECT | Frontend/project JS prefix. |'
 echo '| `assets/css/rep_*` | FRONTEND_PROJECT | Frontend/project CSS prefix. |'
 echo '| `assets/js/sec_*` | SHARED_ADMIN | Admin/shared JS prefix. |'
+echo '| `assets/js/sec/*` | SHARED_ADMIN | Admin/shared JS po agendach. |'
 echo '| `assets/css/default.css` | FRONTEND_PROJECT | Frontend/projektove CSS; nesynchronizovat automaticky. |'
 echo '| `assets/css/secure.css` | SHARED_ADMIN | Shared/admin CSS; ma zustat byte-identical napric projekty. |'
 
