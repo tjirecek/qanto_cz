@@ -14,13 +14,21 @@ $editId = (int)($_GET['edit'] ?? 0);
 $form = changelog_default();
 $editing = false;
 $tableExists = changelog_table_exists();
+$newsLinkAvailable = $tableExists && changelog_news_link_available();
 
 if (!$tableExists) {
     $messages[] = [
         'type' => 'warning',
         'text' => 'Tabulka changelog zatím neexistuje. Nejdříve spusť odpovídající aktivní migraci v secure/sql/.',
     ];
-} else {
+} elseif (!$newsLinkAvailable) {
+    $messages[] = [
+        'type' => 'info',
+        'text' => 'Vazba ChangeLogu na novinky zatím není aktivní. Spusť migraci pro sloupec changelog.news_id.',
+    ];
+}
+
+if ($tableExists) {
     if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'POST') {
         $action = trim((string)($_POST['action'] ?? ''));
 
@@ -209,6 +217,14 @@ $currentYear = (int)date('Y');
                     </div>
 
                     <div class="col-6 col-lg-2">
+                        <label for="news_id" class="form-label">ID novinky</label>
+                        <input type="number" min="1" step="1" name="news_id" id="news_id" class="form-control"
+                               value="<?= changelog_e((string)($form['news_id'] ?? '')) ?>"
+                            <?= $newsLinkAvailable ? '' : 'disabled' ?>>
+                        <div class="form-text">Volitelná vazba na manuál/novinku.</div>
+                    </div>
+
+                    <div class="col-6 col-lg-2">
                         <label for="priority" class="form-label">Pořadí</label>
                         <input type="number" min="0" max="255" step="1" name="priority" id="priority" class="form-control"
                                value="<?= (int)$form['priority'] ?>">
@@ -254,12 +270,13 @@ $currentYear = (int)date('Y');
                         <th class="text-filter">Plán</th>
                         <th data-type="date">Hotovo</th>
                         <th>Pořadí</th>
+                        <th class="text-filter">Novinka</th>
                         <th class="no-sort no-filter text-end">Akce</th>
                     </tr>
                     </thead>
                     <tfoot class="table-light">
                     <tr>
-                        <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                        <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                     </tr>
                     </tfoot>
                     <tbody>
@@ -286,6 +303,30 @@ $currentYear = (int)date('Y');
                             <td><?= changelog_e(changelog_planned_text($row)) ?></td>
                             <td><?= changelog_e((string)format_date_www((string)($row['done_on'] ?? ''))) ?></td>
                             <td><?= (int)($row['priority'] ?? 0) ?></td>
+                            <td>
+                                <?php if ((int)($row['news_id'] ?? 0) > 0): ?>
+                                    <?php if (changelog_has_linked_news($row)): ?>
+                                        <a class="fw-semibold" href="<?= changelog_news_admin_url((int)$row['news_id']) ?>">
+                                            #<?= (int)$row['news_id'] ?> - <?= changelog_e(changelog_linked_news_title($row)) ?>
+                                        </a>
+                                        <?php if ($status === 'nasazeno'): ?>
+                                            <?php $previewText = changelog_news_preview_text($row); ?>
+                                            <div class="small text-muted mt-1">
+                                                <?php if ((string)($row['changelog_news_date'] ?? '') !== ''): ?>
+                                                    <span class="badge text-bg-light border me-1">
+                                                        <?= changelog_e((string)format_date_www((string)$row['changelog_news_date'])) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?= $previewText !== '' ? changelog_e($previewText) : 'Náhled textu není vyplněný.' ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="text-danger">Novinka #<?= (int)$row['news_id'] ?> nenalezena</span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="text-muted">bez vazby</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a class="btn btn-outline-primary" href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=2&amp;edit=<?= (int)$row['id'] ?>">

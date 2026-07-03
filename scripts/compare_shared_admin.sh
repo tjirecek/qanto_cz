@@ -182,6 +182,7 @@ phpmailer_version() {
 
 shared_roots=(
   "functions/bootstrap.php"
+  "functions/fun_changelog.php"
   "functions/fun_email_log.php"
   "functions/fun_mailer.php"
   "functions/fun_users_password_reset.php"

@@ -24,14 +24,119 @@ function changelog_categories(): array
 
 function changelog_table_exists(): bool
 {
+    return changelog_db_table_exists('changelog');
+}
+
+function changelog_db_table_exists(string $table): bool
+{
     global $pdo;
 
+    $cacheKey = strtolower($table);
+    static $cache = [];
+    if (array_key_exists($cacheKey, $cache)) {
+        return $cache[$cacheKey];
+    }
+
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'changelog'");
-        return $stmt !== false && $stmt->fetchColumn() !== false;
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = :table'
+        );
+        $stmt->execute([':table' => $table]);
+        $cache[$cacheKey] = (int)$stmt->fetchColumn() > 0;
+    } catch (Throwable $e) {
+        $cache[$cacheKey] = false;
+    }
+
+    return $cache[$cacheKey];
+}
+
+function changelog_db_column_exists(string $table, string $column): bool
+{
+    global $pdo;
+
+    $cacheKey = strtolower($table . '.' . $column);
+    static $cache = [];
+    if (array_key_exists($cacheKey, $cache)) {
+        return $cache[$cacheKey];
+    }
+
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = :table
+               AND COLUMN_NAME = :column'
+        );
+        $stmt->execute([
+            ':table' => $table,
+            ':column' => $column,
+        ]);
+        $cache[$cacheKey] = (int)$stmt->fetchColumn() > 0;
+    } catch (Throwable $e) {
+        $cache[$cacheKey] = false;
+    }
+
+    return $cache[$cacheKey];
+}
+
+function changelog_news_link_available(): bool
+{
+    return changelog_table_exists() && changelog_db_column_exists('changelog', 'news_id');
+}
+
+function changelog_news_table_available(): bool
+{
+    return changelog_db_table_exists('news');
+}
+
+function changelog_news_exists(int $newsId): bool
+{
+    global $pdo;
+
+    if ($newsId <= 0 || !changelog_news_table_available()) {
+        return false;
+    }
+
+    try {
+        $stmt = $pdo->prepare('SELECT id FROM news WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $newsId]);
+        return $stmt->fetchColumn() !== false;
     } catch (Throwable $e) {
         return false;
     }
+}
+
+function changelog_news_select_part(string $column, string $alias): string
+{
+    if (changelog_db_column_exists('news', $column)) {
+        return 'n.' . $column . ' AS ' . $alias;
+    }
+
+    return 'NULL AS ' . $alias;
+}
+
+function changelog_select_sql(string $where, string $orderAndLimit = ''): string
+{
+    $select = 'c.*';
+    $join = '';
+
+    if (changelog_news_link_available() && changelog_news_table_available()) {
+        $select .= ', n.id AS changelog_news_found_id';
+        $select .= ', ' . changelog_news_select_part('nazev_cz', 'changelog_news_title');
+        $select .= ', ' . changelog_news_select_part('perex_cz', 'changelog_news_perex');
+        $select .= ', ' . changelog_news_select_part('text_cz', 'changelog_news_text');
+        $select .= ', ' . changelog_news_select_part('url_cz', 'changelog_news_url');
+        $select .= ', ' . changelog_news_select_part('datum', 'changelog_news_date');
+        $select .= ', ' . changelog_news_select_part('visible', 'changelog_news_visible');
+        $select .= ', ' . changelog_news_select_part('valid', 'changelog_news_valid');
+        $join = ' LEFT JOIN news n ON n.id = c.news_id';
+    }
+
+    return 'SELECT ' . $select . ' FROM changelog c' . $join . ' WHERE ' . $where . ' ' . $orderAndLimit;
 }
 
 function changelog_current_user(): string
@@ -51,6 +156,7 @@ function changelog_default(): array
         'description' => '',
         'status' => 'zaevidovano',
         'category' => 'system',
+        'news_id' => '',
         'priority' => 50,
         'recorded_on' => date('Y-m-d'),
         'planned_year' => '',
@@ -68,6 +174,7 @@ function changelog_from_request(array $src, ?array $base = null): array
     $data['description'] = trim((string)($src['description'] ?? $data['description']));
     $data['status'] = trim((string)($src['status'] ?? $data['status']));
     $data['category'] = trim((string)($src['category'] ?? $data['category']));
+    $data['news_id'] = trim((string)($src['news_id'] ?? $data['news_id']));
     $data['priority'] = max(0, min(255, (int)($src['priority'] ?? $data['priority'])));
     $data['recorded_on'] = trim((string)($src['recorded_on'] ?? $data['recorded_on']));
     $data['planned_year'] = trim((string)($src['planned_year'] ?? $data['planned_year']));
@@ -110,6 +217,22 @@ function changelog_validate(array $data): array
     }
     if (!in_array($data['category'], $categories, true)) {
         $errors[] = 'Vyber platnou kategorii.';
+    }
+
+    $newsIdRaw = trim((string)($data['news_id'] ?? ''));
+    if ($newsIdRaw === '') {
+        $data['news_id'] = null;
+    } elseif (!ctype_digit($newsIdRaw) || (int)$newsIdRaw <= 0) {
+        $errors[] = 'ID novinky musí být kladné celé číslo.';
+        $data['news_id'] = null;
+    } elseif (!changelog_news_link_available()) {
+        $errors[] = 'Vazba na novinku není dostupná. Nejdříve spusť migraci pro sloupec changelog.news_id.';
+        $data['news_id'] = (int)$newsIdRaw;
+    } elseif (!changelog_news_exists((int)$newsIdRaw)) {
+        $errors[] = 'Novinka s tímto ID neexistuje.';
+        $data['news_id'] = (int)$newsIdRaw;
+    } else {
+        $data['news_id'] = (int)$newsIdRaw;
     }
 
     $recordedOn = changelog_normalize_date((string)$data['recorded_on']);
@@ -155,18 +278,19 @@ function changelog_create(array $data): void
     global $pdo;
 
     $user = changelog_current_user();
+    $hasNewsId = changelog_news_link_available();
     $stmt = $pdo->prepare(
         'INSERT INTO changelog (
             title, description, status, category, priority,
-            recorded_on, planned_year, planned_month, done_on,
+            ' . ($hasNewsId ? 'news_id, ' : '') . 'recorded_on, planned_year, planned_month, done_on,
             active_l, created_by, updated_by
         ) VALUES (
             :title, :description, :status, :category, :priority,
-            :recorded_on, :planned_year, :planned_month, :done_on,
+            ' . ($hasNewsId ? ':news_id, ' : '') . ':recorded_on, :planned_year, :planned_month, :done_on,
             :active_l, :created_by, :updated_by
         )'
     );
-    $stmt->execute([
+    $params = [
         ':title' => $data['title'],
         ':description' => $data['description'] === '' ? null : $data['description'],
         ':status' => $data['status'],
@@ -179,7 +303,12 @@ function changelog_create(array $data): void
         ':active_l' => (int)$data['active_l'],
         ':created_by' => $user,
         ':updated_by' => $user,
-    ]);
+    ];
+    if ($hasNewsId) {
+        $params[':news_id'] = $data['news_id'] === '' ? null : $data['news_id'];
+    }
+
+    $stmt->execute($params);
 }
 
 function changelog_update(int $id, array $data): void
@@ -187,6 +316,7 @@ function changelog_update(int $id, array $data): void
     global $pdo;
 
     $user = changelog_current_user();
+    $hasNewsId = changelog_news_link_available();
     $stmt = $pdo->prepare(
         'UPDATE changelog SET
             title = :title,
@@ -194,6 +324,7 @@ function changelog_update(int $id, array $data): void
             status = :status,
             category = :category,
             priority = :priority,
+            ' . ($hasNewsId ? 'news_id = :news_id,' : '') . '
             recorded_on = :recorded_on,
             planned_year = :planned_year,
             planned_month = :planned_month,
@@ -202,7 +333,7 @@ function changelog_update(int $id, array $data): void
             updated_by = :updated_by
          WHERE id = :id'
     );
-    $stmt->execute([
+    $params = [
         ':title' => $data['title'],
         ':description' => $data['description'] === '' ? null : $data['description'],
         ':status' => $data['status'],
@@ -215,7 +346,12 @@ function changelog_update(int $id, array $data): void
         ':active_l' => (int)$data['active_l'],
         ':updated_by' => $user,
         ':id' => $id,
-    ]);
+    ];
+    if ($hasNewsId) {
+        $params[':news_id'] = $data['news_id'] === '' ? null : $data['news_id'];
+    }
+
+    $stmt->execute($params);
 }
 
 function changelog_archive(int $id): void
@@ -234,7 +370,7 @@ function changelog_fetch(int $id): ?array
 {
     global $pdo;
 
-    $stmt = $pdo->prepare('SELECT * FROM changelog WHERE id = :id LIMIT 1');
+    $stmt = $pdo->prepare(changelog_select_sql('c.id = :id', 'LIMIT 1'));
     $stmt->execute([':id' => $id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -245,17 +381,17 @@ function changelog_list(bool $includeInactive = false): array
 {
     global $pdo;
 
-    $where = $includeInactive ? '1=1' : 'active_l = 1';
+    $where = $includeInactive ? '1=1' : 'c.active_l = 1';
     $stmt = $pdo->query(
-        "SELECT *
-         FROM changelog
-         WHERE {$where}
-         ORDER BY active_l DESC,
-             status = 'nasazeno' ASC,
-             FIELD(status, 'probiha', 'naplanovano', 'zaevidovano', 'nasazeno') ASC,
-             priority ASC,
-             recorded_on DESC,
-             id DESC"
+        changelog_select_sql(
+            $where,
+            "ORDER BY c.active_l DESC,
+             c.status = 'nasazeno' ASC,
+             FIELD(c.status, 'probiha', 'naplanovano', 'zaevidovano', 'nasazeno') ASC,
+             c.priority ASC,
+             c.recorded_on DESC,
+             c.id DESC"
+        )
     );
 
     return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
@@ -266,15 +402,15 @@ function changelog_dashboard_open(int $limit = 12): array
     global $pdo;
 
     $stmt = $pdo->prepare(
-        "SELECT *
-         FROM changelog
-         WHERE active_l = 1
-           AND status IN ('zaevidovano','naplanovano','probiha')
-         ORDER BY FIELD(status, 'probiha', 'naplanovano', 'zaevidovano') ASC,
-             priority ASC,
-             recorded_on DESC,
-             id DESC
+        changelog_select_sql(
+            "c.active_l = 1
+           AND c.status IN ('zaevidovano','naplanovano','probiha')",
+            "ORDER BY FIELD(c.status, 'probiha', 'naplanovano', 'zaevidovano') ASC,
+             c.priority ASC,
+             c.recorded_on DESC,
+             c.id DESC
          LIMIT :limit"
+        )
     );
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
@@ -287,17 +423,56 @@ function changelog_dashboard_done(int $limit = 12): array
     global $pdo;
 
     $stmt = $pdo->prepare(
-        "SELECT *
-         FROM changelog
-         WHERE active_l = 1
-           AND status = 'nasazeno'
-         ORDER BY COALESCE(done_on, recorded_on) DESC, id DESC
-         LIMIT :limit"
+        changelog_select_sql(
+            "c.active_l = 1
+           AND c.status = 'nasazeno'",
+            'ORDER BY COALESCE(c.done_on, c.recorded_on) DESC, c.id DESC
+         LIMIT :limit'
+        )
     );
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
 
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function changelog_news_admin_url(int $newsId): string
+{
+    return 'index.php?section=01&amp;page=01&amp;sec_page=02&amp;edit=' . $newsId . '&amp;show=2';
+}
+
+function changelog_news_preview_text(array $row, int $limit = 180): string
+{
+    $text = trim(strip_tags((string)($row['changelog_news_perex'] ?? '')));
+    if ($text === '') {
+        $text = trim(strip_tags((string)($row['changelog_news_text'] ?? '')));
+    }
+
+    if ($text === '') {
+        return '';
+    }
+
+    if (mb_strlen($text, 'UTF-8') <= $limit) {
+        return $text;
+    }
+
+    return rtrim(mb_substr($text, 0, $limit, 'UTF-8')) . '...';
+}
+
+function changelog_has_linked_news(array $row): bool
+{
+    return (int)($row['news_id'] ?? 0) > 0 && (int)($row['changelog_news_found_id'] ?? 0) > 0;
+}
+
+function changelog_linked_news_title(array $row): string
+{
+    $title = trim((string)($row['changelog_news_title'] ?? ''));
+    if ($title !== '') {
+        return $title;
+    }
+
+    $newsId = (int)($row['news_id'] ?? 0);
+    return $newsId > 0 ? 'Novinka #' . $newsId : '';
 }
 
 function changelog_planned_text(array $row): string
