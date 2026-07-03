@@ -11,20 +11,39 @@ function changelog_statuses(): array
     ];
 }
 
-function changelog_categories(): array
+function changelog_category_badge_options(): array
 {
     return [
-        'expedice' => 'Expedice',
-        'oz' => 'OZ',
-        'maloobchod' => 'Maloobchod',
-        'centrala' => 'Centrála',
-        'system' => 'Systém',
+        'text-bg-secondary' => 'Šedá',
+        'text-bg-primary' => 'Modrá',
+        'text-bg-success' => 'Zelená',
+        'text-bg-danger' => 'Červená',
+        'text-bg-warning' => 'Žlutá',
+        'text-bg-info' => 'Tyrkysová',
+        'text-bg-light' => 'Světlá',
+        'text-bg-dark' => 'Tmavá',
+    ];
+}
+
+function changelog_category_fallback_rows(): array
+{
+    return [
+        ['id' => 0, 'code' => 'expedice', 'name' => 'Expedice', 'badge_class' => 'text-bg-warning', 'sort_order' => 10, 'active_l' => 1],
+        ['id' => 0, 'code' => 'oz', 'name' => 'OZ', 'badge_class' => 'text-bg-success', 'sort_order' => 20, 'active_l' => 1],
+        ['id' => 0, 'code' => 'maloobchod', 'name' => 'Maloobchod', 'badge_class' => 'text-bg-primary', 'sort_order' => 30, 'active_l' => 1],
+        ['id' => 0, 'code' => 'centrala', 'name' => 'Centrála', 'badge_class' => 'text-bg-dark', 'sort_order' => 40, 'active_l' => 1],
+        ['id' => 0, 'code' => 'system', 'name' => 'Systém', 'badge_class' => 'text-bg-secondary', 'sort_order' => 50, 'active_l' => 1],
     ];
 }
 
 function changelog_table_exists(): bool
 {
     return changelog_db_table_exists('changelog');
+}
+
+function changelog_category_table_exists(): bool
+{
+    return changelog_db_table_exists('changelog_cat');
 }
 
 function changelog_db_table_exists(string $table): bool
@@ -83,6 +102,257 @@ function changelog_db_column_exists(string $table, string $column): bool
     return $cache[$cacheKey];
 }
 
+function changelog_current_user(): string
+{
+    if (function_exists('_qn_user')) {
+        return (string)_qn_user();
+    }
+
+    return (string)($_SESSION['user_name'] ?? '');
+}
+
+function changelog_safe_badge_class(string $badgeClass): string
+{
+    $badgeClass = trim($badgeClass);
+    if (isset(changelog_category_badge_options()[$badgeClass])) {
+        return $badgeClass;
+    }
+
+    return 'text-bg-secondary';
+}
+
+function changelog_category_rows(bool $activeOnly = true): array
+{
+    global $pdo;
+
+    if (!changelog_category_table_exists()) {
+        return array_values(array_filter(
+            changelog_category_fallback_rows(),
+            static fn (array $row): bool => !$activeOnly || (int)$row['active_l'] === 1
+        ));
+    }
+
+    try {
+        $where = $activeOnly ? 'WHERE active_l = 1' : '';
+        $stmt = $pdo->query(
+            "SELECT id, code, name, badge_class, sort_order, active_l
+             FROM changelog_cat
+             {$where}
+             ORDER BY active_l DESC, sort_order ASC, name ASC, id ASC"
+        );
+        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        if ($rows !== []) {
+            foreach ($rows as &$row) {
+                $row['badge_class'] = changelog_safe_badge_class((string)($row['badge_class'] ?? ''));
+            }
+            unset($row);
+            return $rows;
+        }
+    } catch (Throwable $e) {
+        return changelog_category_fallback_rows();
+    }
+
+    return changelog_category_fallback_rows();
+}
+
+function changelog_categories(): array
+{
+    $categories = [];
+    foreach (changelog_category_rows(true) as $row) {
+        $code = (string)($row['code'] ?? '');
+        if ($code !== '') {
+            $categories[$code] = (string)($row['name'] ?? $code);
+        }
+    }
+
+    return $categories;
+}
+
+function changelog_category_meta(string $category): array
+{
+    static $cache = null;
+    if ($cache === null) {
+        $cache = [];
+        foreach (changelog_category_rows(false) as $row) {
+            $code = (string)($row['code'] ?? '');
+            if ($code !== '') {
+                $cache[$code] = [
+                    'label' => (string)($row['name'] ?? $code),
+                    'badge' => changelog_safe_badge_class((string)($row['badge_class'] ?? '')),
+                ];
+            }
+        }
+    }
+
+    return $cache[$category] ?? [
+        'label' => $category,
+        'badge' => 'text-bg-secondary',
+    ];
+}
+
+function changelog_default_category_code(): string
+{
+    $categories = changelog_categories();
+    if (isset($categories['system'])) {
+        return 'system';
+    }
+
+    $first = array_key_first($categories);
+    return is_string($first) && $first !== '' ? $first : 'system';
+}
+
+function changelog_category_default(): array
+{
+    return [
+        'id' => 0,
+        'code' => '',
+        'name' => '',
+        'badge_class' => 'text-bg-secondary',
+        'sort_order' => 50,
+        'active_l' => 1,
+    ];
+}
+
+function changelog_category_from_request(array $src, ?array $base = null): array
+{
+    $data = $base ?? changelog_category_default();
+
+    $data['code'] = strtolower(trim((string)($src['code'] ?? $data['code'])));
+    $data['name'] = trim((string)($src['name'] ?? $data['name']));
+    $data['badge_class'] = trim((string)($src['badge_class'] ?? $data['badge_class']));
+    $data['sort_order'] = max(0, min(999, (int)($src['sort_order'] ?? $data['sort_order'])));
+    $data['active_l'] = isset($src['active_l']) ? 1 : 0;
+
+    return $data;
+}
+
+function changelog_category_code_exists(string $code, int $exceptId = 0): bool
+{
+    global $pdo;
+
+    if (!changelog_category_table_exists()) {
+        return array_key_exists($code, changelog_categories());
+    }
+
+    $sql = 'SELECT id FROM changelog_cat WHERE code = :code';
+    $params = [':code' => $code];
+    if ($exceptId > 0) {
+        $sql .= ' AND id <> :id';
+        $params[':id'] = $exceptId;
+    }
+    $sql .= ' LIMIT 1';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchColumn() !== false;
+}
+
+function changelog_category_validate(array $data, int $id = 0): array
+{
+    $errors = [];
+
+    if (!preg_match('/^[a-z0-9][a-z0-9_-]{0,63}$/', (string)$data['code'])) {
+        $errors[] = 'Kód kategorie smí obsahovat jen malá písmena bez diakritiky, čísla, pomlčku a podtržítko.';
+    } elseif (changelog_category_code_exists((string)$data['code'], $id)) {
+        $errors[] = 'Kategorie s tímto kódem už existuje.';
+    }
+
+    if ((string)$data['name'] === '') {
+        $errors[] = 'Vyplň název kategorie.';
+    }
+    if (mb_strlen((string)$data['name']) > 120) {
+        $errors[] = 'Název kategorie může mít maximálně 120 znaků.';
+    }
+    if (!isset(changelog_category_badge_options()[(string)$data['badge_class']])) {
+        $errors[] = 'Vyber platnou barvu kategorie.';
+    }
+
+    return [$errors, $data];
+}
+
+function changelog_category_fetch(int $id): ?array
+{
+    global $pdo;
+
+    if ($id <= 0 || !changelog_category_table_exists()) {
+        return null;
+    }
+
+    $stmt = $pdo->prepare('SELECT * FROM changelog_cat WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? $row : null;
+}
+
+function changelog_category_create(array $data): void
+{
+    global $pdo;
+
+    if (!changelog_category_table_exists()) {
+        throw new RuntimeException('Tabulka changelog_cat zatím neexistuje.');
+    }
+
+    $user = changelog_current_user();
+    $stmt = $pdo->prepare(
+        'INSERT INTO changelog_cat (code, name, badge_class, sort_order, active_l, created_by, updated_by)
+         VALUES (:code, :name, :badge_class, :sort_order, :active_l, :created_by, :updated_by)'
+    );
+    $stmt->execute([
+        ':code' => $data['code'],
+        ':name' => $data['name'],
+        ':badge_class' => $data['badge_class'],
+        ':sort_order' => (int)$data['sort_order'],
+        ':active_l' => (int)$data['active_l'],
+        ':created_by' => $user,
+        ':updated_by' => $user,
+    ]);
+}
+
+function changelog_category_update(int $id, array $data): void
+{
+    global $pdo;
+
+    if (!changelog_category_table_exists()) {
+        throw new RuntimeException('Tabulka changelog_cat zatím neexistuje.');
+    }
+
+    $stmt = $pdo->prepare(
+        'UPDATE changelog_cat SET
+            code = :code,
+            name = :name,
+            badge_class = :badge_class,
+            sort_order = :sort_order,
+            active_l = :active_l,
+            updated_by = :updated_by
+         WHERE id = :id'
+    );
+    $stmt->execute([
+        ':code' => $data['code'],
+        ':name' => $data['name'],
+        ':badge_class' => $data['badge_class'],
+        ':sort_order' => (int)$data['sort_order'],
+        ':active_l' => (int)$data['active_l'],
+        ':updated_by' => changelog_current_user(),
+        ':id' => $id,
+    ]);
+}
+
+function changelog_category_archive(int $id): void
+{
+    global $pdo;
+
+    if (!changelog_category_table_exists()) {
+        throw new RuntimeException('Tabulka changelog_cat zatím neexistuje.');
+    }
+
+    $stmt = $pdo->prepare('UPDATE changelog_cat SET active_l = 0, updated_by = :updated_by WHERE id = :id');
+    $stmt->execute([
+        ':updated_by' => changelog_current_user(),
+        ':id' => $id,
+    ]);
+}
+
 function changelog_news_link_available(): bool
 {
     return changelog_table_exists() && changelog_db_column_exists('changelog', 'news_id');
@@ -139,15 +409,6 @@ function changelog_select_sql(string $where, string $orderAndLimit = ''): string
     return 'SELECT ' . $select . ' FROM changelog c' . $join . ' WHERE ' . $where . ' ' . $orderAndLimit;
 }
 
-function changelog_current_user(): string
-{
-    if (function_exists('_qn_user')) {
-        return (string)_qn_user();
-    }
-
-    return (string)($_SESSION['user_name'] ?? '');
-}
-
 function changelog_default(): array
 {
     return [
@@ -155,7 +416,7 @@ function changelog_default(): array
         'title' => '',
         'description' => '',
         'status' => 'zaevidovano',
-        'category' => 'system',
+        'category' => changelog_default_category_code(),
         'news_id' => '',
         'priority' => 50,
         'recorded_on' => date('Y-m-d'),
@@ -500,18 +761,10 @@ function changelog_status_badge(string $status): string
 
 function changelog_category_label(string $category): string
 {
-    $categories = changelog_categories();
-    return (string)($categories[$category] ?? $category);
+    return (string)changelog_category_meta($category)['label'];
 }
 
 function changelog_category_badge(string $category): string
 {
-    return match ($category) {
-        'expedice' => 'text-bg-warning',
-        'oz' => 'text-bg-success',
-        'maloobchod' => 'text-bg-primary',
-        'centrala' => 'text-bg-dark',
-        'system' => 'text-bg-secondary',
-        default => 'text-bg-light',
-    };
+    return (string)changelog_category_meta($category)['badge'];
 }

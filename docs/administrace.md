@@ -31,7 +31,7 @@ Project vrstva qanto.cz je otevrena pouze pro novy web qanto.cz a nesmi se autom
 - Kontakty a pobočky.
 - Napište nám.
 - Cron log.
-- ChangeLog včetně volitelné vazby na novinku/manuál.
+- ChangeLog včetně editovatelných kategorií a volitelné vazby na novinku/manuál.
 - DB migrace.
 - E-mail log.
 - TinyMCE a DataTables inicializace.

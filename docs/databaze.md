@@ -18,6 +18,7 @@ Do tohoto projektu se kopírují pouze sdílené tabulky bez prefixu `rep_`, nap
 - `pobocky`, `pobocky_otevdoba`, `pobocky_otevdoba_vyjimky`
 - `log_users`, `log_cron`, `log_emails`
 - `changelog` včetně volitelné vazby `news_id` na novinku/manuál
+- `changelog_cat` pro editovatelný výčet kategorií ChangeLogu a jejich barev
 - `schema_migrations`
 
 Projektové tabulky `rep_*` sem nepatří.
