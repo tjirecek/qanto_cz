@@ -638,6 +638,49 @@ function changelog_fetch(int $id): ?array
     return is_array($row) ? $row : null;
 }
 
+function changelog_fetch_active(int $id): ?array
+{
+    global $pdo;
+
+    if ($id <= 0) {
+        return null;
+    }
+
+    $stmt = $pdo->prepare(changelog_select_sql('c.id = :id AND c.active_l = 1', 'LIMIT 1'));
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? $row : null;
+}
+
+function changelog_fetch_for_news(int $newsId, bool $activeOnly = true): ?array
+{
+    global $pdo;
+
+    if ($newsId <= 0 || !changelog_news_link_available()) {
+        return null;
+    }
+
+    $where = 'c.news_id = :news_id';
+    if ($activeOnly) {
+        $where .= ' AND c.active_l = 1';
+    }
+
+    $stmt = $pdo->prepare(
+        changelog_select_sql(
+            $where,
+            "ORDER BY c.status = 'nasazeno' DESC,
+             COALESCE(c.done_on, c.recorded_on) DESC,
+             c.id DESC
+             LIMIT 1"
+        )
+    );
+    $stmt->execute([':news_id' => $newsId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? $row : null;
+}
+
 function changelog_list(bool $includeInactive = false): array
 {
     global $pdo;
@@ -702,6 +745,22 @@ function changelog_news_admin_url(int $newsId): string
     return 'index.php?section=01&amp;page=01&amp;sec_page=02&amp;edit=' . $newsId . '&amp;show=2';
 }
 
+function changelog_admin_detail_url(int $id): string
+{
+    return 'index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=4&amp;detail=' . $id;
+}
+
+function changelog_admin_list_url(): string
+{
+    return 'index.php?section=09&amp;page=02&amp;sec_page=07';
+}
+
+function changelog_frontend_detail_url(int $id, string $lang = 'cz'): string
+{
+    $lang = in_array($lang, ['cz', 'en', 'sk'], true) ? $lang : 'cz';
+    return '/' . $lang . '/changelog/' . $id;
+}
+
 function changelog_news_preview_text(array $row, int $limit = 180): string
 {
     $text = trim(strip_tags((string)($row['changelog_news_perex'] ?? '')));
@@ -718,6 +777,42 @@ function changelog_news_preview_text(array $row, int $limit = 180): string
     }
 
     return rtrim(mb_substr($text, 0, $limit, 'UTF-8')) . '...';
+}
+
+function changelog_linked_news_body_html(array $row): string
+{
+    return trim((string)($row['changelog_news_text'] ?? ''));
+}
+
+function changelog_linked_news_perex_html(array $row): string
+{
+    return trim((string)($row['changelog_news_perex'] ?? ''));
+}
+
+function changelog_linked_news_body_text(array $row): string
+{
+    return changelog_html_to_plain_text(changelog_linked_news_body_html($row));
+}
+
+function changelog_linked_news_perex_text(array $row): string
+{
+    return changelog_html_to_plain_text(changelog_linked_news_perex_html($row));
+}
+
+function changelog_html_to_plain_text(string $html): string
+{
+    $text = trim($html);
+    if ($text === '') {
+        return '';
+    }
+
+    $text = preg_replace('~<\s*br\s*/?\s*>~i', "\n", $text) ?? $text;
+    $text = preg_replace('~</\s*(p|div|li|h[1-6]|tr)\s*>~i', "\n", $text) ?? $text;
+    $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = preg_replace("~[ \t]+\n~", "\n", $text) ?? $text;
+    $text = preg_replace("~\n{3,}~", "\n\n", $text) ?? $text;
+
+    return trim($text);
 }
 
 function changelog_has_linked_news(array $row): bool

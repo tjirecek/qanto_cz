@@ -52,15 +52,28 @@ function mailer_config_bool(array $config, string $key, bool $default = false): 
     return in_array(strtolower(trim((string)$value)), ['1', 'true', 'yes', 'on'], true);
 }
 
+function mailer_email_list_text(string $emails): string
+{
+    $text = preg_replace('~<(script|style)\b[^>]*>.*?</\1>~is', ' ', $emails) ?? $emails;
+    $text = preg_replace('~<(br|/p|/div|/li)\b[^>]*>~i', "\n", $text) ?? $text;
+    $text = strip_tags($text);
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = str_replace(["\xc2\xa0", '&nbsp;'], ' ', $text);
+
+    return trim($text);
+}
+
 function mailer_email_list(mixed $emails): array
 {
+    $parts = [];
     if (is_array($emails)) {
-        $parts = [];
         foreach ($emails as $email) {
-            $parts = array_merge($parts, preg_split('/[,;\n\r]+/', (string)$email) ?: []);
+            $text = mailer_email_list_text((string)$email);
+            $parts = array_merge($parts, preg_split('/[,;\n\r]+/', $text) ?: []);
         }
     } else {
-        $parts = preg_split('/[,;\n\r]+/', (string)$emails) ?: [];
+        $text = mailer_email_list_text((string)$emails);
+        $parts = preg_split('/[,;\n\r]+/', $text) ?: [];
     }
 
     $normalized = [];
@@ -252,6 +265,46 @@ function mailer_send_smtp(array $config, array $message): ?string
             }
             if ($path !== '' && is_file($path)) {
                 $mail->addAttachment($path, $name !== '' ? $name : '');
+            }
+        }
+
+        $embeddedImages = $message['embedded_images'] ?? [];
+        if (!is_array($embeddedImages)) {
+            $embeddedImages = [];
+        }
+        foreach ($embeddedImages as $image) {
+            if (!is_array($image)) {
+                continue;
+            }
+
+            $cid = trim((string)($image['cid'] ?? ''));
+            if ($cid === '') {
+                continue;
+            }
+
+            $name = trim((string)($image['name'] ?? ''));
+            $type = trim((string)($image['type'] ?? 'image/png'));
+            $data = $image['data'] ?? null;
+            if (is_string($data) && $data !== '') {
+                $mail->addStringEmbeddedImage(
+                    $data,
+                    $cid,
+                    $name !== '' ? $name : 'image.png',
+                    PHPMailer::ENCODING_BASE64,
+                    $type !== '' ? $type : 'image/png'
+                );
+                continue;
+            }
+
+            $path = trim((string)($image['path'] ?? ''));
+            if ($path !== '' && is_file($path)) {
+                $mail->addEmbeddedImage(
+                    $path,
+                    $cid,
+                    $name !== '' ? $name : basename($path),
+                    PHPMailer::ENCODING_BASE64,
+                    $type !== '' ? $type : ''
+                );
             }
         }
 

@@ -11,11 +11,13 @@ function changelog_e(string $value): string
 $messages = [];
 $show = (int)($_GET['show'] ?? 0);
 $editId = (int)($_GET['edit'] ?? 0);
+$detailId = (int)($_GET['detail'] ?? 0);
 $categoryEditId = (int)($_GET['category_edit'] ?? 0);
 $form = changelog_default();
 $categoryForm = changelog_category_default();
 $editing = false;
 $categoryEditing = false;
+$detailRow = null;
 $tableExists = changelog_table_exists();
 $categoryTableExists = changelog_category_table_exists();
 $newsLinkAvailable = $tableExists && changelog_news_link_available();
@@ -175,6 +177,14 @@ if ($tableExists) {
         }
     }
 
+    if ($show === 4) {
+        $detailRow = $detailId > 0 ? changelog_fetch($detailId) : null;
+        if ($detailRow === null) {
+            $messages[] = ['type' => 'warning', 'text' => 'Požadovaná změna neexistuje.'];
+            $show = 0;
+        }
+    }
+
     if ($show === 3 && $categoryEditId > 0 && !$categoryEditing) {
         $existingCategory = changelog_category_fetch($categoryEditId);
         if ($existingCategory === null) {
@@ -220,6 +230,94 @@ $currentYear = (int)date('Y');
         <?= changelog_e((string)$message['text']) ?>
     </div>
 <?php endforeach; ?>
+
+<?php if ($tableExists && $show === 4 && is_array($detailRow)): ?>
+    <?php
+    $status = (string)($detailRow['status'] ?? '');
+    $category = (string)($detailRow['category'] ?? '');
+    $description = trim((string)($detailRow['description'] ?? ''));
+    ?>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+                <div class="small text-muted">Detail změny #<?= (int)$detailRow['id'] ?></div>
+                <h6 class="m-0 fw-bold text-primary"><?= changelog_e((string)$detailRow['title']) ?></h6>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge <?= changelog_e(changelog_category_badge($category)) ?>">
+                    <?= changelog_e(changelog_category_label($category)) ?>
+                </span>
+                <span class="badge <?= changelog_e(changelog_status_badge($status)) ?>">
+                    <?= changelog_e(changelog_status_label($status)) ?>
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <?php if ($description !== ''): ?>
+                <div class="lead fs-6 mb-4"><?= nl2br(changelog_e($description)) ?></div>
+            <?php else: ?>
+                <div class="text-muted mb-4">Popis změny není vyplněný.</div>
+            <?php endif; ?>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="small text-muted">Zaevidováno</div>
+                    <div class="fw-semibold"><?= changelog_e((string)format_date_www((string)($detailRow['recorded_on'] ?? ''))) ?></div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Předpoklad nasazení</div>
+                    <div class="fw-semibold"><?= changelog_e(changelog_planned_text($detailRow)) ?></div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Hotovo</div>
+                    <div class="fw-semibold"><?= changelog_e((string)format_date_www((string)($detailRow['done_on'] ?? ''))) ?></div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Pořadí</div>
+                    <div class="fw-semibold"><?= (int)($detailRow['priority'] ?? 0) ?></div>
+                </div>
+            </div>
+
+            <div class="border rounded-3 p-3 bg-light">
+                <div class="fw-semibold mb-2">Navázaná novinka</div>
+                <?php if ((int)($detailRow['news_id'] ?? 0) > 0): ?>
+                    <?php if (changelog_has_linked_news($detailRow)): ?>
+                        <div class="fw-semibold">
+                            #<?= (int)$detailRow['news_id'] ?> - <?= changelog_e(changelog_linked_news_title($detailRow)) ?>
+                        </div>
+                        <?php $newsPerex = changelog_linked_news_perex_html($detailRow); ?>
+                        <?php $newsBody = changelog_linked_news_body_html($detailRow); ?>
+                        <?php if ($newsPerex !== ''): ?>
+                            <div class="mt-3 border-top pt-3 changelog-linked-news-perex">
+                                <div class="small text-muted mb-1">Perex</div>
+                                <?= $newsPerex ?>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($newsBody !== ''): ?>
+                            <div class="mt-3 border-top pt-3 changelog-linked-news-body">
+                                <div class="small text-muted mb-1">Tělo</div>
+                                <?= $newsBody ?>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($newsPerex === '' && $newsBody === ''): ?>
+                            <div class="small text-muted mt-2">Perex ani tělo navázané novinky nejsou vyplněné.</div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <span class="text-danger">Novinka #<?= (int)$detailRow['news_id'] ?> nenalezena</span>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <span class="text-muted">Tato změna nemá navázanou novinku.</span>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="card-footer d-flex flex-wrap gap-2">
+            <a href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=2&amp;edit=<?= (int)$detailRow['id'] ?>" class="btn btn-primary">
+                Upravit změnu
+            </a>
+            <a href="<?= changelog_admin_list_url() ?>" class="btn btn-outline-secondary">Zpět na ChangeLog</a>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php if ($tableExists && $show === 3): ?>
     <div class="row g-4 mb-4">
@@ -473,7 +571,7 @@ $currentYear = (int)date('Y');
     </div>
 <?php endif; ?>
 
-<?php if ($tableExists): ?>
+<?php if ($tableExists && $show !== 4): ?>
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 fw-bold text-primary d-sm-inline">Evidence změn</h6>
@@ -533,9 +631,9 @@ $currentYear = (int)date('Y');
                             <td>
                                 <?php if ((int)($row['news_id'] ?? 0) > 0): ?>
                                     <?php if (changelog_has_linked_news($row)): ?>
-                                        <a class="fw-semibold" href="<?= changelog_news_admin_url((int)$row['news_id']) ?>">
+                                        <span class="fw-semibold">
                                             #<?= (int)$row['news_id'] ?> - <?= changelog_e(changelog_linked_news_title($row)) ?>
-                                        </a>
+                                        </span>
                                         <?php if ($status === 'nasazeno'): ?>
                                             <?php $previewText = changelog_news_preview_text($row); ?>
                                             <div class="small text-muted mt-1">
@@ -556,6 +654,9 @@ $currentYear = (int)date('Y');
                             </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm" role="group">
+                                    <a class="btn btn-outline-secondary" href="<?= changelog_admin_detail_url((int)$row['id']) ?>" title="Detail změny">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     <a class="btn btn-outline-primary" href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=2&amp;edit=<?= (int)$row['id'] ?>">
                                         <i class="bi bi-pencil"></i>
                                     </a>

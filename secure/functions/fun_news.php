@@ -317,6 +317,21 @@ function news_url_unique(string $url, string $lang = 'cz', ?int $ignoreId = null
     return $candidate;
 }
 
+function news_admin_url_with_show(int $show): string
+{
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = (string)($_SERVER['HTTP_HOST'] ?? '');
+    $uri = (string)($_SERVER['REQUEST_URI'] ?? 'index.php');
+    $parts = parse_url($uri) ?: [];
+    $path = (string)($parts['path'] ?? 'index.php');
+    $query = [];
+    parse_str((string)($parts['query'] ?? ''), $query);
+    $query['show'] = $show;
+
+    $url = $path . '?' . http_build_query($query);
+    return $host !== '' ? $scheme . '://' . $host . $url : $url;
+}
+
 //funkce pro pridani nove novinky
 function news_add (
     string $datum,
@@ -340,6 +355,12 @@ function news_add (
 ): int
 {
     global $pdo;
+
+    $datum = trim($datum);
+    $nazev_cz = trim($nazev_cz);
+    if ($datum === '' || $news_typ <= 0 || $nazev_cz === '') {
+        throw new RuntimeException('Novinka nebyla vložena: chybí datum, typ novinky nebo název CZ.');
+    }
 
     $url_cz = news_url_unique($url_cz !== '' ? $url_cz : news_url_generate($nazev_cz, $datum), 'cz');
     $url_en = trim($url_en) !== ''
@@ -380,11 +401,9 @@ function news_add (
         ]);
         $newsId = (int)$pdo->lastInsertId();
         news_tags_save_for_news($newsId, $tagIds);
-    } catch (PDOException $e) {
-        echo '<a href="#" class="btn btn-warning btn-icon-split">
-                <span class="icon text-white-50"><i class="fas fa-exclamation-triangle"></i></span><span class="text">Novinka nebyla vložena</span></a>';
-        echo $e->getMessage();
-        return 0;
+    } catch (Throwable $e) {
+        error_log('news_add failed: ' . $e->getMessage());
+        throw new RuntimeException('Novinka nebyla vložena: ' . $e->getMessage(), 0, $e);
     }
 
     if($soubor <> ""):
@@ -405,9 +424,10 @@ function news_add (
     endif;
 
     unset ($_POST['add']);
-    $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]1";
-    echo "<script type='text/javascript'>document.location.href='$url';</script>";
-    echo '<META HTTP-EQUIV="refresh" content="0;URL=' . $url . '">';
+    $url = news_admin_url_with_show(11);
+    $jsUrl = json_encode($url, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+    echo "<script type='text/javascript'>document.location.href={$jsUrl};</script>";
+    echo '<META HTTP-EQUIV="refresh" content="0;URL=' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">';
 
     return $newsId;
 }

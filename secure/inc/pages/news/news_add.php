@@ -130,8 +130,22 @@ $galleries = function_exists('galerie_all') ? galerie_all(null, 1, 0) : [];
         </form>
     <?php elseif ($add === 1): ?>
         <?php
-        $soubor = (string)news_photo_add();
-        news_add($datum, $news_typ, $nazev_cz, $perex_cz, $text_cz, $galerie_id, $visible, $soubor, $url_cz, $seo_title_cz, $seo_description_cz, $tagIds, $nazev_en, $perex_en, $text_en, $url_en, $seo_title_en, $seo_description_en);
+        try {
+            $soubor = (string)news_photo_add();
+            $newsId = news_add($datum, $news_typ, $nazev_cz, $perex_cz, $text_cz, $galerie_id, $visible, $soubor, $url_cz, $seo_title_cz, $seo_description_cz, $tagIds, $nazev_en, $perex_en, $text_en, $url_en, $seo_title_en, $seo_description_en);
+            if ($newsId <= 0) {
+                throw new RuntimeException('Novinka nebyla vložena, databáze nevrátila ID nového záznamu.');
+            }
+        } catch (Throwable $e) {
+            error_log('news_add page failed: ' . $e->getMessage());
+            ?>
+            <div class="alert alert-danger mb-3">
+                <div class="fw-bold">Novinka nebyla vložena.</div>
+                <div><?= htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') ?></div>
+            </div>
+            <a href="<?= htmlspecialchars(news_admin_url_with_show(1), ENT_QUOTES, 'UTF-8') ?>" class="btn btn-outline-primary">Zpět na přidání novinky</a>
+            <?php
+        }
         ?>
     <?php endif; ?>
 </div>
