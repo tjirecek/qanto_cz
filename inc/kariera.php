@@ -176,35 +176,67 @@ $mapBranchesJson = htmlspecialchars(
 
         <div class="career-jobs" id="volna-mista">
             <div class="career-jobs__layout">
-                <div class="career-list">
-                    <?php if ($jobs === []): ?>
-                        <div class="career-list__empty"><?= htmlspecialchars(ui_text('kariera.no_jobs', 'Aktuálně zde nejsou žádná volná místa.'), ENT_QUOTES, 'UTF-8') ?></div>
-                    <?php else: ?>
-                        <?php foreach ($jobs as $job): ?>
-                            <?php
-                            $jobCity = $jobCityByStredisko[(int)($job['stredisko_kod'] ?? 0)] ?? '';
-                            $jobStredisko = (int)($job['stredisko_kod'] ?? 0);
-                            $jobLocationParts = array_values(array_filter([$jobCity, (string)$job['location']], static fn(string $part): bool => trim($part) !== ''));
-                            $jobLocationLabel = implode(' - ', $jobLocationParts);
-                            ?>
-                            <article
-                                class="career-card"
-                                id="kariera-pozice-<?= (int)$job['id'] ?>"
-                                data-career-job-card
-                                data-city="<?= htmlspecialchars($jobCity, ENT_QUOTES, 'UTF-8') ?>"
-                                data-stredisko="<?= $jobStredisko ?>"
+                <div class="career-list-pane">
+                    <div class="career-list-filter">
+                        <div class="markets-city career-city" data-career-map-city-picker>
+                            <button
+                                type="button"
+                                class="markets-city__trigger"
+                                data-career-map-city-trigger
+                                aria-expanded="false"
                             >
-                                <a class="career-card__link" href="<?= htmlspecialchars((string)$job['url'], ENT_QUOTES, 'UTF-8') ?>">
-                                    <span class="career-card__body">
-                                        <h3><?= htmlspecialchars((string)$job['title'], ENT_QUOTES, 'UTF-8') ?></h3>
-                                        <p><?= htmlspecialchars($jobLocationLabel, ENT_QUOTES, 'UTF-8') ?></p>
-                                    </span>
-                                    <span class="career-card__arrow" aria-hidden="true">›</span>
-                                </a>
-                            </article>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                    <div class="career-list__empty" data-career-jobs-empty hidden><?= htmlspecialchars(ui_text('kariera.jobs_filter_empty', 'Pro vybrané město nejsou dostupné žádné pozice.'), ENT_QUOTES, 'UTF-8') ?></div>
+                                <span data-career-map-city-label><?= htmlspecialchars(ui_text('kariera.map_all_cities', 'Celá ČR'), ENT_QUOTES, 'UTF-8') ?></span>
+                            </button>
+                            <div
+                                class="markets-city__panel"
+                                data-career-map-city-panel
+                                data-search-placeholder="<?= htmlspecialchars(ui_text('markety.city_search_placeholder', 'Hledat obec'), ENT_QUOTES, 'UTF-8') ?>"
+                                data-search-empty="<?= htmlspecialchars(ui_text('markety.city_search_empty', 'Žádná obec neodpovídá hledání.'), ENT_QUOTES, 'UTF-8') ?>"
+                                role="listbox"
+                                hidden
+                            ></div>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        class="markets-mobile-toggle career-mobile-toggle"
+                        data-career-mobile-toggle
+                        data-label-map="<?= htmlspecialchars(ui_text('markety.show_map', 'Zobrazit mapu'), ENT_QUOTES, 'UTF-8') ?>"
+                        data-label-list="<?= htmlspecialchars(ui_text('markety.show_list', 'Zobrazit seznam'), ENT_QUOTES, 'UTF-8') ?>"
+                        aria-pressed="false"
+                    >
+                        <span data-career-mobile-toggle-label><?= htmlspecialchars(ui_text('markety.show_map', 'Zobrazit mapu'), ENT_QUOTES, 'UTF-8') ?></span>
+                    </button>
+                    <div class="career-list">
+                        <?php if ($jobs === []): ?>
+                            <div class="career-list__empty"><?= htmlspecialchars(ui_text('kariera.no_jobs', 'Aktuálně zde nejsou žádná volná místa.'), ENT_QUOTES, 'UTF-8') ?></div>
+                        <?php else: ?>
+                            <?php foreach ($jobs as $job): ?>
+                                <?php
+                                $jobCity = $jobCityByStredisko[(int)($job['stredisko_kod'] ?? 0)] ?? '';
+                                $jobStredisko = (int)($job['stredisko_kod'] ?? 0);
+                                $jobLocationParts = array_values(array_filter([$jobCity, (string)$job['location']], static fn(string $part): bool => trim($part) !== ''));
+                                $jobLocationLabel = implode(' - ', $jobLocationParts);
+                                ?>
+                                <article
+                                    class="career-card"
+                                    id="kariera-pozice-<?= (int)$job['id'] ?>"
+                                    data-career-job-card
+                                    data-city="<?= htmlspecialchars($jobCity, ENT_QUOTES, 'UTF-8') ?>"
+                                    data-stredisko="<?= $jobStredisko ?>"
+                                >
+                                    <a class="career-card__link" href="<?= htmlspecialchars((string)$job['url'], ENT_QUOTES, 'UTF-8') ?>">
+                                        <span class="career-card__body">
+                                            <h3><?= htmlspecialchars((string)$job['title'], ENT_QUOTES, 'UTF-8') ?></h3>
+                                            <p><?= htmlspecialchars($jobLocationLabel, ENT_QUOTES, 'UTF-8') ?></p>
+                                        </span>
+                                        <span class="career-card__arrow" aria-hidden="true">›</span>
+                                    </a>
+                                </article>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                        <div class="career-list__empty" data-career-jobs-empty hidden><?= htmlspecialchars(ui_text('kariera.jobs_filter_empty', 'Pro vybrané město nejsou dostupné žádné pozice.'), ENT_QUOTES, 'UTF-8') ?></div>
+                    </div>
                 </div>
 
                 <div class="career-map" aria-label="<?= htmlspecialchars(ui_text('kariera.map_label', 'Mapa poboček a volných míst'), ENT_QUOTES, 'UTF-8') ?>">
@@ -212,21 +244,6 @@ $mapBranchesJson = htmlspecialchars(
                         <button type="button" class="career-map__toggle" data-career-map-jobs-only>
                             <?= htmlspecialchars(ui_text('kariera.map_only_jobs', 'Jen volná místa'), ENT_QUOTES, 'UTF-8') ?>
                         </button>
-                        <div class="career-map-city" data-career-map-city-picker>
-                            <button
-                                type="button"
-                                class="career-map-city__trigger"
-                                data-career-map-city-trigger
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                            >
-                                <span>
-                                    <small><?= htmlspecialchars(ui_text('kariera.map_city', 'Město'), ENT_QUOTES, 'UTF-8') ?></small>
-                                    <strong data-career-map-city-label><?= htmlspecialchars(ui_text('kariera.map_all_cities', 'Celá ČR'), ENT_QUOTES, 'UTF-8') ?></strong>
-                                </span>
-                            </button>
-                            <div class="career-map-city__panel" data-career-map-city-panel role="listbox" hidden></div>
-                        </div>
                         <button type="button" class="career-map__reset" data-career-map-reset hidden>
                             <?= htmlspecialchars(ui_text('kariera.reset_filter', 'Zrušit filtr'), ENT_QUOTES, 'UTF-8') ?>
                         </button>

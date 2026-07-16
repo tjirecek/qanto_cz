@@ -54,6 +54,91 @@ img {
     height: auto;
 }
 
+.static-text-page__content,
+.news-detail__content,
+.markets-page__intro,
+.markets-text,
+.career-hero__text,
+.career-detail__content {
+    font-family: var(--font-display) !important;
+}
+
+.static-text-page__content *,
+.news-detail__content *,
+.markets-page__intro *,
+.markets-text *,
+.career-hero__text *,
+.career-detail__content * {
+    font-family: var(--font-display) !important;
+}
+
+.static-text-page__content p,
+.news-detail__content p,
+.markets-page__intro p,
+.markets-text p,
+.career-hero__text p,
+.career-detail__content p {
+    margin: 0 0 .85em;
+    color: inherit;
+    line-height: inherit;
+}
+
+.static-text-page__content ul,
+.static-text-page__content ol,
+.news-detail__content ul,
+.news-detail__content ol,
+.markets-page__intro ul,
+.markets-page__intro ol,
+.markets-text ul,
+.markets-text ol,
+.career-hero__text ul,
+.career-hero__text ol,
+.career-detail__content ul,
+.career-detail__content ol {
+    margin: 0 0 .9em;
+    padding-left: 1.18rem;
+    color: inherit;
+    line-height: inherit;
+}
+
+.static-text-page__content li,
+.news-detail__content li,
+.markets-page__intro li,
+.markets-text li,
+.career-hero__text li,
+.career-detail__content li {
+    margin: 0 0 .35em;
+    color: inherit;
+    line-height: inherit;
+}
+
+.static-text-page__content a,
+.news-detail__content a,
+.markets-page__intro a,
+.markets-text a,
+.career-hero__text a,
+.career-detail__content a {
+    color: var(--qanto-red);
+}
+
+.static-text-page__content > :first-child,
+.news-detail__content > :first-child,
+.markets-page__intro > :first-child,
+.markets-text > :first-child,
+.career-hero__text > :first-child,
+.career-detail__content > :first-child {
+    margin-top: 0;
+}
+
+.static-text-page__content > :last-child,
+.news-detail__content > :last-child,
+.markets-page__intro > :last-child,
+.markets-text > :last-child,
+.career-hero__text > :last-child,
+.career-detail__content > :last-child {
+    margin-bottom: 0;
+}
+
 .site-shell {
     width: var(--shell);
     margin-inline: auto;
@@ -3828,6 +3913,29 @@ img {
     line-height: 1.35;
 }
 
+.markets-mobile-toggle {
+    display: none;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    border: 1px solid var(--qanto-black);
+    border-radius: 10px;
+    color: #fff;
+    background: var(--qanto-black);
+    font-size: .84rem;
+    font-weight: 760;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.markets-mobile-toggle:hover,
+.markets-mobile-toggle:focus-visible {
+    color: var(--qanto-black);
+    background: #fff;
+}
+
 .markets-list {
     max-height: 586px;
     overflow: auto;
@@ -5257,12 +5365,37 @@ body.has-market-lightbox {
     padding: clamp(8px, 2vw, 22px) 0 clamp(28px, 4vw, 46px);
 }
 
+.career-hero__text {
+    color: rgba(29, 29, 27, .78);
+    font-family: var(--font-display);
+    font-size: .92rem;
+    line-height: 1.43;
+}
+
 .career-hero__copy p {
     max-width: 100%;
     margin: 0 0 9px;
-    color: rgba(29, 29, 27, .78);
-    font-size: .92rem;
-    line-height: 1.43;
+    color: inherit;
+    font: inherit;
+}
+
+.career-hero__text ul,
+.career-hero__text ol {
+    margin: 0 0 12px;
+    padding-left: 1.15rem;
+    color: inherit;
+    font: inherit;
+}
+
+.career-hero__text li {
+    margin: 0 0 5px;
+    color: inherit;
+    font: inherit;
+}
+
+.career-hero__text a {
+    color: var(--qanto-red);
+    font: inherit;
 }
 
 .career-video {
@@ -5340,11 +5473,35 @@ body.has-market-lightbox {
     align-items: stretch;
 }
 
+.career-list-pane {
+    min-height: 650px;
+    max-height: 650px;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-right: 1px solid rgba(29, 29, 27, .08);
+}
+
+.career-list-filter {
+    padding: 10px;
+    border-bottom: 1px solid rgba(29, 29, 27, .08);
+    background: #fff;
+}
+
+.career-city {
+    width: 100%;
+}
+
+.career-list-pane .career-mobile-toggle {
+    margin: 0 10px 10px;
+    width: calc(100% - 20px);
+}
+
 .career-list {
+    flex: 1 1 auto;
     max-height: 650px;
     overflow: auto;
     background: #fff;
-    border-right: 1px solid rgba(29, 29, 27, .08);
 }
 
 .career-card {
@@ -6260,43 +6417,97 @@ body.has-brigada-modal {
 
 @media (max-width: 1199.98px) {
     .site-menu-wrap {
-        padding-bottom: 12px;
-        background: rgba(255, 250, 241, .98);
+        background: #fff;
     }
 
     .site-nav__toggle {
         display: inline-flex;
         flex-direction: column;
+        transition: background-color .16s ease, border-color .16s ease;
+    }
+
+    .site-nav__toggle[aria-expanded="true"] {
+        border-color: var(--qanto-black);
+        background: #f5f5f3;
     }
 
     .site-nav__collapse {
-        padding-bottom: 14px;
+        padding: 10px 0 14px;
+        border-top: 1px solid rgba(29, 29, 27, .08);
     }
 
     .site-menu {
         height: auto;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        border-radius: 0;
-        overflow: hidden;
+        gap: 8px;
+        padding: 10px;
+        border: 1px solid rgba(29, 29, 27, .10);
+        border-radius: 10px;
+        overflow: visible;
+        background: #fff;
     }
 
     .site-menu__item,
     .site-menu__item:first-child,
     .site-menu__item:last-child {
-        min-height: 52px;
+        width: 100%;
+        min-height: 44px;
         justify-content: flex-start;
-        border-top: 1px solid rgba(255, 255, 255, .09);
-        border-left: 1px solid rgba(255, 255, 255, .09);
-        border-radius: 0;
+        padding: 0 12px;
+        border: 1px solid rgba(29, 29, 27, .08);
+        border-radius: 10px;
+        color: var(--qanto-black);
+        background: #f5f5f3;
+        font-size: .9rem;
+        text-decoration: none;
+    }
+
+    .site-menu__item:hover,
+    .site-menu__item.is-active,
+    .site-menu__button.show {
+        color: #fff;
+        border-color: var(--qanto-black);
+        background: var(--qanto-black);
     }
 
     .site-menu__dropdown {
         display: block;
+        position: relative;
     }
 
     .site-menu__button {
         width: 100%;
+        height: 44px;
+        justify-content: space-between;
+    }
+
+    .site-menu__dropdown-menu {
+        position: static !important;
+        width: 100%;
+        min-width: 0;
+        margin: 8px 0 0 !important;
+        transform: none !important;
+        box-shadow: none;
+        border-color: rgba(29, 29, 27, .10);
+        background: #f5f5f3;
+    }
+
+    .site-menu__dropdown-menu.show {
+        display: grid;
+    }
+
+    .site-menu__dropdown-menu .dropdown-item {
+        min-height: 34px;
+        border-radius: 8px;
+        background: #fff;
+        font-size: .82rem;
+    }
+
+    .site-menu__dropdown-menu .dropdown-item:hover,
+    .site-menu__dropdown-menu .dropdown-item.active {
+        color: #fff;
+        background: var(--qanto-red);
     }
 
     .markets-finder {
@@ -6462,9 +6673,14 @@ body.has-brigada-modal {
         min-height: 240px;
     }
 
-    .career-list {
+    .career-list-pane {
+        min-height: 0;
         max-height: none;
         border-right: 0;
+    }
+
+    .career-list {
+        max-height: none;
     }
 
     .career-map {
@@ -6629,14 +6845,49 @@ body.has-brigada-modal {
         width: 54px;
     }
 
+    .markets-mobile-toggle {
+        display: inline-flex;
+    }
+
     .markets-list {
         max-height: 360px;
     }
 
+    .markets-finder:not(.is-map-visible) .markets-map {
+        display: none;
+    }
+
+    .wholesale-finder:not(.is-map-visible) .wholesale-map {
+        display: none;
+    }
+
+    .markets-finder.is-map-visible .markets-list {
+        display: none;
+    }
+
+    .wholesale-finder.is-map-visible .wholesale-branches-list {
+        display: none;
+    }
+
+    .markets-finder.is-map-visible .markets-finder__sidebar {
+        border-bottom: 0;
+    }
+
     .markets-map,
     .markets-map__leaflet,
-    .markets-map__empty {
-        min-height: 390px;
+    .markets-map__empty,
+    .wholesale-map,
+    .wholesale-map__leaflet,
+    .wholesale-map .markets-map__empty {
+        min-height: 340px;
+        height: clamp(340px, 54vh, 430px);
+        height: clamp(340px, 54svh, 430px);
+    }
+
+    .markets-map,
+    .wholesale-map {
+        height: clamp(340px, 54vh, 430px);
+        height: clamp(340px, 54svh, 430px);
     }
 
     .markets-contact {
@@ -6852,8 +7103,23 @@ body.has-brigada-modal {
         width: 100%;
     }
 
-    .career-map {
-        min-height: 420px;
+    .career-jobs:not(.is-map-visible) .career-map {
+        display: none;
+    }
+
+    .career-jobs.is-map-visible .career-list {
+        display: none;
+    }
+
+    .career-mobile-toggle {
+        display: inline-flex;
+    }
+
+    .career-map,
+    .career-map__canvas {
+        min-height: 340px;
+        height: clamp(340px, 54vh, 430px);
+        height: clamp(340px, 54svh, 430px);
     }
 
     .career-map__toolbar {
@@ -6874,11 +7140,6 @@ body.has-brigada-modal {
     .career-map__toggle,
     .career-map__reset {
         width: 100%;
-    }
-
-    .career-map__canvas {
-        height: 318px;
-        min-height: 318px;
     }
 
     .career-map__legend {

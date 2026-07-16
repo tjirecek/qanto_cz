@@ -1524,6 +1524,14 @@ $ui_texts = [
         'cz' => 'Žádná obec neodpovídá hledání.',
         'en' => 'No town matches the search.',
     ],
+    'markety.show_map' => [
+        'cz' => 'Zobrazit mapu',
+        'en' => 'Show map',
+    ],
+    'markety.show_list' => [
+        'cz' => 'Zobrazit seznam',
+        'en' => 'Show list',
+    ],
     'markety.empty' => [
         'cz' => 'Aktuálně nejsou dostupné žádné markety.',
         'en' => 'No markets are currently available.',

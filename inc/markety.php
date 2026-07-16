@@ -406,6 +406,16 @@ $marketRouterText = (function_exists('stat_vyraz') && function_exists('plain_tex
                             hidden
                         ></div>
                     </div>
+                    <button
+                        type="button"
+                        class="markets-mobile-toggle"
+                        data-markets-mobile-toggle
+                        data-label-map="<?= frontend_markety_e(ui_text('markety.show_map', 'Zobrazit mapu')) ?>"
+                        data-label-list="<?= frontend_markety_e(ui_text('markety.show_list', 'Zobrazit seznam')) ?>"
+                        aria-pressed="false"
+                    >
+                        <span data-markets-mobile-toggle-label><?= frontend_markety_e(ui_text('markety.show_map', 'Zobrazit mapu')) ?></span>
+                    </button>
                 </div>
 
                 <div class="markets-list">

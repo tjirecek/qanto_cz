@@ -274,6 +274,8 @@
     const areas = parseJsonElement(container, '[data-wholesale-map-areas]', { type: 'FeatureCollection', features: [] });
     const branches = parseJsonElement(container, '[data-wholesale-map-branches]', []);
     const section = container.closest('.wholesale-finder');
+    const mobileToggle = section ? section.querySelector('[data-wholesale-mobile-toggle]') : null;
+    const mobileToggleLabel = mobileToggle ? mobileToggle.querySelector('[data-wholesale-mobile-toggle-label]') : null;
     const branchCards = section ? Array.from(section.querySelectorAll('[data-wholesale-branch-card]')) : [];
     const features = Array.isArray(areas.features) ? areas.features : [];
     const branchPoints = Array.isArray(branches)
@@ -408,6 +410,37 @@
     addMapResetControl(map, container.dataset.labelReset || '', () => fitDefaultView(true, true));
 
     if (section) {
+      const setMobileMapVisible = (visible) => {
+        if (!mobileToggle) {
+          return;
+        }
+
+        section.classList.toggle('is-map-visible', visible);
+        mobileToggle.setAttribute('aria-pressed', visible ? 'true' : 'false');
+        if (mobileToggleLabel) {
+          mobileToggleLabel.textContent = visible
+            ? (mobileToggle.dataset.labelList || '')
+            : (mobileToggle.dataset.labelMap || '');
+        }
+
+        if (visible) {
+          window.setTimeout(() => {
+            map.invalidateSize();
+            fitDefaultView(true);
+            window.setTimeout(() => {
+              map.invalidateSize();
+              fitDefaultView(true);
+            }, 120);
+          }, 80);
+        }
+      };
+
+      if (mobileToggle) {
+        mobileToggle.addEventListener('click', () => {
+          setMobileMapVisible(!section.classList.contains('is-map-visible'));
+        });
+      }
+
       document.addEventListener('qanto:wholesale-branch-selected', (event) => {
         if (event.detail && event.detail.source === 'map') {
           return;
@@ -487,6 +520,8 @@
     const cityTrigger = section ? section.querySelector('[data-markets-city-trigger]') : null;
     const cityLabel = section ? section.querySelector('[data-markets-city-label]') : null;
     const cityPanel = section ? section.querySelector('[data-markets-city-panel]') : null;
+    const mobileToggle = section ? section.querySelector('[data-markets-mobile-toggle]') : null;
+    const mobileToggleLabel = mobileToggle ? mobileToggle.querySelector('[data-markets-mobile-toggle-label]') : null;
     const marketCards = section ? Array.from(section.querySelectorAll('[data-market-card]')) : [];
     const empty = section ? section.querySelector('[data-markets-empty]') : null;
     const allCitiesLabel = container.dataset.labelAllCities || '';
@@ -648,6 +683,31 @@
       renderCards();
     };
 
+    const setMobileMapVisible = (visible) => {
+      if (!section || !mobileToggle) {
+        return;
+      }
+
+      section.classList.toggle('is-map-visible', visible);
+      mobileToggle.setAttribute('aria-pressed', visible ? 'true' : 'false');
+      if (mobileToggleLabel) {
+        mobileToggleLabel.textContent = visible
+          ? (mobileToggle.dataset.labelList || '')
+          : (mobileToggle.dataset.labelMap || '');
+      }
+
+      if (visible) {
+        window.setTimeout(() => {
+          map.invalidateSize();
+          render(true);
+          window.setTimeout(() => {
+            map.invalidateSize();
+            render(true);
+          }, 120);
+        }, 80);
+      }
+    };
+
     if (cityPanel) {
       const options = [{ value: '', label: allCitiesLabel }, ...cityOptions.map((city) => ({ value: city, label: city }))];
       const searchWrap = document.createElement('div');
@@ -729,6 +789,12 @@
     }
 
     if (section) {
+      if (mobileToggle) {
+        mobileToggle.addEventListener('click', () => {
+          setMobileMapVisible(!section.classList.contains('is-map-visible'));
+        });
+      }
+
       addMapResetControl(map, allCitiesLabel, () => {
         selectedCity = '';
         map.closePopup();
@@ -764,9 +830,14 @@
     const points = parseCareerMapPoints(container);
     const mapRoot = container.closest('.career-map');
     const careerSection = container.closest('.career-jobs');
-    const cityTrigger = mapRoot ? mapRoot.querySelector('[data-career-map-city-trigger]') : null;
-    const cityLabel = mapRoot ? mapRoot.querySelector('[data-career-map-city-label]') : null;
-    const cityPanel = mapRoot ? mapRoot.querySelector('[data-career-map-city-panel]') : null;
+    const mobileToggle = careerSection ? careerSection.querySelector('[data-career-mobile-toggle]') : null;
+    const mobileToggleLabel = mobileToggle ? mobileToggle.querySelector('[data-career-mobile-toggle-label]') : null;
+    const cityPicker = careerSection
+      ? careerSection.querySelector('[data-career-map-city-picker]')
+      : (mapRoot ? mapRoot.querySelector('[data-career-map-city-picker]') : null);
+    const cityTrigger = cityPicker ? cityPicker.querySelector('[data-career-map-city-trigger]') : null;
+    const cityLabel = cityPicker ? cityPicker.querySelector('[data-career-map-city-label]') : null;
+    const cityPanel = cityPicker ? cityPicker.querySelector('[data-career-map-city-panel]') : null;
     const jobsOnlyButton = mapRoot ? mapRoot.querySelector('[data-career-map-jobs-only]') : null;
     const resetButton = mapRoot ? mapRoot.querySelector('[data-career-map-reset]') : null;
     const filterEmpty = mapRoot ? mapRoot.querySelector('[data-career-map-filter-empty]') : null;
@@ -776,6 +847,9 @@
     let selectedCity = '';
     let selectedStredisko = '';
     let jobsOnly = false;
+    let citySearchTerm = '';
+    let citySearchInput = null;
+    let citySearchEmpty = null;
 
     container.replaceChildren();
 
@@ -824,6 +898,32 @@
       }
       cityPanel.hidden = true;
       cityTrigger.setAttribute('aria-expanded', 'false');
+      citySearchTerm = '';
+      if (citySearchInput) {
+        citySearchInput.value = '';
+        filterCareerCityOptions();
+      }
+    };
+
+    const filterCareerCityOptions = () => {
+      if (!cityPanel) {
+        return;
+      }
+
+      const query = normalizeFilterText(citySearchTerm);
+      let visibleCount = 0;
+      cityPanel.querySelectorAll('[data-career-map-city-option]').forEach((button) => {
+        const text = normalizeFilterText(button.textContent || '');
+        const isVisible = !query || text.includes(query);
+        button.hidden = !isVisible;
+        if (isVisible) {
+          visibleCount += 1;
+        }
+      });
+
+      if (citySearchEmpty) {
+        citySearchEmpty.hidden = visibleCount > 0;
+      }
     };
 
     const setCityOptionsState = () => {
@@ -905,6 +1005,31 @@
       renderJobCards();
     };
 
+    const setMobileMapVisible = (visible) => {
+      if (!careerSection || !mobileToggle) {
+        return;
+      }
+
+      careerSection.classList.toggle('is-map-visible', visible);
+      mobileToggle.setAttribute('aria-pressed', visible ? 'true' : 'false');
+      if (mobileToggleLabel) {
+        mobileToggleLabel.textContent = visible
+          ? (mobileToggle.dataset.labelList || '')
+          : (mobileToggle.dataset.labelMap || '');
+      }
+
+      if (visible) {
+        window.setTimeout(() => {
+          map.invalidateSize();
+          renderCareerFilter(true);
+          window.setTimeout(() => {
+            map.invalidateSize();
+            renderCareerFilter(true);
+          }, 120);
+        }, 80);
+      }
+    };
+
     markerItems.forEach(({ point, marker }) => {
       marker.on('click', () => {
         selectedCity = normalizeCareerCity(point.city);
@@ -917,16 +1042,56 @@
 
     if (cityPanel) {
       const options = [{ value: '', label: allCitiesLabel }, ...cityOptions.map((city) => ({ value: city, label: city }))];
-      cityPanel.replaceChildren(...options.map((option) => {
+      const searchWrap = document.createElement('div');
+      searchWrap.className = 'markets-city__search';
+
+      citySearchInput = document.createElement('input');
+      citySearchInput.type = 'search';
+      citySearchInput.autocomplete = 'off';
+      citySearchInput.placeholder = cityPanel.dataset.searchPlaceholder || '';
+      citySearchInput.setAttribute('aria-label', cityPanel.dataset.searchPlaceholder || '');
+      searchWrap.appendChild(citySearchInput);
+
+      const optionsList = document.createElement('div');
+      optionsList.className = 'markets-city__options';
+
+      options.forEach((option) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'career-map-city__option';
+        button.className = 'markets-city__option career-map-city__option';
         button.dataset.careerMapCityOption = '';
         button.dataset.city = option.value;
         button.setAttribute('role', 'option');
         button.textContent = option.label;
-        return button;
-      }));
+        optionsList.appendChild(button);
+      });
+
+      citySearchEmpty = document.createElement('div');
+      citySearchEmpty.className = 'markets-city__empty';
+      citySearchEmpty.textContent = cityPanel.dataset.searchEmpty || '';
+      citySearchEmpty.hidden = true;
+
+      cityPanel.replaceChildren(searchWrap, optionsList, citySearchEmpty);
+
+      citySearchInput.addEventListener('input', () => {
+        citySearchTerm = citySearchInput ? citySearchInput.value : '';
+        filterCareerCityOptions();
+      });
+
+      citySearchInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          const firstVisibleOption = cityPanel.querySelector('[data-career-map-city-option]:not([hidden])');
+          if (firstVisibleOption) {
+            firstVisibleOption.click();
+          }
+        }
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeCityPanel();
+          cityTrigger?.focus();
+        }
+      });
 
       cityPanel.addEventListener('click', (event) => {
         const option = event.target.closest('[data-career-map-city-option]');
@@ -945,10 +1110,13 @@
         const shouldOpen = cityPanel.hidden;
         cityPanel.hidden = !shouldOpen;
         cityTrigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        if (shouldOpen && citySearchInput) {
+          window.setTimeout(() => citySearchInput?.focus(), 0);
+        }
       });
 
       document.addEventListener('click', (event) => {
-        if (mapRoot && !mapRoot.contains(event.target)) {
+        if (cityPicker && !cityPicker.contains(event.target)) {
           closeCityPanel();
         }
       });
@@ -969,6 +1137,14 @@
         jobsOnlyButton.classList.toggle('is-active', jobsOnly);
         jobsOnlyButton.setAttribute('aria-pressed', jobsOnly ? 'true' : 'false');
         renderMarkers(true);
+      });
+    }
+
+    if (mobileToggle) {
+      mobileToggle.addEventListener('click', () => {
+        if (careerSection) {
+          setMobileMapVisible(!careerSection.classList.contains('is-map-visible'));
+        }
       });
     }
 

@@ -457,6 +457,17 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
                         </form>
                         <script type="application/json" data-wholesale-availability-places><?= frontend_velkoobchod_json($wholesalePlaces) ?></script>
                     </section>
+
+                    <button
+                        type="button"
+                        class="markets-mobile-toggle wholesale-mobile-toggle"
+                        data-wholesale-mobile-toggle
+                        data-label-map="<?= frontend_velkoobchod_e(ui_text('markety.show_map', 'Zobrazit mapu')) ?>"
+                        data-label-list="<?= frontend_velkoobchod_e(ui_text('markety.show_list', 'Zobrazit seznam')) ?>"
+                        aria-pressed="false"
+                    >
+                        <span data-wholesale-mobile-toggle-label><?= frontend_velkoobchod_e(ui_text('markety.show_map', 'Zobrazit mapu')) ?></span>
+                    </button>
                 </div>
 
                 <div class="markets-list wholesale-branches-list">
