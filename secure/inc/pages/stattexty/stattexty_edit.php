@@ -102,6 +102,10 @@ $valid = (int)($dev['valid'] ?? 0);
                 </div>
             </div>
 
+            <div class="col-md-4 d-flex align-items-end">
+                <?= admin_auto_translate_checkbox($dev ?? null, 'stattext_auto_translate_en') ?>
+            </div>
+
             <div class="col-md-2 d-flex align-items-end">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" name="valid" id="valid" value="1" <?= ($valid === 1 ? 'checked' : '') ?>>

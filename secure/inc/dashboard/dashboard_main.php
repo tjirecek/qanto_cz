@@ -103,7 +103,7 @@
                 <tr>
                     <td><span class="badge text-bg-qanto-markety">Markety</span></td>
                     <td><code>text-bg-qanto-markety</code></td>
-                    <td>Štítek Markety.</td>
+                    <td>Štítek Markety, tmavá projektová barva.</td>
                 </tr>
                 <tr>
                     <td><span class="badge text-bg-qanto-velkoobchod">Velkoobchod</span></td>
@@ -113,7 +113,7 @@
                 <tr>
                     <td><span class="badge text-bg-qanto">Qanto</span></td>
                     <td><code>text-bg-qanto</code></td>
-                    <td>Obecný štítek Qanto.</td>
+                    <td>Obecný štítek Qanto, modrá projektová barva.</td>
                 </tr>
                 <tr>
                     <td><span class="badge text-bg-qantoplus">Qanto+</span></td>

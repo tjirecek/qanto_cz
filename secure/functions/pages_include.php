@@ -40,6 +40,8 @@ $routes = [
             '03' => 'pages/kontakty/velkoobchody',
             '04' => 'pages/kontakty/obchodni_zastupci',
             '05' => 'pages/kontakty/oteviraci_doby',
+            '06' => 'pages/kontakty/kontakty_lide',
+            '07' => 'pages/kontakty/kontakty_lide',
         ],
         '03' => [
             '01' => 'pages/galerie/galerie_vypis',
@@ -51,6 +53,7 @@ $routes = [
         ],
         '05' => [
             '01' => 'pages/napiste_nam/napiste_nam_vypis',
+            '02' => 'pages/napiste_nam/napiste_nam_vypis',
         ],
     ],
     '09' => [
@@ -70,6 +73,7 @@ $routes = [
             '07' => 'settings/changelog',
             '08' => 'settings/migrations',
             '09' => 'settings/email_log',
+            '10' => 'settings/ui_texty',
         ],
     ],
     '03' => [

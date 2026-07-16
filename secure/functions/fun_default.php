@@ -138,6 +138,47 @@ function sp_hodnota_text(string $sp): ?string
     return ($val === false) ? null : (string)$val;
 }
 
+if (!function_exists('plain_text')) {
+    /**
+     * Očistí krátký obsah na plain text pro použití v UI.
+     */
+    function plain_text(?string $html): string
+    {
+        $html = (string)$html;
+        if ($html === '') {
+            return '';
+        }
+
+        $html = preg_replace('~<script\b[^>]*>.*?</script>~is', '', $html) ?? $html;
+        $html = preg_replace('~<style\b[^>]*>.*?</style>~is', '', $html) ?? $html;
+
+        $text = strip_tags($html);
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = trim(preg_replace('~\s+~u', ' ', $text) ?? $text);
+
+        return $text;
+    }
+}
+
+if (!function_exists('editor_html')) {
+    /**
+     * Ochrana HTML obsahu z administračních editorů.
+     * Běžné HTML zůstává, spustitelné skripty do obsahu nepatří.
+     */
+    function editor_html(?string $html): string
+    {
+        $html = (string)$html;
+        if ($html === '') {
+            return '';
+        }
+
+        $html = preg_replace('~<script\b[^>]*>.*?</script>~is', '', $html) ?? $html;
+        $html = preg_replace('~<script\b[^>]*/?>~is', '', $html) ?? $html;
+
+        return trim($html);
+    }
+}
+
 // max šířka/orig, výška/orig, šířka thumb, výška thumb
 // (ponechávám funkce kvůli kompatibilitě se starým kódem, ale tahám to přes sp_hodnota)
 function galerie_orig_width(): int

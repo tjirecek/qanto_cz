@@ -36,7 +36,7 @@ if ($add === 1 && trim(strip_tags($cz)) === '' && trim(strip_tags($en)) === '') 
                     <div class="tab-content admin-lang-tab-content border border-top-0 rounded-bottom p-3" id="statvyrazLangTabsContent">
                         <div class="tab-pane fade show active" id="statvyraz-cz-pane" role="tabpanel" aria-labelledby="statvyraz-cz-tab" tabindex="0">
                             <label for="cz" class="form-label">Statický výraz CZ</label>
-                            <textarea name="cz" id="cz" class="form-control js-tinymce" rows="8" data-tinymce-height="260" data-translate-source="vyraz" data-translate-format="html"><?= $cz ?></textarea>
+                            <textarea name="cz" id="cz" class="form-control" rows="4" data-translate-source="vyraz" data-translate-format="text"><?= htmlspecialchars($cz, ENT_QUOTES, 'UTF-8') ?></textarea>
                         </div>
 
                         <div class="tab-pane fade" id="statvyraz-en-pane" role="tabpanel" aria-labelledby="statvyraz-en-tab" tabindex="0">
@@ -50,9 +50,13 @@ if ($add === 1 && trim(strip_tags($cz)) === '' && trim(strip_tags($en)) === '') 
                                 </div>
                             </div>
                             <label for="en" class="form-label">Statický výraz EN</label>
-                            <textarea name="en" id="en" class="form-control js-tinymce" rows="8" data-tinymce-height="260" data-translate-target="vyraz"><?= $en ?></textarea>
+                            <textarea name="en" id="en" class="form-control" rows="4" data-translate-target="vyraz"><?= htmlspecialchars($en, ENT_QUOTES, 'UTF-8') ?></textarea>
                         </div>
                     </div>
+                </div>
+
+                <div class="col-md-4">
+                    <?= admin_auto_translate_checkbox(null, 'statvyraz_add_auto_translate_en') ?>
                 </div>
 
                 <div class="col-md-3">

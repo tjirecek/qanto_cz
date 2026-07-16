@@ -286,6 +286,10 @@ if ($typeFilter !== null) {
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <?= admin_auto_translate_checkbox($editType ?? null, 'galerie_type_auto_translate_en') ?>
+                        </div>
+
                         <?php if ($editType): ?>
                             <div class="mb-3 form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="valid" id="type_valid" value="1" <?= (int)($editType['valid'] ?? 1) === 1 ? 'checked' : '' ?>>
@@ -452,6 +456,10 @@ if ($typeFilter !== null) {
                             </div>
                         </div>
                         <?php if ($gallery): ?>
+                            <div class="col-12 col-md-4 d-flex align-items-end">
+                                <?= admin_auto_translate_checkbox($gallery, 'galerie_auto_translate_en') ?>
+                            </div>
+
                             <div class="col-12 col-md-4 d-flex align-items-end">
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="valid" id="galerie_valid" value="1" <?= (int)($gallery['valid'] ?? 1) === 1 ? 'checked' : '' ?>>

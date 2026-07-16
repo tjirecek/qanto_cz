@@ -30,7 +30,12 @@ $existingImage = (string)($record['image'] ?? '');
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (int)($_POST['add'] ?? 0) === 2) {
     try {
         $formValues = pobocky_normalize_form_data($_POST, $type);
-        $formValues['image'] = pobocky_image_upload($_FILES['userfile'] ?? null, $existingImage);
+        if (!empty($_POST['delete_image'])) {
+            pobocky_image_delete_file_if_unused($pdo, $existingImage, $edit);
+            $formValues['image'] = '';
+        } else {
+            $formValues['image'] = pobocky_image_upload($_FILES['userfile'] ?? null, $existingImage);
+        }
         pobocky_edit($pdo, $edit, $type, $formValues);
         pobocky_redirect($type, [
             'show' => 21,
@@ -44,10 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (int)($_POST['add'] ?? 0) === 2) {
             'poradi' => (int)($_POST['poradi'] ?? ($formValues['poradi'] ?? 0)),
             'stredisko' => (string)($_POST['stredisko'] ?? ($formValues['stredisko'] ?? '')),
             'galerie_id' => trim((string)($_POST['galerie_id'] ?? ($formValues['galerie_id'] ?? ''))),
+            'slug' => (string)($_POST['slug'] ?? ($formValues['slug'] ?? '')),
             'nazev_cz' => (string)($_POST['nazev_cz'] ?? ($formValues['nazev_cz'] ?? '')),
             'nazev_en' => (string)($_POST['nazev_en'] ?? ($formValues['nazev_en'] ?? '')),
             'mobil' => (string)($_POST['mobil'] ?? ($formValues['mobil'] ?? '')),
             'email' => (string)($_POST['email'] ?? ($formValues['email'] ?? '')),
+            'email_brigada' => (string)($_POST['email_brigada'] ?? ($formValues['email_brigada'] ?? '')),
+            'email_kariera' => (string)($_POST['email_kariera'] ?? ($formValues['email_kariera'] ?? '')),
             'adresa' => (string)($_POST['adresa'] ?? ($formValues['adresa'] ?? '')),
             'gps' => (string)($_POST['gps'] ?? ($formValues['gps'] ?? '')),
             'vedouci' => (string)($_POST['vedouci'] ?? ($formValues['vedouci'] ?? '')),

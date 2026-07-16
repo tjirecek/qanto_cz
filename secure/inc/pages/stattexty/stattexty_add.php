@@ -57,6 +57,10 @@ $add = isset($_POST['add']) ? (int)$_POST['add'] : 0;
                     <textarea name="editor" id="editor" class="form-control js-tinymce" rows="12"><?= $text_cz ?></textarea>
                 </div>
 
+                <div class="col-md-4">
+                    <?= admin_auto_translate_checkbox(null, 'stattext_add_auto_translate_en') ?>
+                </div>
+
                 <div class="col-md-3">
                     <input type="hidden" name="add" value="1">
                     <button type="submit" class="btn btn-primary w-100">Vložit statický text</button>

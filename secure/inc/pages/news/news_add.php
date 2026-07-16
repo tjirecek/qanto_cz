@@ -122,6 +122,10 @@ $galleries = function_exists('galerie_all') ? galerie_all(null, 1, 0) : [];
                     </div>
                 </div>
 
+                <div class="col-md-4">
+                    <?= admin_auto_translate_checkbox(null, 'news_add_auto_translate_en') ?>
+                </div>
+
                 <div class="col-md-3">
                     <input type="hidden" name="add" value="1">
                     <button type="submit" class="btn btn-primary w-100">Vložit novinku</button>

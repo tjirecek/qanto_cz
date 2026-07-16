@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<div class="mt-4 pt-4 border-top">
+<div class="mt-4 pt-4 border-top" id="otevdoba-standard">
     <h6 class="fw-bold text-primary mb-3">Standardní otevírací doba</h6>
 
     <?php if ($hoursSuccessMessage !== ''): ?>

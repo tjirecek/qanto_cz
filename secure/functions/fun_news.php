@@ -1,4 +1,6 @@
 <?php
+
+require_once __DIR__ . '/fun_admin_translate.php';
 // PDO verze
 
 function news_ico_dir(bool $small = false): string
@@ -199,8 +201,10 @@ function news_typ_save(array $data, ?int $id = null): int
             VALUES (:poradi, :nazev_cz, :nazev_en, :popis_cz, :popis_en, :color, :user_i, :user_u)');
         $payload[':user_i'] = $user;
         $stmt->execute($payload);
+        $newId = (int)$pdo->lastInsertId();
+        admin_auto_translate_record('news.type', $newId, $data);
 
-        return (int)$pdo->lastInsertId();
+        return $newId;
     }
 
     $payload[':id'] = $id;
@@ -216,6 +220,7 @@ function news_typ_save(array $data, ?int $id = null): int
             user_u = :user_u
         WHERE id = :id');
     $stmt->execute($payload);
+    admin_auto_translate_record('news.type', $id, $data);
 
     return $id;
 }
@@ -366,6 +371,10 @@ function news_add (
     $url_en = trim($url_en) !== ''
         ? news_url_unique($url_en, 'en')
         : (trim($nazev_en) !== '' ? news_url_unique(news_url_generate($nazev_en, $datum), 'en') : '');
+    $perex_cz = editor_html($perex_cz);
+    $perex_en = editor_html($perex_en);
+    $text_cz = editor_html($text_cz);
+    $text_en = editor_html($text_en);
     $qn_user = admin_session_user();
     $pdo->exec("SET NAMES utf8");
 
@@ -400,6 +409,18 @@ function news_add (
             ':user_u'     => $qn_user,
         ]);
         $newsId = (int)$pdo->lastInsertId();
+        admin_auto_translate_record('news.record', $newsId, array_merge($_POST, [
+            'nazev_cz' => $nazev_cz,
+            'nazev_en' => $nazev_en,
+            'perex_cz' => $perex_cz,
+            'perex_en' => $perex_en,
+            'text_cz' => $text_cz,
+            'text_en' => $text_en,
+            'seo_title_cz' => $seo_title_cz,
+            'seo_title_en' => $seo_title_en,
+            'seo_description_cz' => $seo_description_cz,
+            'seo_description_en' => $seo_description_en,
+        ]));
         news_tags_save_for_news($newsId, $tagIds);
     } catch (Throwable $e) {
         error_log('news_add failed: ' . $e->getMessage());
@@ -456,6 +477,11 @@ function news_edit_multilang(
         ? news_url_unique($urlEn, 'en', $id)
         : ($nazevEn !== '' ? news_url_unique(news_url_generate($nazevEn, $datum), 'en', $id) : '');
 
+    $perexCz = editor_html((string)($data['perex_cz'] ?? ''));
+    $perexEn = editor_html((string)($data['perex_en'] ?? ''));
+    $textCz = editor_html((string)($data['text_cz'] ?? ''));
+    $textEn = editor_html((string)($data['text_en'] ?? ''));
+
     $sql = 'UPDATE news SET
                 url_cz = :url_cz,
                 url_en = :url_en,
@@ -486,10 +512,10 @@ function news_edit_multilang(
             ':news_typ' => $news_typ,
             ':nazev_cz' => $nazevCz,
             ':nazev_en' => $nazevEn,
-            ':perex_cz' => (string)($data['perex_cz'] ?? ''),
-            ':perex_en' => (string)($data['perex_en'] ?? ''),
-            ':text_cz' => (string)($data['text_cz'] ?? ''),
-            ':text_en' => (string)($data['text_en'] ?? ''),
+            ':perex_cz' => $perexCz,
+            ':perex_en' => $perexEn,
+            ':text_cz' => $textCz,
+            ':text_en' => $textEn,
             ':seo_title_cz' => trim((string)($data['seo_title_cz'] ?? '')),
             ':seo_title_en' => trim((string)($data['seo_title_en'] ?? '')),
             ':seo_description_cz' => trim((string)($data['seo_description_cz'] ?? '')),
@@ -506,6 +532,18 @@ function news_edit_multilang(
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
+        admin_auto_translate_record('news.record', $id, array_merge($data, [
+            'nazev_cz' => $nazevCz,
+            'nazev_en' => $nazevEn,
+            'perex_cz' => $perexCz,
+            'perex_en' => $perexEn,
+            'text_cz' => $textCz,
+            'text_en' => $textEn,
+            'seo_title_cz' => $params[':seo_title_cz'],
+            'seo_title_en' => $params[':seo_title_en'],
+            'seo_description_cz' => $params[':seo_description_cz'],
+            'seo_description_en' => $params[':seo_description_en'],
+        ]));
         news_tags_save_for_news($id, $tagIds);
     } catch (PDOException $e) {
         echo '<a href="#" class="btn btn-warning btn-icon-split">
@@ -777,7 +815,7 @@ function news_delete ($id): void
 }
 
 //funkce pro smazani fotografie
-function news_ico_delete ($ico_del): void
+function news_ico_delete ($ico_del, bool $announce = true): void
 {
     global $pdo;
 
@@ -789,17 +827,29 @@ function news_ico_delete ($ico_del): void
     $soubor = stripslashes($soubor);
 
     if ($soubor !== '') {
-        @unlink(news_ico_path($soubor));
-        @unlink(news_ico_path($soubor, true));
+        $stmtUsed = $pdo->prepare('SELECT COUNT(*) FROM news WHERE news_ico = :news_ico AND id <> :id');
+        $stmtUsed->execute([
+            ':news_ico' => $soubor,
+            ':id' => (int)$ico_del,
+        ]);
+
+        if ((int)$stmtUsed->fetchColumn() === 0) {
+            @unlink(news_ico_path($soubor));
+            @unlink(news_ico_path($soubor, true));
+        }
     }
 
     try {
         $stmt2 = $pdo->prepare("UPDATE news SET news_ico = '' WHERE id = :id");
         $stmt2->execute([':id' => (int)$ico_del]);
-        echo '<span class="warning">Novinka byla upravena</span>';
+        if ($announce) {
+            echo '<span class="warning">Novinka byla upravena</span>';
+        }
     } catch (PDOException $e) {
-        echo '<span class="warning">Novinka nebyla upraveno</span><br />';
-        echo $e->getMessage();
+        if ($announce) {
+            echo '<span class="warning">Novinka nebyla upraveno</span><br />';
+            echo $e->getMessage();
+        }
     }
 }
 
@@ -1070,8 +1120,10 @@ function news_tag_save(array $data, ?int $id = null): int
             VALUES (:poradi, :nazev_cz, :nazev_en, :slug_cz, :slug_en, :color, :user_i, :user_u)');
         $payload[':user_i'] = $user;
         $stmt->execute($payload);
+        $newId = (int)$pdo->lastInsertId();
+        admin_auto_translate_record('news.tag', $newId, $data);
 
-        return (int)$pdo->lastInsertId();
+        return $newId;
     }
 
     $payload[':id'] = $id;
@@ -1087,6 +1139,7 @@ function news_tag_save(array $data, ?int $id = null): int
             user_u = :user_u
         WHERE id = :id');
     $stmt->execute($payload);
+    admin_auto_translate_record('news.tag', $id, $data);
 
     return $id;
 }

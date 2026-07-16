@@ -1,46 +1,9 @@
 <?php
 declare(strict_types=1);
 
-function email_log_schema_sql(): string
-{
-    return "CREATE TABLE IF NOT EXISTS log_emails (
-        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-        public_id CHAR(36) NOT NULL,
-        context VARCHAR(60) NOT NULL,
-        template_code VARCHAR(80) DEFAULT NULL,
-        subject VARCHAR(255) NOT NULL,
-        recipient_email VARCHAR(190) NOT NULL,
-        recipient_name VARCHAR(160) DEFAULT NULL,
-        sender_email VARCHAR(190) DEFAULT NULL,
-        sender_name VARCHAR(160) DEFAULT NULL,
-        reply_to_email VARCHAR(190) DEFAULT NULL,
-        related_table VARCHAR(80) DEFAULT NULL,
-        related_id BIGINT UNSIGNED DEFAULT NULL,
-        status VARCHAR(30) NOT NULL DEFAULT 'queued',
-        provider VARCHAR(60) DEFAULT NULL,
-        provider_message_id VARCHAR(190) DEFAULT NULL,
-        error_message TEXT DEFAULT NULL,
-        payload_json MEDIUMTEXT DEFAULT NULL,
-        body_text MEDIUMTEXT DEFAULT NULL,
-        body_html MEDIUMTEXT DEFAULT NULL,
-        queued_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        sent_at DATETIME DEFAULT NULL,
-        failed_at DATETIME DEFAULT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        UNIQUE KEY uq_log_emails_public_id (public_id),
-        KEY idx_log_emails_recipient (recipient_email),
-        KEY idx_log_emails_context (context, template_code),
-        KEY idx_log_emails_related (related_table, related_id),
-        KEY idx_log_emails_status (status, queued_at),
-        KEY idx_log_emails_provider_message (provider, provider_message_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-}
-
 function email_log_prepare_table(PDO $pdo): void
 {
-    $pdo->exec(email_log_schema_sql());
+    // Schema is managed exclusively by SQL migrations.
 }
 
 function email_log_uuid(): string

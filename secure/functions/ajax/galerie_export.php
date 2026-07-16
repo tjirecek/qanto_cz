@@ -18,20 +18,17 @@ require_once $autoload;
 
 function galerie_export_columns(PDO $pdo, string $table): array
 {
-    if (!in_array($table, ['galerie', 'galerie_photo'], true)) {
-        throw new InvalidArgumentException('Neplatna exportni tabulka.');
-    }
-
-    $columns = [];
-    $stmt = $pdo->query('SHOW COLUMNS FROM `' . $table . '`');
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $field = (string)($row['Field'] ?? '');
-        if ($field !== '') {
-            $columns[] = $field;
-        }
-    }
-
-    return $columns;
+    return match ($table) {
+        'galerie' => [
+            'id', 'nazev_cz', 'nazev_en', 'datum', 'galerie_typ', 'popis_cz', 'popis_en',
+            'valid', 'user_i', 'user_u', 'ts_i', 'ts_u',
+        ],
+        'galerie_photo' => [
+            'id', 'poradi', 'galerie_id', 'nazev_cz', 'nazev_en', 'soubor', 'mime_type',
+            'width', 'height', 'filesize', 'valid', 'user_i', 'user_u', 'ts_i', 'ts_u',
+        ],
+        default => throw new InvalidArgumentException('Neplatna exportni tabulka.'),
+    };
 }
 
 function galerie_export_rows(PDO $pdo, string $type): array

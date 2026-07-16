@@ -24,12 +24,16 @@ Project vrstva qanto.cz je otevrena pouze pro novy web qanto.cz a nesmi se autom
 - Přihlášení administrace a session namespace.
 - Uživatelé a skupiny.
 - Systémové proměnné.
+- UI texty webu jako DB přepis pro `ui_text()` s fallbackem do `functions/lang.php`.
 - Systémové menu a práva skupin na menu.
 - Novinky.
 - Statické texty a výrazy.
 - Fotogalerie.
 - Kontakty a pobočky.
-- Napište nám.
+- Obchodní zástupci s vazbou na pobočku a připravenou vazbou na oblast.
+- Otevírací doby jako souhrnný přehled všech aktivních poboček s editací v detailu pobočky.
+- Kontaktní osoby ve firmě a jejich skupiny včetně fotek.
+- Napište nám: historické zprávy a kategorie kontaktního formuláře s příjemci e-mailů.
 - Cron log.
 - ChangeLog včetně editovatelných kategorií a volitelné vazby na novinku/manuál.
 - DB migrace.
@@ -51,6 +55,21 @@ Project menu noveho webu qanto.cz je v sekci `02`:
 - `06` Volani
 - `07` TenisQcup
 - `08` Inventury
+- `09` Zavozove obce
+
+Agenda `01 Volná místa` má podstránky `Pozice`, `Skupiny` a `Dotazníky`. Pozice i skupiny mají samostatný výpis, přidání a editaci; formulář se zobrazuje pouze po kliknutí na akci přidání nebo úpravy. Filtr skupin ve výpisech pozic a dotazníků je řešen kompaktním vyhledávacím dropdownem se zaškrtávátky; pozice navíc doplňuje filtr `Zobrazovat` pro hodnoty `Vše`, `Ano`, `Ne`. Výpisy standardně zobrazují validní záznamy a přes horní tlačítko lze přepnout na nevalidní. Agenda spravuje pracovní místa a skupiny, zobrazuje přijaté dotazníky s detailem, PDF stažením a umožňuje znevalidnění/obnovení.
+
+U pozic jsou dvě akce pro ÚP: oznámení nového pracovního místa a oznámení zrušení pracovního místa. Příjemce se bere z pole `E-mail ÚP` u skupiny pracovních míst. Předměty, HTML šablony a odesílací identita jsou systémové proměnné s prefixem `rep_volna_mista_up_`; e-maily se odesílají přes `mailer_send_smtp_logged()` a zapisují do `log_emails` s kontextem `rep_volna_mista`.
+
+Agenda `09 Zavozove obce` ma podstranky `Obce` a `Mapa`. `Obce` obsahuje import XLSX a seznam vsech obci s rucni zmenou stavu; `Mapa` zobrazuje vsechny obce nad OpenStreetMap s filtrem podle stavu a modalovou zmenou stavu.
+
+Agenda `05 Ples` obsahuje registrace hostů z frontend formuláře, default posledního ročníku, filtrování podle ročníků, valid/nevalid přepínač, znevalidnění/obnovení a XLSX export aktuálního filtru.
+
+Agenda `04 Brigádníci` má submenu `VO` a `MO`. Obě podstránky obsahují registrace z frontend formuláře, default posledního ročníku podle `reg_date`, filtrování podle ročníků, valid/nevalid přepínač, znevalidnění/obnovení, název napárované aktuální pobočky a XLSX export aktuálního filtru.
+
+Agenda `07 TenisQcup` obsahuje registrace týmů z frontend formuláře, filtrování podle ročníků a XLSX export aktuálně vybraných ročníků.
+
+Agenda `06 Volání` obsahuje import původních XML souborů přeúčtování (`vf_prehled.xml`, `vf_souhrn.xml`, `vf_detail_*.xml`), historický výpis podle období/e-mailu/telefonu a zákaznické odkazy přes `unify` na veřejný souhrn nebo detail. Na rozdíl od původního webu import netruncuje tabulky; přehled se aktualizuje podle `obdobi + mobil`, souhrn a detail se deduplikují podle hashe řádku.
 
 System menu je v sekci `09`.
 
@@ -68,6 +87,16 @@ Na lokálním prostředí musí newsletter respektovat `mail_bypass_enabled`. Po
 
 Obrázky a odkazy v HTML obsahu novinek se v DB drží relativně. Při sestavení newsletteru se `src` a `href` relativní vůči webu převádějí na absolutní URL podle `newsletter_public_base_url`. Vizuál e-mailu se řídí konfiguračními klíči `newsletter_brand_name`, `newsletter_logo_url` a `newsletter_accent_color`; logo pro e-mail preferuj ve formátu PNG/JPG kvůli kompatibilitě e-mail klientů.
 
+## ChangeLog
+
+ChangeLog je shared admin agenda v `secure/inc/settings/changelog.php` s helpery ve `functions/fun_changelog.php` a admin wrapperem `secure/functions/fun_changelog.php`.
+
+E-mailem lze odeslat pouze změnu ve stavu `nasazeno`. E-mail obsahuje popis změny a při navázaném `news_id` také perex/tělo novinky. Obrázky a odkazy v HTML obsahu se při sestavení e-mailu převádějí na absolutní URL podle `changelog_public_base_url`, fallback aktuální host administrace, nebo `newsletter_public_base_url`.
+
+Příjemci se vybírají přes multiselect skupin. Shared zdroj je vždy `users_skup` + `users`. Pokud cílový projekt obsahuje `rep_users_skup` + `rep_users`, zobrazí se i projektové skupiny. Do rozesílky vstupují pouze aktivní/validní uživatelé s platným e-mailem; duplicitní e-maily napříč skupinami se deduplikují.
+
+Odesílání používá `mailer_send_smtp_logged()` a zapisuje jednotlivé e-maily do `log_emails` s kontextem `changelog`, šablonou `changelog_release`, `related_table = changelog` a `related_id = ID změny`.
+
 ## Vicejazycne Editace
 
 Novinky, fotogalerie, staticke texty a staticke vyrazy jsou shared admin agendy s vicejazycnymi poli. Preklad CZ -> EN pouziva DeepL konfiguraci z INI (`deepl_*`).
@@ -76,15 +105,32 @@ Vicejazycne zaznamy se edituji v jednom detailu pres zalozky `CZ` / `EN`; ve vyp
 
 Preklad se dela z aktualnich hodnot CZ poli ve formulari, ne z DB, aby bylo mozne prelozit i rozepsanou neulozenou upravu. To plati pro novinky, galerie, staticke texty i staticke vyrazy.
 
+Automatický překlad při uložení nepoužívá slepé hledání všech párů `*_cz` / `*_en`. Autoritativní mapa překládaných polí je ve `secure/functions/fun_admin_translate_map.php`; project agendy doplňují vlastní mapu přes `rep_admin_translate_field_maps()` v `secure/functions/fun_rep_admin_translate_map.php`. Výchozí chování je automaticky překládat CZ -> EN, ruční výjimka je přes příznak `auto_translate_en = 0` a checkbox `automaticky nepřekládat do EN`. Backendový save hook je v `secure/functions/fun_admin_translate.php` a po normálním uložení aktualizuje jen explicitně mapovaná EN pole.
+
 ## Staticke Texty A Vyrazy
 
 Staticke texty a staticke vyrazy jsou shared admin agenda.
+
+## Napište Nám
+
+Napište nám je shared admin agenda v `secure/inc/pages/napiste_nam/`.
+
+Administrace spravuje:
+
+- historický výpis přijatých zpráv,
+- kategorie kontaktního formuláře,
+- hlavní e-mail příjemce a e-mail kopie pro každou kategorii,
+- viditelnost kategorie na webu a validitu záznamu.
+
+Odesílání formuláře na veřejném frontendu se zatím neřeší; frontend později použije validní a viditelné kategorie jako seznam dotazů a podle zvolené kategorie vybere příjemce.
 
 ## Systemove Promenne
 
 Typ systemove promenne je volne textove pole. Nepouzivat pevny vycet hodnot, protoze typy se mohou lisit podle projektu; prazdna hodnota se uklada jako `main`.
 
 Vychozi limit vypisu systemovych promennych je 500 zaznamu. Rucni `limit=0` zustava zachovany pro nacteni vsech zaznamu.
+
+Podmenu `UI texty webu` spravuje tabulku `ui_texty`. Web pri volani `ui_text()` nacte validni DB hodnoty jednou za request do pametove cache; pokud klic v DB chybi nebo je nevalidni, pouzije se fallback z `functions/lang.php` a potom fallback predany primo ve volani `ui_text()`. Synchronizace v administraci vklada pouze chybejici klice z `functions/lang.php` a jednoduchych pouziti `ui_text('klic', 'fallback')`; existujici rucne upravene DB hodnoty neprepisuje.
 
 ## Cron
 

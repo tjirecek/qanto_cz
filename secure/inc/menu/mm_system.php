@@ -40,6 +40,7 @@ $cronListActive   = ($section==="09" && $page==="02" && $sec_page==="06");
 $changelogActive  = ($section==="09" && $page==="02" && $sec_page==="07");
 $migrationsActive = ($section==="09" && $page==="02" && $sec_page==="08");
 $emailLogActive   = ($section==="09" && $page==="02" && $sec_page==="09");
+$uiTextyActive    = ($section==="09" && $page==="02" && $sec_page==="10");
 ?>
 
 <div class="text-uppercase small fw-semibold text-muted mt-3 mb-1">Settings</div>
@@ -84,5 +85,6 @@ $emailLogActive   = ($section==="09" && $page==="02" && $sec_page==="09");
         <?= mm_sys_item($isAdmin, 'index.php?section=09&amp;page=02&amp;sec_page=07', 'ChangeLog', $changelogActive) ?>
         <?= mm_sys_item($isAdmin, 'index.php?section=09&amp;page=02&amp;sec_page=08', 'DB migrace', $migrationsActive) ?>
         <?= mm_sys_item($isAdmin, 'index.php?section=09&amp;page=02&amp;sec_page=09', 'E-mail log', $emailLogActive) ?>
+        <?= mm_sys_item($isAdmin, 'index.php?section=09&amp;page=02&amp;sec_page=10', 'UI texty webu', $uiTextyActive) ?>
     </div>
 </div>

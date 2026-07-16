@@ -132,6 +132,10 @@ $typeOrderValue = $_SERVER['REQUEST_METHOD'] === 'POST'
                         <textarea class="form-control" name="popis_en" id="news_type_popis_en" rows="3"><?= htmlspecialchars((string)($editType['popis_en'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
                     </div>
 
+                    <div class="mb-3">
+                        <?= admin_auto_translate_checkbox($editType ?? null, 'news_type_auto_translate_en') ?>
+                    </div>
+
                     <?php if ($editType): ?>
                         <div class="mb-3 form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="valid" id="news_type_valid" value="1" <?= (int)($editType['valid'] ?? 1) === 1 ? 'checked' : '' ?>>

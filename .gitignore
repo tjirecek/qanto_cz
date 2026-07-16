@@ -10,7 +10,14 @@ yarn-error.log*
 
 secure/PHP_errors.log
 
-_files/
+_files/*
+!_files/.htaccess
+!_files/volna-mista/
+_files/volna-mista/*
+!_files/volna-mista/.htaccess
+!_files/volna-mista/dotazniky/
+_files/volna-mista/dotazniky/*
+!_files/volna-mista/dotazniky/.htaccess
 
 ini/config.ini
 ini/config_local.ini
@@ -21,6 +28,7 @@ media/**
 !media/**/.gitkeep
 
 uploads/
+var/
 
 secure/lib/flmngr/cache/
 secure/lib/flmngr/tmp/

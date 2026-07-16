@@ -3,7 +3,8 @@
     "description": "Shared administration dependencies for qanto_cz.",
     "license": "proprietary",
     "require": {
-        "phpoffice/phpspreadsheet": "^5.8"
+        "phpoffice/phpspreadsheet": "^5.8",
+        "dompdf/dompdf": "^3.1"
     },
     "config": {
         "platform": {

@@ -37,10 +37,13 @@ $marketsActive         = ($section==="01" && $page==="04" && $sec_page==="02");
 $wholesaleActive       = ($section==="01" && $page==="04" && $sec_page==="03");
 $representativesAct    = ($section==="01" && $page==="04" && $sec_page==="04");
 $openingHoursActive    = ($section==="01" && $page==="04" && $sec_page==="05");
+$contactsPeopleActive  = ($section==="01" && $page==="04" && $sec_page==="06");
+$contactsGroupsActive  = ($section==="01" && $page==="04" && $sec_page==="07");
 
 $galleryListActive = ($section==="01" && $page==="03" && $sec_page==="01");
 $galleryTypesActive = ($section==="01" && $page==="03" && $sec_page==="04");
-$contactFormActive = ($section==="01" && $page==="05" && $sec_page==="01");
+$contactFormMessagesActive = ($section==="01" && $page==="05" && $sec_page==="01");
+$contactFormCategoriesActive = ($section==="01" && $page==="05" && $sec_page==="02");
 ?>
 
 <div class="text-uppercase small fw-semibold text-muted mt-2 mb-1">Hlavní menu</div>
@@ -141,6 +144,10 @@ $contactFormActive = ($section==="01" && $page==="05" && $sec_page==="01");
            href="index.php?section=01&amp;page=04&amp;sec_page=04">Obchodní zástupci</a>
         <a class="nav-link py-1 <?= $openingHoursActive ? 'active' : '' ?>"
            href="index.php?section=01&amp;page=04&amp;sec_page=05">Otevírací doby</a>
+        <a class="nav-link py-1 <?= $contactsPeopleActive ? 'active' : '' ?>"
+           href="index.php?section=01&amp;page=04&amp;sec_page=06">Lidé</a>
+        <a class="nav-link py-1 <?= $contactsGroupsActive ? 'active' : '' ?>"
+           href="index.php?section=01&amp;page=04&amp;sec_page=07">Skupiny osob</a>
     </div>
 </div>
 
@@ -158,7 +165,9 @@ $contactFormActive = ($section==="01" && $page==="05" && $sec_page==="01");
 
 <div class="collapse <?= $isContactFormOpen ? 'show' : '' ?>" id="<?= $collapseContactFormId ?>">
     <div class="nav flex-column ms-4">
-        <a class="nav-link py-1 <?= $contactFormActive ? 'active' : '' ?>"
+        <a class="nav-link py-1 <?= $contactFormMessagesActive ? 'active' : '' ?>"
            href="index.php?section=01&amp;page=05&amp;sec_page=01">Výpis zpráv</a>
+        <a class="nav-link py-1 <?= $contactFormCategoriesActive ? 'active' : '' ?>"
+           href="index.php?section=01&amp;page=05&amp;sec_page=02">Kategorie</a>
     </div>
 </div>

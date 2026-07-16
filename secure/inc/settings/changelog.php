@@ -12,15 +12,25 @@ $messages = [];
 $show = (int)($_GET['show'] ?? 0);
 $editId = (int)($_GET['edit'] ?? 0);
 $detailId = (int)($_GET['detail'] ?? 0);
+$sendId = isset($_GET['send']) ? (int)$_GET['send'] : (int)($_POST['send'] ?? 0);
 $categoryEditId = (int)($_GET['category_edit'] ?? 0);
 $form = changelog_default();
 $categoryForm = changelog_category_default();
 $editing = false;
 $categoryEditing = false;
 $detailRow = null;
+$sendRow = null;
+$sendResult = null;
+$sendSelectedGroups = [];
 $tableExists = changelog_table_exists();
 $categoryTableExists = changelog_category_table_exists();
 $newsLinkAvailable = $tableExists && changelog_news_link_available();
+
+$sendCsrfToken = (string)admin_session_get('changelog_send_csrf_token', '');
+if ($sendCsrfToken === '') {
+    $sendCsrfToken = bin2hex(random_bytes(16));
+    admin_session_set('changelog_send_csrf_token', $sendCsrfToken);
+}
 
 if (!$tableExists) {
     $messages[] = [
@@ -117,6 +127,28 @@ if ($tableExists) {
             }
         }
 
+        if ($action === 'send_email') {
+            $postId = (int)($_POST['send'] ?? 0);
+            $sendSelectedGroups = changelog_email_selected_groups((array)($_POST['group_keys'] ?? []));
+            $show = 5;
+            $sendId = $postId;
+
+            try {
+                if (!hash_equals($sendCsrfToken, (string)($_POST['csrf_token'] ?? ''))) {
+                    throw new RuntimeException('Neplatný bezpečnostní token formuláře.');
+                }
+
+                $sendResult = changelog_email_send($postId, $sendSelectedGroups);
+                $messages[] = [
+                    'type' => 'success',
+                    'text' => 'ChangeLog byl odeslán: ' . (int)$sendResult['sent'] . ' úspěšně, '
+                        . (int)$sendResult['failed'] . ' chyb.',
+                ];
+            } catch (Throwable $e) {
+                $messages[] = ['type' => 'danger', 'text' => 'Odeslání se nepodařilo: ' . $e->getMessage()];
+            }
+        }
+
         if ($action === 'create' || $action === 'update') {
             $postId = (int)($_POST['id'] ?? 0);
             $base = changelog_default();
@@ -163,6 +195,18 @@ if ($tableExists) {
                     $editId = $postId;
                 }
             }
+        }
+    }
+
+    if ($show === 5 || $sendId > 0) {
+        $show = 5;
+        $sendRow = $sendId > 0 ? changelog_fetch($sendId) : null;
+        if ($sendRow === null) {
+            $messages[] = ['type' => 'warning', 'text' => 'Požadovaná změna pro odeslání neexistuje.'];
+            $show = 0;
+            $sendId = 0;
+        } elseif ((string)($sendRow['status'] ?? '') !== 'nasazeno') {
+            $messages[] = ['type' => 'warning', 'text' => 'E-mailem lze odeslat pouze změnu ve stavu Nasazeno.'];
         }
     }
 
@@ -314,7 +358,126 @@ $currentYear = (int)date('Y');
             <a href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=2&amp;edit=<?= (int)$detailRow['id'] ?>" class="btn btn-primary">
                 Upravit změnu
             </a>
+            <?php if ($status === 'nasazeno'): ?>
+                <a href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=5&amp;send=<?= (int)$detailRow['id'] ?>" class="btn btn-success">
+                    <i class="bi bi-envelope me-1"></i> Odeslat e-mailem
+                </a>
+            <?php endif; ?>
             <a href="<?= changelog_admin_list_url() ?>" class="btn btn-outline-secondary">Zpět na ChangeLog</a>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($tableExists && $show === 5 && is_array($sendRow)): ?>
+    <?php
+    $groupOptions = changelog_email_group_options();
+    $groupOptionsBySource = [];
+    foreach ($groupOptions as $groupOption) {
+        $groupOptionsBySource[(string)$groupOption['source_label']][] = $groupOption;
+    }
+    $previewRecipients = $sendSelectedGroups !== [] ? changelog_email_recipients($sendSelectedGroups) : [];
+    $emailPreviewHtml = '';
+    $emailPreviewError = '';
+    try {
+        $emailPreviewHtml = changelog_email_body_html($sendRow, changelog_logo_preview_src());
+    } catch (Throwable $e) {
+        $emailPreviewError = $e->getMessage();
+    }
+    $sendAllowed = (string)($sendRow['status'] ?? '') === 'nasazeno';
+    ?>
+    <div class="row g-4 mb-4">
+        <div class="col-xl-5">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">Rozeslání ChangeLogu e-mailem</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-3">
+                        <dt class="col-sm-4">Změna</dt>
+                        <dd class="col-sm-8">#<?= (int)$sendRow['id'] ?> - <?= changelog_e((string)$sendRow['title']) ?></dd>
+
+                        <dt class="col-sm-4">Stav</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge <?= changelog_e(changelog_status_badge((string)$sendRow['status'])) ?>">
+                                <?= changelog_e(changelog_status_label((string)$sendRow['status'])) ?>
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">Předmět</dt>
+                        <dd class="col-sm-8"><?= changelog_e(changelog_email_subject($sendRow)) ?></dd>
+
+                        <dt class="col-sm-4">Vybraní příjemci</dt>
+                        <dd class="col-sm-8">
+                            <?= (int)count($previewRecipients) ?> unikátních e-mailů
+                            <?php if ($sendSelectedGroups === []): ?>
+                                <div class="text-muted small">Po výběru skupin se příjemci ověří při odeslání.</div>
+                            <?php endif; ?>
+                        </dd>
+                    </dl>
+
+                    <?php if (!$sendAllowed): ?>
+                        <div class="alert alert-warning mb-0">Tuto změnu nelze odeslat, protože není ve stavu Nasazeno.</div>
+                    <?php elseif ($groupOptions === []): ?>
+                        <div class="alert alert-warning mb-0">Nejsou dostupné žádné skupiny uživatelů.</div>
+                    <?php elseif ($emailPreviewError !== ''): ?>
+                        <div class="alert alert-warning mb-0">Náhled e-mailu nelze sestavit: <?= changelog_e($emailPreviewError) ?></div>
+                    <?php else: ?>
+                        <form method="post" onsubmit="return confirm('Opravdu odeslat ChangeLog vybraným skupinám?');">
+                            <input type="hidden" name="csrf_token" value="<?= changelog_e($sendCsrfToken) ?>">
+                            <input type="hidden" name="action" value="send_email">
+                            <input type="hidden" name="send" value="<?= (int)$sendRow['id'] ?>">
+
+                            <label for="changelog_group_keys" class="form-label">Odeslat skupinám</label>
+                            <select name="group_keys[]" id="changelog_group_keys" class="form-select" multiple size="<?= max(6, min(12, count($groupOptions) + count($groupOptionsBySource))) ?>" required>
+                                <?php foreach ($groupOptionsBySource as $sourceLabel => $sourceOptions): ?>
+                                    <optgroup label="<?= changelog_e($sourceLabel) ?>">
+                                        <?php foreach ($sourceOptions as $groupOption): ?>
+                                            <option value="<?= changelog_e((string)$groupOption['key']) ?>" <?= in_array((string)$groupOption['key'], $sendSelectedGroups, true) ? 'selected' : '' ?>>
+                                                <?= changelog_e((string)$groupOption['name']) ?> (<?= (int)$groupOption['recipient_count'] ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text">Drž Ctrl/Cmd pro výběr více skupin. Duplicitní e-maily napříč skupinami se odešlou jen jednou.</div>
+
+                            <?php if (is_array($sendResult) && ($sendResult['errors'] ?? []) !== []): ?>
+                                <details class="mt-3">
+                                    <summary>Chyby odeslání</summary>
+                                    <ul class="mb-0 mt-2">
+                                        <?php foreach (array_slice((array)$sendResult['errors'], 0, 30) as $sendError): ?>
+                                            <li><?= changelog_e((string)$sendError) ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </details>
+                            <?php endif; ?>
+
+                            <div class="mt-4 d-flex flex-wrap gap-2">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-send me-1"></i> Odeslat e-mailem
+                                </button>
+                                <a href="<?= changelog_admin_detail_url((int)$sendRow['id']) ?>" class="btn btn-outline-secondary">Zpět na detail</a>
+                                <a href="<?= changelog_admin_list_url() ?>" class="btn btn-outline-secondary">Zpět na ChangeLog</a>
+                            </div>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-7">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold text-primary">Náhled e-mailu</h6>
+                </div>
+                <div class="card-body">
+                    <?php if ($emailPreviewHtml !== ''): ?>
+                        <iframe class="newsletter-preview-frame" title="Náhled e-mailu ChangeLogu" srcdoc="<?= changelog_e($emailPreviewHtml) ?>"></iframe>
+                    <?php else: ?>
+                        <div class="alert alert-warning mb-0">Náhled není k dispozici.</div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
 <?php endif; ?>
@@ -571,7 +734,7 @@ $currentYear = (int)date('Y');
     </div>
 <?php endif; ?>
 
-<?php if ($tableExists && $show !== 4): ?>
+<?php if ($tableExists && !in_array($show, [4, 5], true)): ?>
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 fw-bold text-primary d-sm-inline">Evidence změn</h6>
@@ -660,6 +823,11 @@ $currentYear = (int)date('Y');
                                     <a class="btn btn-outline-primary" href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=2&amp;edit=<?= (int)$row['id'] ?>">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                    <?php if ($status === 'nasazeno'): ?>
+                                        <a class="btn btn-outline-success" href="index.php?section=09&amp;page=02&amp;sec_page=07&amp;show=5&amp;send=<?= (int)$row['id'] ?>" title="Odeslat e-mailem">
+                                            <i class="bi bi-envelope"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     <form method="post" class="d-inline" onsubmit="return confirm('Skrýt tuto změnu z aktivní evidence?');">
                                         <input type="hidden" name="action" value="archive">
                                         <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">

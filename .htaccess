@@ -7,19 +7,64 @@ php_value post_max_size 100M
 php_value max_input_time 100
 php_value memory_limit 120M
 
-php_flag  display_errors on
-php_flag  display_startup_errors on
+php_flag  display_errors off
+php_flag  display_startup_errors off
 php_value error_reporting 32767
 php_flag  log_errors on
 
 RewriteEngine on
 
+# Private runtime files. Apache respects this; Nginx needs equivalent server config.
+RewriteRule ^_files/ - [F,L]
+
+# Legacy public subdomains from old qanto.cz.
+RewriteCond %{HTTP_HOST} ^obedy\.qanto\.cz$ [NC]
+RewriteRule ^ http://31.30.24.226:9090/AktionNEXT/ [R=302,L]
+
+RewriteCond %{HTTP_HOST} ^csv\.qanto\.cz$ [NC]
+RewriteRule ^ https://www.qanto.cz/cz/elektronicka-vymena-dat [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^markety\.qanto\.cz$ [NC]
+RewriteRule ^ https://www.qanto.cz/cz/markety [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^(brigada|chcibrigadu)\.qanto\.cz$ [NC]
+RewriteRule ^ https://www.qanto.cz/cz/brigada [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^ples\.qanto\.cz$ [NC]
+RewriteRule ^ https://www.qanto.cz/cz/ples [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^tenisqcup\.qanto\.cz$ [NC]
+RewriteRule ^ https://www.qanto.cz/cz/tenisqcup [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^inventury\.qanto\.cz$ [NC]
+RewriteRule ^ https://www.qanto.cz/cz/inventury [R=301,L]
+
+# Legacy customer phone billing links.
+RewriteRule ^volani/index\.php$ /index.php?section=volani&lang=cz [L,QSA]
+RewriteRule ^volani/?$ /index.php?section=volani&lang=cz [L,QSA]
+
 # Local shared admin domain.
 RewriteCond %{HTTP_HOST} ^qanto\.local(:[0-9]+)?$ [NC]
 RewriteRule ^$ /secure/ [R=302,L]
 
-# Production canonical host placeholder for the shared admin source project.
+# Production canonical host for the public project.
 RewriteCond %{HTTP_HOST} ^(www\.)?qanto\.cz$ [NC]
 RewriteCond %{HTTPS} !=on [OR]
 RewriteCond %{HTTP_HOST} !^www\.qanto\.cz$ [NC]
-RewriteRule (.*) https://www.qanto.cz%{REQUEST_URI} [L,R=301]
+RewriteRule ^ https://www.qanto.cz%{REQUEST_URI} [L,R=301]
+
+# Legacy old-qanto frontend URLs with known equivalents.
+RewriteRule ^([a-z]{2})/index/csv/?$ /$1/elektronicka-vymena-dat [R=301,L]
+RewriteRule ^([a-z]{2})/index/kontakt-mo/?$ /$1/markety [R=301,L]
+RewriteRule ^([a-z]{2})/index/brigada-(mo|vo)/?$ /$1/brigada [R=301,L]
+RewriteRule ^([a-z]{2})/index/ples/?$ /$1/ples [R=301,L]
+RewriteRule ^([a-z]{2})/index/tenisqcup/?$ /$1/tenisqcup [R=301,L]
+RewriteRule ^([a-z]{2})/index/inv/?$ /$1/inventury [R=301,L]
+
+# Frontend pretty URLs.
+RewriteRule ^([a-z]{2})/main/?$ /$1 [R=301,L]
+RewriteRule ^([a-z]{2})/?$ /index.php?section=main&lang=$1 [L,QSA]
+RewriteRule ^([a-z]{2})/index/?$ /$1 [R=301,L]
+RewriteRule ^([a-z]{2})/index/(.+)$ /$1/$2 [R=301,L]
+RewriteRule ^([a-z]{2})/([^/]+)/?$ /index.php?section=$2&lang=$1 [L,QSA]
+RewriteRule ^([a-z]{2})/([^/]+)/([^/]+)/?$ /index.php?section=$2&text=$3&lang=$1 [L,QSA]

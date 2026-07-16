@@ -6,20 +6,7 @@ require_once ROOT_DIR . '/functions/fun_mailer.php';
 
 function users_password_prepare_column(PDO $pdo): void
 {
-    static $prepared = false;
-    if ($prepared) {
-        return;
-    }
-
-    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'password'");
-    $column = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : false;
-    $type = strtolower((string)($column['Type'] ?? ''));
-
-    if (!preg_match('~^varchar\((\d+)\)$~', $type, $matches) || (int)$matches[1] < 255) {
-        $pdo->exec("ALTER TABLE users MODIFY password VARCHAR(255) NOT NULL DEFAULT ''");
-    }
-
-    $prepared = true;
+    // Schema is managed exclusively by SQL migrations.
 }
 
 function users_password_hash(string $password): string

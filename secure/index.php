@@ -32,6 +32,19 @@ if ($adminJsVersion <= 0) {
     $adminJsVersion = time();
 }
 
+$adminConfig = app_bootstrap_config();
+$adminMapProvider = trim((string)($adminConfig['frontend_map_provider'] ?? 'mapy'));
+$adminMapyApiKey = trim((string)($adminConfig['frontend_mapy_api_key'] ?? ''));
+$adminMapyMapset = trim((string)($adminConfig['frontend_mapy_mapset'] ?? 'basic'));
+$adminMapyRetina = (bool)($adminConfig['frontend_mapy_retina'] ?? true);
+
+if (!in_array($adminMapyMapset, ['basic', 'outdoor', 'winter', 'aerial'], true)) {
+    $adminMapyMapset = 'basic';
+}
+
+$adminMapTileSize = $adminMapyRetina && in_array($adminMapyMapset, ['basic', 'outdoor'], true) ? '256@2x' : '256';
+$adminMapProvider = $adminMapProvider === 'mapy' && $adminMapyApiKey !== '' ? 'mapy' : 'osm';
+
 ?>
 <!DOCTYPE html>
 <html lang="cs">
@@ -43,7 +56,7 @@ if ($adminJsVersion <= 0) {
     <meta name="author" content="Qanto admin">
     <meta name="generator" content="TM">
     <title>Admin | qanto.cz</title>
-    <link rel="icon" href="/img/design/logo_qanto.webp" sizes="192x192" />
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="256x256" />
 
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
 
@@ -63,7 +76,11 @@ if ($adminJsVersion <= 0) {
       data-admin-page="<?= htmlspecialchars((string)($page ?? ''), ENT_QUOTES, 'UTF-8') ?>"
       data-admin-sec-page="<?= htmlspecialchars((string)($sec_page ?? ''), ENT_QUOTES, 'UTF-8') ?>"
       data-admin-js-base="<?= htmlspecialchars(BASE_URL . 'assets/js/sec/', ENT_QUOTES, 'UTF-8') ?>"
-      data-admin-js-version="<?= (int)$adminJsVersion ?>">
+      data-admin-js-version="<?= (int)$adminJsVersion ?>"
+      data-admin-map-provider="<?= htmlspecialchars($adminMapProvider, ENT_QUOTES, 'UTF-8') ?>"
+      data-admin-mapy-api-key="<?= htmlspecialchars($adminMapyApiKey, ENT_QUOTES, 'UTF-8') ?>"
+      data-admin-mapy-mapset="<?= htmlspecialchars($adminMapyMapset, ENT_QUOTES, 'UTF-8') ?>"
+      data-admin-mapy-tile-size="<?= htmlspecialchars($adminMapTileSize, ENT_QUOTES, 'UTF-8') ?>">
 <?php
 require_once SEC_DIR . '/functions/admin_login.php';
 $uName = admin_session_user_name();

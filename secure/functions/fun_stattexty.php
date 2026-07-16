@@ -1,4 +1,6 @@
 <?php
+
+require_once __DIR__ . '/fun_admin_translate.php';
 // Převedeno na PDO s prepared statements pro bezpečnost
 
 function stattexty_code_is_valid(string $code): bool
@@ -42,6 +44,7 @@ function stattexty_add($code, $nazev_cz, $text_cz, $galerie_id, $col): void
     global $pdo;
     $qn_user = admin_session_user();
     $code = trim((string)$code);
+    $text_cz = editor_html((string)$text_cz);
     if (!stattexty_code_is_valid($code)) {
         stattexty_code_error();
         return;
@@ -70,6 +73,12 @@ function stattexty_add($code, $nazev_cz, $text_cz, $galerie_id, $col): void
             ':user_i' => $qn_user,
             ':user_u' => $qn_user
         ]);
+        admin_auto_translate_record('stat_texty.record', (int)$pdo->lastInsertId(), array_merge($_POST, [
+            'nazev_cz' => (string)$nazev_cz,
+            'nazev_en' => '',
+            'text_cz' => $text_cz,
+            'text_en' => '',
+        ]));
 
         unset($_POST['add']);
         $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]1";
@@ -143,6 +152,7 @@ function stattexty_edit($id, $code, $nazev, $text, $galerie_id, $col, $lang, $va
     global $pdo;
     $qn_user = admin_session_user();
     $code = trim((string)$code);
+    $text = editor_html((string)$text);
     if (!stattexty_code_is_valid($code)) {
         stattexty_code_error();
         return;
@@ -197,6 +207,8 @@ function stattexty_edit_multilang(
 
     $qn_user = admin_session_user();
     $code = trim($code);
+    $textCz = editor_html($textCz);
+    $textEn = editor_html($textEn);
     if (!stattexty_code_is_valid($code)) {
         stattexty_code_error();
         return;
@@ -232,6 +244,12 @@ function stattexty_edit_multilang(
             ':user_u' => $qn_user,
             ':id' => $id,
         ]);
+        admin_auto_translate_record('stat_texty.record', $id, array_merge($_POST, [
+            'nazev_cz' => $nazevCz,
+            'nazev_en' => $nazevEn,
+            'text_cz' => $textCz,
+            'text_en' => $textEn,
+        ]));
     } catch (PDOException $e) {
         echo '<a href="#" class="btn btn-warning btn-icon-split">
                 <span class="icon text-white-50"><i class="fas fa-exclamation-triangle"></i></span><span class="text">Statický text nebyl uložen</span></a>';
@@ -277,7 +295,7 @@ function statvyrazy_code_duplicate_error(): void
 
 function statvyrazy_preview(string $html, int $limit = 120): string
 {
-    $text = trim(preg_replace('~\s+~u', ' ', strip_tags($html)) ?? '');
+    $text = statvyrazy_clean_value($html);
     if (function_exists('mb_strlen') && function_exists('mb_substr')) {
         return mb_strlen($text, 'UTF-8') > $limit
             ? mb_substr($text, 0, $limit, 'UTF-8') . '...'
@@ -287,11 +305,26 @@ function statvyrazy_preview(string $html, int $limit = 120): string
     return strlen($text) > $limit ? substr($text, 0, $limit) . '...' : $text;
 }
 
+function statvyrazy_clean_value(string $value): string
+{
+    if (function_exists('plain_text')) {
+        return plain_text($value);
+    }
+
+    $value = preg_replace('~<script\b[^>]*>.*?</script>~is', '', $value) ?? $value;
+    $value = preg_replace('~<style\b[^>]*>.*?</style>~is', '', $value) ?? $value;
+    $text = html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    return trim(preg_replace('~\s+~u', ' ', $text) ?? $text);
+}
+
 function statvyrazy_add($code, $cz, $en): void
 {
     global $pdo;
     $qn_user = admin_session_user();
     $code = trim((string)$code);
+    $cz = statvyrazy_clean_value((string)$cz);
+    $en = statvyrazy_clean_value((string)$en);
 
     if (!statvyrazy_code_is_valid($code)) {
         statvyrazy_code_error();
@@ -314,6 +347,10 @@ function statvyrazy_add($code, $cz, $en): void
             ':user_i' => $qn_user,
             ':user_u' => $qn_user
         ]);
+        admin_auto_translate_record('stat_vyrazy.record', (int)$pdo->lastInsertId(), array_merge($_POST, [
+            'cz' => $cz,
+            'en' => $en,
+        ]));
 
         unset($_POST['add']);
         $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]1";
@@ -385,6 +422,8 @@ function statvyrazy_edit($id, $code, $cz, $en, $valid): void
     global $pdo;
     $qn_user = admin_session_user();
     $code = trim((string)$code);
+    $cz = statvyrazy_clean_value((string)$cz);
+    $en = statvyrazy_clean_value((string)$en);
 
     if (!statvyrazy_code_is_valid($code)) {
         statvyrazy_code_error();
@@ -407,6 +446,10 @@ function statvyrazy_edit($id, $code, $cz, $en, $valid): void
             ':user_u' => $qn_user,
             ':id' => $id
         ]);
+        admin_auto_translate_record('stat_vyrazy.record', (int)$id, array_merge($_POST, [
+            'cz' => $cz,
+            'en' => $en,
+        ]));
 
         unset($_POST['add']);
         $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]1";

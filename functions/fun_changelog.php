@@ -863,3 +863,602 @@ function changelog_category_badge(string $category): string
 {
     return (string)changelog_category_meta($category)['badge'];
 }
+
+function changelog_config(): array
+{
+    return function_exists('app_bootstrap_config') ? app_bootstrap_config() : [];
+}
+
+function changelog_config_string(string $key, string $default = ''): string
+{
+    $config = changelog_config();
+    $value = trim((string)($config[$key] ?? ''));
+
+    return $value !== '' ? $value : $default;
+}
+
+function changelog_request_base_url(): string
+{
+    $configured = changelog_config_string('changelog_public_base_url');
+    if ($configured !== '') {
+        return rtrim($configured, '/');
+    }
+
+    $host = trim((string)($_SERVER['HTTP_HOST'] ?? ''));
+    if ($host !== '') {
+        $https = function_exists('app_is_https') ? app_is_https() : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        return ($https ? 'https://' : 'http://') . $host;
+    }
+
+    $newsletterBase = changelog_config_string('newsletter_public_base_url');
+    return $newsletterBase !== '' ? rtrim($newsletterBase, '/') : '';
+}
+
+function changelog_absolute_url(string $url): string
+{
+    $url = trim($url);
+    if ($url === '' || preg_match('~^(https?://|mailto:|tel:|#|data:)~i', $url) === 1) {
+        return $url;
+    }
+
+    $baseUrl = changelog_request_base_url();
+    if ($baseUrl === '') {
+        return $url;
+    }
+
+    return $baseUrl . '/' . ltrim($url, '/');
+}
+
+function changelog_absolute_html_urls(string $html): string
+{
+    $html = preg_replace_callback('~\b(src|href)=(["\'])(/[^"\']*)\2~i', static function (array $match): string {
+        return $match[1] . '=' . $match[2] . changelog_absolute_url($match[3]) . $match[2];
+    }, $html) ?? $html;
+
+    return preg_replace_callback('~\b(src|href)=(["\'])(?!https?://|mailto:|tel:|#|data:)([^"\']+)\2~i', static function (array $match): string {
+        return $match[1] . '=' . $match[2] . changelog_absolute_url($match[3]) . $match[2];
+    }, $html) ?? $html;
+}
+
+function changelog_prepare_email_content_html(string $html): string
+{
+    $html = changelog_absolute_html_urls($html);
+
+    return preg_replace_callback('~<img\b([^>]*)>~i', static function (array $match): string {
+        $attributes = $match[1];
+        $responsiveStyle = 'max-width:100%;height:auto;border:0;display:block;margin:18px auto;';
+
+        if (preg_match('~\sstyle=(["\'])(.*?)\1~i', $attributes, $styleMatch) === 1) {
+            $style = rtrim(trim($styleMatch[2]), ';');
+            $style .= ($style !== '' ? ';' : '') . $responsiveStyle;
+            $attributes = preg_replace('~\sstyle=(["\'])(.*?)\1~i', ' style="' . $style . '"', $attributes, 1) ?? $attributes;
+        } else {
+            $attributes .= ' style="' . $responsiveStyle . '"';
+        }
+
+        return '<img' . $attributes . '>';
+    }, $html) ?? $html;
+}
+
+function changelog_brand_name(): string
+{
+    return changelog_config_string('newsletter_brand_name', 'Qanto');
+}
+
+function changelog_logo_url(): string
+{
+    return changelog_absolute_url(changelog_config_string('newsletter_logo_url', '/img/design/logo_admin_login.png'));
+}
+
+function changelog_logo_file_path(): string
+{
+    $configured = changelog_config_string('newsletter_logo_url', '/img/design/logo_admin_login.png');
+    $path = parse_url($configured, PHP_URL_PATH);
+    $candidates = [];
+
+    if (is_string($path) && trim($path) !== '') {
+        $candidates[] = $path;
+    }
+    if ($configured !== '') {
+        $candidates[] = $configured;
+    }
+    $candidates[] = '/img/design/logo_admin_login.png';
+
+    foreach (array_unique($candidates) as $candidate) {
+        $candidate = trim(str_replace('\\', '/', (string)$candidate));
+        if ($candidate === '' || preg_match('~^(https?://|data:)~i', $candidate) === 1) {
+            continue;
+        }
+
+        $filePath = $candidate[0] === '/'
+            ? ROOT_DIR . $candidate
+            : ROOT_DIR . '/' . ltrim($candidate, '/');
+        $realPath = realpath($filePath);
+        if (is_string($realPath) && is_file($realPath)) {
+            return $realPath;
+        }
+    }
+
+    return '';
+}
+
+function changelog_image_mime_type(string $filePath): string
+{
+    $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $types = [
+        'gif' => 'image/gif',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+    ];
+
+    return $types[$extension] ?? 'application/octet-stream';
+}
+
+function changelog_logo_embedded_image(string $cid): array
+{
+    $filePath = changelog_logo_file_path();
+    if ($filePath === '') {
+        return [];
+    }
+
+    return [
+        'path' => $filePath,
+        'cid' => $cid,
+        'name' => basename($filePath),
+        'type' => changelog_image_mime_type($filePath),
+    ];
+}
+
+function changelog_logo_data_uri(): string
+{
+    $filePath = changelog_logo_file_path();
+    if ($filePath === '') {
+        return '';
+    }
+
+    $data = @file_get_contents($filePath);
+    if (!is_string($data) || $data === '') {
+        return '';
+    }
+
+    return 'data:' . changelog_image_mime_type($filePath) . ';base64,' . base64_encode($data);
+}
+
+function changelog_logo_preview_src(): string
+{
+    $dataUri = changelog_logo_data_uri();
+
+    return $dataUri !== '' ? $dataUri : changelog_logo_url();
+}
+
+function changelog_accent_color(): string
+{
+    $color = changelog_config_string('newsletter_accent_color', '#e30613');
+
+    return preg_match('~^#[0-9a-f]{6}$~i', $color) === 1 ? $color : '#e30613';
+}
+
+function changelog_email_subject(array $row): string
+{
+    $title = trim((string)($row['title'] ?? ''));
+
+    return 'ChangeLog' . ($title !== '' ? ' :: ' . $title : '');
+}
+
+function changelog_email_body_html(array $row, ?string $logoSrc = null): string
+{
+    $title = trim((string)($row['title'] ?? ''));
+    $description = trim((string)($row['description'] ?? ''));
+    $category = (string)($row['category'] ?? '');
+    $doneOn = trim((string)($row['done_on'] ?? ''));
+    $brandName = changelog_brand_name();
+    $logoUrl = trim((string)$logoSrc) !== '' ? trim((string)$logoSrc) : changelog_logo_url();
+    $accentColor = changelog_accent_color();
+    $changeUrl = changelog_absolute_url(changelog_frontend_detail_url((int)($row['id'] ?? 0), 'cz'));
+    $descriptionHtml = $description !== ''
+        ? nl2br(htmlspecialchars($description, ENT_QUOTES, 'UTF-8'))
+        : '<span style="color:#64748b;">Popis změny není vyplněný.</span>';
+
+    $newsHtml = '';
+    if (changelog_has_linked_news($row)) {
+        $newsTitle = changelog_linked_news_title($row);
+        $newsPerex = changelog_prepare_email_content_html(changelog_linked_news_perex_html($row));
+        $newsBody = changelog_prepare_email_content_html(changelog_linked_news_body_html($row));
+        $newsContent = trim($newsPerex . $newsBody);
+        if ($newsContent === '') {
+            $newsContent = '<p style="margin:0;color:#64748b;">Perex ani tělo navázané novinky nejsou vyplněné.</p>';
+        }
+
+        $newsHtml = '
+          <tr>
+            <td style="padding:0 38px 38px 38px;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;">
+                <tr>
+                  <td style="padding:22px 24px;font-size:16px;line-height:1.68;color:#26323f;">
+                    <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:8px;">Navázaná novinka</div>
+                    <h2 style="margin:0 0 16px 0;font-size:22px;line-height:1.3;color:#17212f;">' . htmlspecialchars($newsTitle, ENT_QUOTES, 'UTF-8') . '</h2>
+                    ' . $newsContent . '
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>';
+    }
+
+    $doneText = $doneOn !== '' ? format_date_www($doneOn) : '';
+    $year = date('Y');
+
+    return '<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>' . htmlspecialchars($title !== '' ? $title : 'ChangeLog', ENT_QUOTES, 'UTF-8') . '</title>
+</head>
+<body style="margin:0;padding:0;background:#eef1f4;color:#26323f;font-family:Arial,Helvetica,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;color:#eef1f4;font-size:1px;line-height:1px;">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</div>
+  <table role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#eef1f4;margin:0;padding:28px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="720" style="width:720px;max-width:100%;background:#ffffff;border-collapse:collapse;border-radius:18px;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,.12);">
+          <tr>
+            <td style="padding:28px 34px 22px 34px;background:#ffffff;border-top:8px solid ' . htmlspecialchars($accentColor, ENT_QUOTES, 'UTF-8') . ';">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="left" style="vertical-align:middle;">
+                    <img src="' . htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') . '" width="214" alt="' . htmlspecialchars($brandName, ENT_QUOTES, 'UTF-8') . '" style="display:block;width:214px;max-width:70%;height:auto;border:0;">
+                  </td>
+                  <td align="right" style="vertical-align:middle;color:#6b7280;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">
+                    ChangeLog
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#17212f;color:#ffffff;padding:34px 38px 36px 38px;">
+              <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#cbd5e1;">Nasazená změna</div>
+              <h1 style="margin:10px 0 0 0;font-size:32px;line-height:1.22;font-weight:800;">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:30px 38px 14px 38px;font-size:15px;line-height:1.55;color:#475569;">
+              <span style="display:inline-block;background:#e2e8f0;border-radius:999px;padding:5px 11px;margin:0 8px 8px 0;">' . htmlspecialchars(changelog_category_label($category), ENT_QUOTES, 'UTF-8') . '</span>
+              <span style="display:inline-block;background:#dcfce7;color:#166534;border-radius:999px;padding:5px 11px;margin:0 8px 8px 0;">Nasazeno' . ($doneText !== '' ? ' ' . htmlspecialchars($doneText, ENT_QUOTES, 'UTF-8') : '') . '</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 38px 34px 38px;font-size:16px;line-height:1.68;color:#26323f;">
+              ' . $descriptionHtml . '
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:28px 0 0 0;"><tr><td bgcolor="' . htmlspecialchars($accentColor, ENT_QUOTES, 'UTF-8') . '" style="border-radius:999px;"><a href="' . htmlspecialchars($changeUrl, ENT_QUOTES, 'UTF-8') . '" style="display:inline-block;padding:12px 22px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;">Zobrazit detail změny</a></td></tr></table>
+            </td>
+          </tr>
+          ' . $newsHtml . '
+          <tr>
+            <td style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:24px 38px;font-size:13px;line-height:1.55;color:#64748b;">
+              <p style="margin:0 0 8px 0;">Tento e-mail dostáváte jako uživatel vybrané skupiny aplikace ' . htmlspecialchars($brandName, ENT_QUOTES, 'UTF-8') . '.</p>
+              <p style="margin:0;">&copy; ' . htmlspecialchars($brandName, ENT_QUOTES, 'UTF-8') . ' :: Astur &amp; Qanto s.r.o. ' . $year . '</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>';
+}
+
+function changelog_email_body_text(array $row): string
+{
+    $parts = [];
+    $parts[] = 'ChangeLog: ' . trim((string)($row['title'] ?? ''));
+    $parts[] = 'Kategorie: ' . changelog_category_label((string)($row['category'] ?? ''));
+    $parts[] = 'Stav: ' . changelog_status_label((string)($row['status'] ?? ''));
+    if (trim((string)($row['done_on'] ?? '')) !== '') {
+        $parts[] = 'Nasazeno: ' . format_date_www((string)$row['done_on']);
+    }
+    $parts[] = '';
+    $parts[] = trim((string)($row['description'] ?? ''));
+
+    if (changelog_has_linked_news($row)) {
+        $parts[] = '';
+        $parts[] = 'Navázaná novinka: ' . changelog_linked_news_title($row);
+        $newsText = trim(changelog_linked_news_perex_text($row) . "\n\n" . changelog_linked_news_body_text($row));
+        if ($newsText !== '') {
+            $parts[] = $newsText;
+        }
+    }
+
+    $parts[] = '';
+    $parts[] = 'Detail změny: ' . changelog_absolute_url(changelog_frontend_detail_url((int)($row['id'] ?? 0), 'cz'));
+
+    return trim(implode("\n", $parts));
+}
+
+function changelog_email_group_sources(): array
+{
+    $sources = [];
+
+    if (
+        changelog_db_table_exists('users')
+        && changelog_db_table_exists('users_skup')
+        && changelog_db_column_exists('users', 'email')
+        && changelog_db_column_exists('users', 'skup_id')
+    ) {
+        $sources['users'] = [
+            'label' => 'Administrace',
+            'users_table' => 'users',
+            'groups_table' => 'users_skup',
+        ];
+    }
+
+    if (
+        changelog_db_table_exists('rep_users')
+        && changelog_db_table_exists('rep_users_skup')
+        && changelog_db_column_exists('rep_users', 'email')
+        && changelog_db_column_exists('rep_users', 'skup_id')
+    ) {
+        $sources['rep_users'] = [
+            'label' => 'Projekt',
+            'users_table' => 'rep_users',
+            'groups_table' => 'rep_users_skup',
+        ];
+    }
+
+    return $sources;
+}
+
+function changelog_email_group_key(string $source, int $groupId): string
+{
+    return $source . ':' . $groupId;
+}
+
+function changelog_email_group_options(): array
+{
+    global $pdo;
+
+    $options = [];
+    foreach (changelog_email_group_sources() as $source => $meta) {
+        $groupsTable = $meta['groups_table'];
+        $usersTable = $meta['users_table'];
+        $groupValidWhere = changelog_db_column_exists($groupsTable, 'valid') ? 'g.valid = 1' : '1=1';
+        $userWhere = ["u.email IS NOT NULL", "TRIM(u.email) <> ''"];
+        if (changelog_db_column_exists($usersTable, 'valid')) {
+            $userWhere[] = 'u.valid = 1';
+        }
+        if (changelog_db_column_exists($usersTable, 'aktivni_l')) {
+            $userWhere[] = 'u.aktivni_l = 1';
+        }
+        $userWhereSql = implode(' AND ', $userWhere);
+
+        $stmt = $pdo->query(
+            "SELECT
+                g.id,
+                g.nazev_cz AS name,
+                COUNT(u.id) AS recipient_count
+             FROM {$groupsTable} g
+             LEFT JOIN {$usersTable} u
+                    ON u.skup_id = g.id
+                   AND {$userWhereSql}
+             WHERE {$groupValidWhere}
+             GROUP BY g.id, g.nazev_cz
+             ORDER BY g.nazev_cz ASC, g.id ASC"
+        );
+
+        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        foreach ($rows as $row) {
+            $groupId = (int)($row['id'] ?? 0);
+            if ($groupId <= 0) {
+                continue;
+            }
+
+            $options[] = [
+                'key' => changelog_email_group_key($source, $groupId),
+                'source' => $source,
+                'source_label' => (string)$meta['label'],
+                'id' => $groupId,
+                'name' => (string)($row['name'] ?? ''),
+                'recipient_count' => (int)($row['recipient_count'] ?? 0),
+            ];
+        }
+    }
+
+    return $options;
+}
+
+function changelog_email_group_options_by_key(): array
+{
+    $options = [];
+    foreach (changelog_email_group_options() as $option) {
+        $options[(string)$option['key']] = $option;
+    }
+
+    return $options;
+}
+
+function changelog_email_selected_groups(array $values): array
+{
+    $available = changelog_email_group_options_by_key();
+    $selected = [];
+
+    foreach ($values as $value) {
+        $key = trim((string)$value);
+        if (!isset($available[$key]) || isset($selected[$key])) {
+            continue;
+        }
+        $selected[$key] = $key;
+    }
+
+    return array_values($selected);
+}
+
+function changelog_email_recipients(array $groupKeys): array
+{
+    global $pdo;
+
+    $availableGroups = changelog_email_group_options_by_key();
+    $sources = changelog_email_group_sources();
+    $bySource = [];
+    foreach ($groupKeys as $groupKey) {
+        $option = $availableGroups[$groupKey] ?? null;
+        if (!is_array($option)) {
+            continue;
+        }
+        $bySource[(string)$option['source']][] = (int)$option['id'];
+    }
+
+    $recipients = [];
+    foreach ($bySource as $source => $groupIds) {
+        $meta = $sources[$source] ?? null;
+        if (!is_array($meta)) {
+            continue;
+        }
+
+        $usersTable = $meta['users_table'];
+        $groupsTable = $meta['groups_table'];
+        $userWhere = ["u.email IS NOT NULL", "TRIM(u.email) <> ''"];
+        if (changelog_db_column_exists($usersTable, 'valid')) {
+            $userWhere[] = 'u.valid = 1';
+        }
+        if (changelog_db_column_exists($usersTable, 'aktivni_l')) {
+            $userWhere[] = 'u.aktivni_l = 1';
+        }
+        $placeholders = [];
+        $params = [];
+        foreach (array_values(array_unique(array_map('intval', $groupIds))) as $index => $groupId) {
+            if ($groupId <= 0) {
+                continue;
+            }
+            $placeholder = ':g' . $index;
+            $placeholders[] = $placeholder;
+            $params[$placeholder] = $groupId;
+        }
+        if ($placeholders === []) {
+            continue;
+        }
+
+        $nameSelect = changelog_db_column_exists($usersTable, 'name') ? 'u.name' : "''";
+        $stmt = $pdo->prepare(
+            "SELECT
+                u.id,
+                {$nameSelect} AS name,
+                u.email,
+                u.skup_id,
+                g.nazev_cz AS group_name
+             FROM {$usersTable} u
+             INNER JOIN {$groupsTable} g ON g.id = u.skup_id
+             WHERE u.skup_id IN (" . implode(',', $placeholders) . ")
+               AND " . implode(' AND ', $userWhere) . "
+             ORDER BY g.poradi ASC, g.nazev_cz ASC, u.id ASC"
+        );
+        $stmt->execute($params);
+
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $email = trim((string)($row['email'] ?? ''));
+            if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+                continue;
+            }
+            $emailKey = mb_strtolower($email, 'UTF-8');
+            $groupKey = changelog_email_group_key($source, (int)($row['skup_id'] ?? 0));
+            if (!isset($recipients[$emailKey])) {
+                $recipients[$emailKey] = [
+                    'email' => $email,
+                    'name' => trim((string)($row['name'] ?? '')),
+                    'sources' => [],
+                    'groups' => [],
+                ];
+            }
+
+            $recipients[$emailKey]['sources'][$source] = (string)$meta['label'];
+            $recipients[$emailKey]['groups'][$groupKey] = [
+                'source' => $source,
+                'source_label' => (string)$meta['label'],
+                'name' => (string)($row['group_name'] ?? ''),
+            ];
+        }
+    }
+
+    return array_values($recipients);
+}
+
+function changelog_email_send(int $changeId, array $groupKeys): array
+{
+    global $pdo;
+
+    $row = changelog_fetch($changeId);
+    if (!is_array($row)) {
+        throw new RuntimeException('Změna nebyla nalezena.');
+    }
+    if ((string)($row['status'] ?? '') !== 'nasazeno') {
+        throw new RuntimeException('E-mailem lze odeslat pouze změnu ve stavu Nasazeno.');
+    }
+
+    $groupKeys = changelog_email_selected_groups($groupKeys);
+    if ($groupKeys === []) {
+        throw new RuntimeException('Vyber alespoň jednu skupinu příjemců.');
+    }
+
+    $recipients = changelog_email_recipients($groupKeys);
+    if ($recipients === []) {
+        throw new RuntimeException('Ve vybraných skupinách není žádný aktivní uživatel s platným e-mailem.');
+    }
+
+    require_once ROOT_DIR . '/functions/fun_mailer.php';
+
+    if (function_exists('set_time_limit')) {
+        set_time_limit(0);
+    }
+
+    $config = changelog_config();
+    $subject = changelog_email_subject($row);
+    $logoCid = 'changelog-logo-' . $changeId;
+    $embeddedImages = [];
+    $embeddedLogo = changelog_logo_embedded_image($logoCid);
+    if ($embeddedLogo !== []) {
+        $embeddedImages[] = $embeddedLogo;
+    }
+    $bodyHtml = changelog_email_body_html($row, $embeddedImages !== [] ? 'cid:' . $logoCid : null);
+    $bodyText = changelog_email_body_text($row);
+    $result = [
+        'total' => 0,
+        'sent' => 0,
+        'failed' => 0,
+        'errors' => [],
+        'recipients' => $recipients,
+    ];
+
+    foreach ($recipients as $recipient) {
+        $result['total']++;
+        try {
+            $message = [
+                'recipient_email' => (string)$recipient['email'],
+                'recipient_name' => (string)($recipient['name'] ?? ''),
+                'subject' => $subject,
+                'body_html' => $bodyHtml,
+                'body_text' => $bodyText,
+            ];
+            if ($embeddedImages !== []) {
+                $message['embedded_images'] = $embeddedImages;
+            }
+
+            mailer_send_smtp_logged($pdo, $config, $message, [
+                'context' => 'changelog',
+                'template_code' => 'changelog_release',
+                'related_table' => 'changelog',
+                'related_id' => $changeId,
+                'payload' => [
+                    'group_keys' => $groupKeys,
+                    'recipient_groups' => array_values((array)($recipient['groups'] ?? [])),
+                ],
+            ]);
+            $result['sent']++;
+        } catch (Throwable $e) {
+            $result['failed']++;
+            $result['errors'][] = (string)$recipient['email'] . ': ' . $e->getMessage();
+        }
+    }
+
+    return $result;
+}

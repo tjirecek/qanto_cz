@@ -66,6 +66,12 @@ declare(strict_types=1);
                         <?= htmlspecialchars((string)basename((string)$formValues['image']), ENT_QUOTES) ?>
                     </a>
                 </div>
+                <?php if ((int)($formActionValue ?? 0) === 2): ?>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="delete_image" id="delete_image" value="1">
+                        <label class="form-check-label" for="delete_image">smazat aktuální obrázek</label>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -97,7 +103,21 @@ declare(strict_types=1);
             >
         </div>
 
-        <div class="col-lg-5">
+        <div class="col-lg-3">
+            <label for="slug" class="form-label">URL slug</label>
+            <input
+                type="text"
+                name="slug"
+                id="slug"
+                class="form-control"
+                value="<?= htmlspecialchars((string)($formValues['slug'] ?? ''), ENT_QUOTES) ?>"
+                pattern="[a-z0-9-]+"
+                placeholder="napr. qanto-svitavy"
+            >
+            <div class="form-text">Ruční adresa detailu. Při změně názvu se sama nemění.</div>
+        </div>
+
+        <div class="col-lg-3">
             <label for="adresa" class="form-label">Adresa</label>
             <input
                 type="text"
@@ -108,7 +128,7 @@ declare(strict_types=1);
             >
         </div>
 
-        <div class="col-lg-2">
+        <div class="col-lg-1">
             <label for="gps" class="form-label">GPS</label>
             <input
                 type="text"
@@ -143,7 +163,31 @@ declare(strict_types=1);
             >
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-lg-3">
+            <label for="email_brigada" class="form-label">E-mail brigáda</label>
+            <input
+                type="email"
+                name="email_brigada"
+                id="email_brigada"
+                class="form-control"
+                value="<?= htmlspecialchars((string)($formValues['email_brigada'] ?? ''), ENT_QUOTES) ?>"
+            >
+        </div>
+
+        <div class="col-lg-3">
+            <label for="email_kariera" class="form-label">E-mail kariéra</label>
+            <input
+                type="email"
+                name="email_kariera"
+                id="email_kariera"
+                class="form-control"
+                value="<?= htmlspecialchars((string)($formValues['email_kariera'] ?? ''), ENT_QUOTES) ?>"
+            >
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
             <label for="vedouci" class="form-label">Vedoucí</label>
             <input
                 type="text"
@@ -184,6 +228,10 @@ declare(strict_types=1);
     </div>
 
     <div class="row g-3">
+        <div class="col-md-4">
+            <?= admin_auto_translate_checkbox($formValues ?? null, 'pobocky_auto_translate_en') ?>
+        </div>
+
         <div class="col-md-3">
             <input type="hidden" name="add" value="<?= (int)$formActionValue ?>">
             <button type="submit" class="btn btn-primary w-100"><?= htmlspecialchars($formSubmitLabel, ENT_QUOTES) ?></button>

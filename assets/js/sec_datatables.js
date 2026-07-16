@@ -250,6 +250,13 @@
           return;
         }
 
+        if (headerTh.classList.contains('select-filter')) {
+          if (!isServerSide) {
+            filterCell.appendChild(createSelectFilterControl());
+          }
+          return;
+        }
+
         if (!isServerSide) {
           filterCell.appendChild(createSelectFilterControl());
         }

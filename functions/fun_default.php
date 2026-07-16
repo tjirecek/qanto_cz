@@ -93,6 +93,114 @@ function sp_hodnota_text(string $sp): ?string
 }
 
 /**
+ * Pevný UI text ze společného jazykového katalogu.
+ * Používej pro menu, systémové labely a aria popisky; editovatelný obsah patří do stat_vyrazy/stat_texty.
+ */
+function ui_text(string $key, ?string $fallback = null): string
+{
+    global $pdo, $ui_texts, $lang;
+
+    $key = trim($key);
+    $currentLang = ((string)($lang ?? 'cz') === 'en') ? 'en' : 'cz';
+
+    static $dbTexts = null;
+    if ($dbTexts === null) {
+        $dbTexts = [];
+        if (isset($pdo) && $pdo instanceof PDO) {
+            try {
+                $stmt = $pdo->query('SELECT code, cz, en FROM ui_texty WHERE valid = 1');
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $code = trim((string)($row['code'] ?? ''));
+                    if ($code === '') {
+                        continue;
+                    }
+
+                    $dbTexts[$code] = [
+                        'cz' => (string)($row['cz'] ?? ''),
+                        'en' => (string)($row['en'] ?? ''),
+                    ];
+                }
+            } catch (Throwable) {
+                $dbTexts = [];
+            }
+        }
+    }
+
+    if ($key !== '' && array_key_exists($key, $dbTexts)) {
+        $localized = trim((string)($dbTexts[$key][$currentLang] ?? ''));
+        if ($localized !== '') {
+            return $localized;
+        }
+
+        $fallbackLocalized = trim((string)($dbTexts[$key]['cz'] ?? ''));
+        if ($fallbackLocalized !== '') {
+            return $fallbackLocalized;
+        }
+    }
+
+    if ($key !== '' && is_array($ui_texts ?? null) && array_key_exists($key, $ui_texts)) {
+        $value = $ui_texts[$key];
+        if (is_array($value)) {
+            $localized = trim((string)($value[$currentLang] ?? ''));
+            if ($localized !== '') {
+                return $localized;
+            }
+
+            $fallbackLocalized = trim((string)($value['cz'] ?? ''));
+            if ($fallbackLocalized !== '') {
+                return $fallbackLocalized;
+            }
+        } else {
+            return (string)$value;
+        }
+    }
+
+    if ($fallback !== null) {
+        return $fallback;
+    }
+
+    return $key;
+}
+
+/**
+ * Očistí krátký obsah na plain text pro použití v UI.
+ * Používej tam, kde DB hodnota nemá renderovat HTML.
+ */
+function plain_text(?string $html): string
+{
+    $html = (string)$html;
+    if ($html === '') {
+        return '';
+    }
+
+    $html = preg_replace('~<script\b[^>]*>.*?</script>~is', '', $html) ?? $html;
+    $html = preg_replace('~<style\b[^>]*>.*?</style>~is', '', $html) ?? $html;
+
+    $text = strip_tags($html);
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = trim(preg_replace('~\s+~u', ' ', $text) ?? $text);
+
+    return $text;
+}
+
+/**
+ * Ochrana HTML obsahu z administracnich editoru.
+ * Bezna HTML struktura zustava, spustitelne scripty do obsahu nepatri.
+ */
+function editor_html(?string $html): string
+{
+    $html = (string)$html;
+    if ($html === '') {
+        return '';
+    }
+
+    $html = preg_replace('~<script\b[^>]*>.*?</script>~is', '', $html) ?? $html;
+    $html = preg_replace('~<script\b[^>]*/?>~is', '', $html) ?? $html;
+
+    return trim($html);
+}
+
+/**
  * Statický text dle stabilního kódu a jazyka.
  * - $field: "text" nebo "nazev"
  * - pro EN vrací fallback do CZ, pokud EN varianta není vyplněná
@@ -141,7 +249,7 @@ function stat_text(string $code, string $lang = 'cz', string $field = 'text'): ?
 
 /**
  * Statický výraz dle stabilního kódu a jazyka.
- * Výraz může obsahovat HTML z TinyMCE; výstup escapuj jen tam, kde ho chceš použít jako plain text.
+ * Krátké editovatelné výrazy drž jako plain text; HTML patří do stat_texty.
  */
 function stat_vyraz(string $code, string $lang = 'cz'): ?string
 {

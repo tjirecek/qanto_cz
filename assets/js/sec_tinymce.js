@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', function () {
         window.dispatchEvent(new CustomEvent('qanto:layout-change'));
     };
 
+    const sanitizeEditorHtml = function (html) {
+        return String(html || '')
+            .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<script\b[^>]*\/?>/gi, '');
+    };
+
     const baseConfig = {
         language: 'cs',
         language_url: '/assets/lib/tinymce/langs/cs.js',
@@ -35,6 +41,11 @@ document.addEventListener('DOMContentLoaded', function () {
         contextmenu: 'link image table',
         image_advtab: true,
         link_default_target: '_self',
+        invalid_elements: 'script',
+        convert_urls: true,
+        relative_urls: false,
+        remove_script_host: true,
+        document_base_url: window.location.origin + '/',
         content_style:
             'body { background: #f8f9fa; padding: 12px 14px; } ' +
             'body::before { color: #adb5bd; }',
@@ -44,6 +55,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // důležité: aby se do textarea propsal obsah i bez blur
         setup: function (editor) {
+            editor.on('SaveContent', function (event) {
+                event.content = sanitizeEditorHtml(event.content);
+            });
+
             editor.on('change keyup', function () {
                 editor.save();
             });

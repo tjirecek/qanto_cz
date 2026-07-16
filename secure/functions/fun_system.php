@@ -89,6 +89,7 @@ function menu_add(string $url_cz, string $nazev_cz, int $menu): void
     global $pdo;
 
     $qn_user = _qn_user();
+    $hodnota_text = editor_html($hodnota_text);
 
     try {
         $stmt = $pdo->prepare(
@@ -116,6 +117,7 @@ function menu_edit(int $id, string $url_cz, string $nazev_cz, int $menu, int $va
     global $pdo;
 
     $qn_user = _qn_user();
+    $hodnota_text = editor_html($hodnota_text);
 
     try {
         $stmt = $pdo->prepare(

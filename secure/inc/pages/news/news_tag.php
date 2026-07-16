@@ -130,6 +130,10 @@ $tagOrderValue = $_SERVER['REQUEST_METHOD'] === 'POST'
                         <div class="form-text">Použij Bootstrap třídu nebo projektovou třídu z dashboardu.</div>
                     </div>
 
+                    <div class="mb-3">
+                        <?= admin_auto_translate_checkbox($editTag ?? null, 'news_tag_auto_translate_en') ?>
+                    </div>
+
                     <?php if ($editTag): ?>
                         <div class="mb-3 form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="valid" id="news_tag_valid" value="1" <?= (int)($editTag['valid'] ?? 1) === 1 ? 'checked' : '' ?>>

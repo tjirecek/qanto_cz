@@ -1,30 +1,26 @@
 <?php
 declare(strict_types=1);
 
-/**
- * settings.php (OSTRÁ VERZE)
- * Řeší volbu jazyka přes GET ?lang=cz|en
- * Pokud lang chybí, přesměruje na /cz/index nebo /en/index (default cz).
- */
-
 $supportedLangs = ['cz', 'en'];
-$defaultLang    = 'cz';
+$defaultLang = 'cz';
 
-if (!isset($_GET['lang']) || $_GET['lang'] === '') {
-    // tady můžeš mít do budoucna autodetekci; teď držíme původní chování
-    $lang = $defaultLang;
+$langRaw = strtolower(trim((string)($_GET['lang'] ?? '')));
+if ($langRaw === '') {
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+    $parts = array_values(array_filter(explode('/', trim($path, '/'))));
+    $langRaw = strtolower((string)($parts[0] ?? ''));
+    if ($langRaw !== '' && in_array($langRaw, $supportedLangs, true)) {
+        $_GET['lang'] = $langRaw;
+    }
+}
 
-    header('Location: /' . $lang . '', true, 302);
+if ($langRaw === '') {
+    header('Location: /' . $defaultLang, true, 302);
     exit;
 }
 
-$langRaw = strtolower(trim((string)$_GET['lang']));
-
-// whitelist – žádné escapování, žádné SQL
 $lang = in_array($langRaw, $supportedLangs, true) ? $langRaw : $defaultLang;
-
-// pokud přišel nepodporovaný lang, můžeš taky přesměrovat na default
 if ($langRaw !== $lang) {
-    header('Location: /' . $lang . '', true, 302);
+    header('Location: /' . $lang, true, 302);
     exit;
 }

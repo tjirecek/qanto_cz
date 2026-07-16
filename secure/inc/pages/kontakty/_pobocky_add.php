@@ -25,10 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (int)($_POST['add'] ?? 0) === 1) {
             $formValues['poradi'] = (int)($_POST['poradi'] ?? 0);
             $formValues['stredisko'] = (string)($_POST['stredisko'] ?? '');
             $formValues['galerie_id'] = trim((string)($_POST['galerie_id'] ?? ''));
+            $formValues['slug'] = (string)($_POST['slug'] ?? '');
             $formValues['nazev_cz'] = (string)($_POST['nazev_cz'] ?? '');
             $formValues['nazev_en'] = (string)($_POST['nazev_en'] ?? '');
             $formValues['mobil'] = (string)($_POST['mobil'] ?? '');
             $formValues['email'] = (string)($_POST['email'] ?? '');
+            $formValues['email_brigada'] = (string)($_POST['email_brigada'] ?? '');
+            $formValues['email_kariera'] = (string)($_POST['email_kariera'] ?? '');
             $formValues['adresa'] = (string)($_POST['adresa'] ?? '');
             $formValues['gps'] = (string)($_POST['gps'] ?? '');
             $formValues['vedouci'] = (string)($_POST['vedouci'] ?? '');

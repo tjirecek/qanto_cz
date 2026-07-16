@@ -1,8 +1,8 @@
 /* Project admin styles for qanto.cz */
 
 .text-bg-qanto-markety {
-    color: #a85f00 !important;
-    background-color: #fff1dc !important;
+    color: #ffffff !important;
+    background-color: #1d1d1b !important;
 }
 
 .text-bg-qanto-velkoobchod {
@@ -11,11 +11,146 @@
 }
 
 .text-bg-qanto {
-    color: #202020 !important;
-    background-color: #f1f1f1 !important;
+    color: #ffffff !important;
+    background-color: #005aa9 !important;
 }
 
 .text-bg-qantoplus {
     color: #13212a !important;
     background-color: #f49300 !important;
+}
+
+.rep-banner-thumb {
+    width: 92px;
+    height: 52px;
+    object-fit: cover;
+}
+
+.rep-banner-form-preview {
+    max-width: 220px;
+    max-height: 130px;
+    object-fit: cover;
+}
+
+.rep-banner-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: .75rem;
+}
+
+.rep-banner-theme-option {
+    display: grid;
+    grid-template-columns: auto 64px minmax(0, 1fr);
+    align-items: center;
+    gap: .55rem;
+    padding: .55rem;
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    background: #fff;
+    cursor: pointer;
+}
+
+.rep-banner-theme-preview {
+    height: 38px;
+    border-radius: .45rem;
+    background-position: center;
+    background-size: cover;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08);
+}
+
+.rep-banner-theme-label {
+    font-size: .84rem;
+    line-height: 1.15;
+}
+
+.rep-banner-theme-preview--brand-red {
+    background: radial-gradient(circle at 80% 10%, rgba(255,255,255,.22), transparent 42%), linear-gradient(135deg, #d32127, #7d1218);
+}
+
+.rep-banner-theme-preview--brand-dark {
+    background: radial-gradient(circle at 72% 14%, rgba(211,33,39,.36), transparent 38%), linear-gradient(135deg, #2b2b29, #070707);
+}
+
+.rep-banner-theme-preview--graphite {
+    background: linear-gradient(135deg, #50514d, #1d1d1b);
+}
+
+.rep-banner-theme-preview--silver {
+    background: radial-gradient(circle at 18% 20%, rgba(255,255,255,.9), transparent 36%), linear-gradient(135deg, #fbfbfb, #d8ddd9);
+}
+
+.rep-banner-theme-preview--wholesale-green {
+    background: radial-gradient(circle at 76% 14%, rgba(255,255,255,.28), transparent 42%), linear-gradient(135deg, #8dbf49, #456d1f);
+}
+
+.rep-banner-theme-preview--qantoplus-orange {
+    background: radial-gradient(circle at 78% 18%, rgba(255,255,255,.38), transparent 38%), linear-gradient(135deg, #f49300, #c96817);
+}
+
+.rep-banner-theme-preview--ocean-blue {
+    background: radial-gradient(circle at 78% 16%, rgba(255,255,255,.32), transparent 36%), linear-gradient(135deg, #005aa9, #12365d);
+}
+
+.rep-banner-theme-preview--cream-paper {
+    background: repeating-linear-gradient(90deg, rgba(211,33,39,.08) 0 8px, rgba(255,255,255,.12) 8px 16px), linear-gradient(135deg, #fff7e6, #ead8b0);
+}
+
+.rep-banner-theme-preview--warm-sand {
+    background: radial-gradient(circle at 72% 12%, rgba(255,255,255,.32), transparent 42%), linear-gradient(135deg, #f0c36d, #b77a24);
+}
+
+.rep-banner-theme-preview--line-pattern {
+    background: repeating-linear-gradient(135deg, rgba(29,29,27,.08) 0 1px, transparent 1px 9px), linear-gradient(135deg, #f7f7f2, #e8ece4);
+}
+
+.rep-banner-theme-preview--photo-zdenek {
+    background-image: url("/img/design/banner-bg/qanto1779-zdenek.webp?v=2");
+}
+
+.rep-banner-theme-preview--photo-vodicka {
+    background-image: url("/img/design/banner-bg/qanto1935-vodicka.webp?v=2");
+}
+
+.rep-banner-theme-preview--photo-mirek {
+    background-image: url("/img/design/banner-bg/qanto2179-mirek.webp?v=2");
+}
+
+.rep-banner-theme-preview--photo-verka {
+    background-image: url("/img/design/banner-bg/qanto2535_zluta-CMYK-verka.webp?v=2");
+}
+
+.rep-banner-theme-preview--photo-zaneta {
+    background-image: url("/img/design/banner-bg/qanto2983-zaneta.webp?v=2");
+}
+
+.rep-banner-theme-preview--photo-vodickova {
+    background-image: url("/img/design/banner-bg/qanto3141-vodickova.webp?v=2");
+}
+
+.rep-banner-theme-preview--photo-standa {
+    background-image: url("/img/design/banner-bg/qanto3269-standa.webp?v=2");
+}
+
+.rep-banner-theme-preview--photo-matej {
+    background-image: url("/img/design/banner-bg/qanto3707-matej.webp?v=2");
+}
+
+.sec-rep-mapy-logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 4px 8px;
+    border-radius: 7px;
+    color: #1d1d1b;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 8px 20px rgba(29, 29, 27, .16);
+    font-size: .78rem;
+    font-weight: 850;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.sec-rep-mapy-logo:hover {
+    color: #1d1d1b;
+    text-decoration: none;
 }

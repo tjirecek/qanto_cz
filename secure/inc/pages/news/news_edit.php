@@ -34,7 +34,19 @@ if ($add === 2) {
         'seo_description_en' => trim((string)($_POST['seo_description_en'] ?? '')),
     ];
 
-    $soubor = (string)news_photo_add();
+    $existingNewsIcoStmt = $pdo->prepare('SELECT news_ico FROM news WHERE id = :id LIMIT 1');
+    $existingNewsIcoStmt->execute([':id' => $edit]);
+    $existingNewsIco = (string)$existingNewsIcoStmt->fetchColumn();
+
+    if (!empty($_POST['delete_image'])) {
+        news_ico_delete($edit, false);
+        $soubor = '';
+    } else {
+        $soubor = (string)news_photo_add();
+        if ($soubor !== '' && $existingNewsIco !== '' && $soubor !== $existingNewsIco) {
+            news_ico_delete($edit, false);
+        }
+    }
     news_edit_multilang($edit, $datum, $news_typ, $data, $galerie_id, $visible, $valid, $soubor, $tagIds);
     echo '<div class="alert alert-success mb-3"><i class="bi bi-check-circle me-2"></i>Novinka byla uložena.</div>';
 }
@@ -77,6 +89,10 @@ $checked = news_visible_checked($visible);
                 <input type="file" name="userfile" id="userfile" class="form-control" accept="image/*">
                 <?php if ((string)($dev['news_ico'] ?? '') !== ''): ?>
                     <div class="form-text">Aktuálně: <?= htmlspecialchars((string)$dev['news_ico'], ENT_QUOTES, 'UTF-8') ?></div>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="delete_image" id="delete_image" value="1">
+                        <label class="form-check-label" for="delete_image">smazat aktuální obrázek</label>
+                    </div>
                 <?php endif; ?>
             </div>
 
@@ -199,6 +215,10 @@ $checked = news_visible_checked($visible);
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <?= admin_auto_translate_checkbox($dev ?? null, 'news_auto_translate_en') ?>
             </div>
 
             <div class="col-md-2 d-flex align-items-end">

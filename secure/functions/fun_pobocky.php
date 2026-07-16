@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/fun_admin_translate.php';
+
 function pobocky_type_definitions(): array
 {
     return [
@@ -85,93 +87,16 @@ function pobocky_redirect(string $type, array $params = []): void
     echo '<meta http-equiv="refresh" content="0;url=' . htmlspecialchars($url, ENT_QUOTES) . '">';
 }
 
-function pobocky_schema_sql(): array
-{
-    return [
-        "CREATE TABLE IF NOT EXISTS pobocky (
-            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            typ ENUM('market', 'prodejna', 'velkoobchod') NOT NULL,
-            poradi INT NOT NULL DEFAULT 0,
-            stredisko VARCHAR(50) DEFAULT NULL,
-            galerie_id INT UNSIGNED DEFAULT NULL,
-            nazev_cz VARCHAR(255) NOT NULL,
-            nazev_en VARCHAR(255) DEFAULT NULL,
-            mobil VARCHAR(50) DEFAULT NULL,
-            email VARCHAR(255) DEFAULT NULL,
-            adresa TEXT DEFAULT NULL,
-            gps VARCHAR(100) DEFAULT NULL,
-            vedouci VARCHAR(255) DEFAULT NULL,
-            image VARCHAR(255) DEFAULT NULL,
-            sluzby_cz TEXT DEFAULT NULL,
-            sluzby_en TEXT DEFAULT NULL,
-            valid TINYINT(1) NOT NULL DEFAULT 1,
-            user_i VARCHAR(100) NOT NULL DEFAULT '',
-            user_u VARCHAR(100) NOT NULL DEFAULT '',
-            ts_i TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            ts_u TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY idx_pobocky_typ_valid_poradi (typ, valid, poradi),
-            KEY idx_pobocky_stredisko (stredisko),
-            KEY idx_pobocky_galerie_id (galerie_id),
-            KEY idx_pobocky_nazev_cz (nazev_cz)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-        "CREATE TABLE IF NOT EXISTS pobocky_otevdoba (
-            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            pobocka_id INT UNSIGNED NOT NULL,
-            den TINYINT UNSIGNED NOT NULL,
-            zavreno TINYINT(1) NOT NULL DEFAULT 0,
-            od1 TIME DEFAULT NULL,
-            do1 TIME DEFAULT NULL,
-            od2 TIME DEFAULT NULL,
-            do2 TIME DEFAULT NULL,
-            poznamka_cz VARCHAR(255) DEFAULT NULL,
-            poznamka_en VARCHAR(255) DEFAULT NULL,
-            sync_lock TINYINT(1) NOT NULL DEFAULT 0,
-            valid TINYINT(1) NOT NULL DEFAULT 1,
-            user_i VARCHAR(100) NOT NULL DEFAULT '',
-            user_u VARCHAR(100) NOT NULL DEFAULT '',
-            ts_i TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            ts_u TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY uq_pobocky_otevdoba_pobocka_den (pobocka_id, den),
-            KEY idx_pobocky_otevdoba_den (den),
-            KEY idx_pobocky_otevdoba_valid (valid)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-        "CREATE TABLE IF NOT EXISTS pobocky_otevdoba_vyjimky (
-            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            pobocka_id INT UNSIGNED NOT NULL,
-            datum DATE NOT NULL,
-            zavreno TINYINT(1) NOT NULL DEFAULT 0,
-            od1 TIME DEFAULT NULL,
-            do1 TIME DEFAULT NULL,
-            od2 TIME DEFAULT NULL,
-            do2 TIME DEFAULT NULL,
-            poznamka_cz VARCHAR(255) DEFAULT NULL,
-            poznamka_en VARCHAR(255) DEFAULT NULL,
-            valid TINYINT(1) NOT NULL DEFAULT 1,
-            user_i VARCHAR(100) NOT NULL DEFAULT '',
-            user_u VARCHAR(100) NOT NULL DEFAULT '',
-            ts_i TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            ts_u TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY uq_pobocky_otevdoba_vyjimky_pobocka_datum (pobocka_id, datum),
-            KEY idx_pobocky_otevdoba_vyjimky_datum (datum),
-            KEY idx_pobocky_otevdoba_vyjimky_valid (valid)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-    ];
-}
-
 function pobocky_prepare_tables(PDO $pdo): void
 {
-    foreach (pobocky_schema_sql() as $sql) {
-        $pdo->exec($sql);
-    }
+    // Schema is managed exclusively by SQL migrations.
 }
 
 function pobocky_default_form_data(string $type = 'prodejna'): array
 {
     return [
         'typ' => pobocky_normalize_type($type),
+        'slug' => '',
         'poradi' => 0,
         'stredisko' => '',
         'galerie_id' => null,
@@ -179,6 +104,8 @@ function pobocky_default_form_data(string $type = 'prodejna'): array
         'nazev_en' => '',
         'mobil' => '',
         'email' => '',
+        'email_brigada' => '',
+        'email_kariera' => '',
         'adresa' => '',
         'gps' => '',
         'vedouci' => '',
@@ -230,6 +157,75 @@ function pobocky_time_to_input(?string $value): string
     }
 
     return substr($value, 0, 5);
+}
+
+function pobocky_slug_base(string $value): string
+{
+    if (function_exists('text_str')) {
+        $slug = trim((string)text_str($value), '-');
+    } else {
+        $ascii = function_exists('iconv') ? @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value) : false;
+        $slug = strtolower(preg_replace('~[^a-z0-9]+~i', '-', $ascii !== false ? $ascii : $value) ?? '');
+    }
+
+    $slug = strtolower(preg_replace('~[^a-z0-9]+~i', '-', $slug) ?? '');
+    $slug = trim($slug, '-');
+    return $slug !== '' ? $slug : 'pobocka';
+}
+
+function pobocky_normalize_slug(string $slug): string
+{
+    $slug = trim($slug);
+    if ($slug === '') {
+        return '';
+    }
+
+    $slug = strtolower($slug);
+    $slug = preg_replace('~[^a-z0-9-]+~', '-', $slug) ?? '';
+    $slug = trim(preg_replace('~-+~', '-', $slug) ?? '', '-');
+
+    return $slug;
+}
+
+function pobocky_slug_exists(PDO $pdo, string $type, string $slug, ?int $ignoreId = null): bool
+{
+    $sql = 'SELECT id FROM pobocky WHERE typ = :typ AND slug = :slug';
+    $params = [
+        ':typ' => pobocky_normalize_type($type),
+        ':slug' => $slug,
+    ];
+    if ($ignoreId !== null && $ignoreId > 0) {
+        $sql .= ' AND id <> :id';
+        $params[':id'] = $ignoreId;
+    }
+    $sql .= ' LIMIT 1';
+
+    $stmt = $pdo->prepare($sql);
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value, $key === ':id' ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $stmt->execute();
+
+    return $stmt->fetchColumn() !== false;
+}
+
+function pobocky_unique_slug(PDO $pdo, string $type, string $name, ?int $ignoreId = null): string
+{
+    $base = pobocky_slug_base($name);
+    $slug = $base;
+    $suffix = 2;
+    $type = pobocky_normalize_type($type);
+
+    do {
+        if (!pobocky_slug_exists($pdo, $type, $slug, $ignoreId)) {
+            return $slug;
+        }
+
+        $slug = $base . '-' . $suffix;
+        $suffix++;
+    } while ($suffix < 1000);
+
+    return $base . '-' . bin2hex(random_bytes(3));
 }
 
 function pobocky_otevdoba_default_row(int $day): array
@@ -404,6 +400,16 @@ function pobocky_otevdoba_save_week(PDO $pdo, int $pobockaId, array $rows): void
             ':user_i' => $qnUser,
             ':user_u' => $qnUser,
         ]);
+
+        $stmtId = $pdo->prepare('SELECT id FROM pobocky_otevdoba WHERE pobocka_id = :pobocka_id AND den = :den LIMIT 1');
+        $stmtId->execute([
+            ':pobocka_id' => $pobockaId,
+            ':den' => (int)$row['den'],
+        ]);
+        $rowId = (int)$stmtId->fetchColumn();
+        if ($rowId > 0) {
+            admin_auto_translate_record('pobocky.opening_hours', $rowId, $row);
+        }
     }
 }
 
@@ -513,6 +519,7 @@ function pobocky_otevdoba_save_exception(PDO $pdo, int $pobockaId, array $row): 
             ':valid' => (int)$row['valid'],
             ':user_u' => $qnUser,
         ]);
+        admin_auto_translate_record('pobocky.opening_hours_exception', (int)$row['id'], $row);
         return;
     }
 
@@ -547,6 +554,16 @@ function pobocky_otevdoba_save_exception(PDO $pdo, int $pobockaId, array $row): 
         ':user_i' => $qnUser,
         ':user_u' => $qnUser,
     ]);
+
+    $stmtId = $pdo->prepare('SELECT id FROM pobocky_otevdoba_vyjimky WHERE pobocka_id = :pobocka_id AND datum = :datum LIMIT 1');
+    $stmtId->execute([
+        ':pobocka_id' => $pobockaId,
+        ':datum' => (string)$row['datum'],
+    ]);
+    $rowId = (int)$stmtId->fetchColumn();
+    if ($rowId > 0) {
+        admin_auto_translate_record('pobocky.opening_hours_exception', $rowId, $row);
+    }
 }
 
 function pobocky_otevdoba_delete_exception(PDO $pdo, int $pobockaId, int $exceptionId): void
@@ -667,6 +684,37 @@ function pobocky_image_upload(?array $file, string $existingImage = ''): string
     return $relativePath;
 }
 
+function pobocky_image_delete_file_if_unused(PDO $pdo, string $relativePath, int $excludeId = 0): void
+{
+    $relativePath = trim($relativePath);
+    if ($relativePath === '') {
+        return;
+    }
+
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM pobocky WHERE image = :image AND id <> :id');
+    $stmt->execute([
+        ':image' => $relativePath,
+        ':id' => $excludeId,
+    ]);
+    if ((int)$stmt->fetchColumn() > 0) {
+        return;
+    }
+
+    $absoluteBase = realpath(ROOT_DIR . '/' . pobocky_image_relative_dir());
+    $absolutePath = realpath(ROOT_DIR . '/' . ltrim($relativePath, '/'));
+    if ($absoluteBase === false || $absolutePath === false) {
+        return;
+    }
+
+    if (strpos($absolutePath, $absoluteBase . DIRECTORY_SEPARATOR) !== 0) {
+        return;
+    }
+
+    if (is_file($absolutePath)) {
+        @unlink($absolutePath);
+    }
+}
+
 function pobocky_normalize_form_data(array $source, string $defaultType = 'prodejna'): array
 {
     $default = pobocky_default_form_data($defaultType);
@@ -676,9 +724,18 @@ function pobocky_normalize_form_data(array $source, string $defaultType = 'prode
     if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
         throw new InvalidArgumentException('E-mail nema platny format.');
     }
+    $emailBrigada = trim((string)($source['email_brigada'] ?? ''));
+    if ($emailBrigada !== '' && filter_var($emailBrigada, FILTER_VALIDATE_EMAIL) === false) {
+        throw new InvalidArgumentException('E-mail brigada nema platny format.');
+    }
+    $emailKariera = trim((string)($source['email_kariera'] ?? ''));
+    if ($emailKariera !== '' && filter_var($emailKariera, FILTER_VALIDATE_EMAIL) === false) {
+        throw new InvalidArgumentException('E-mail kariera nema platny format.');
+    }
 
     $data = [
         'typ' => pobocky_normalize_type((string)($source['typ'] ?? $default['typ']), $default['typ']),
+        'slug' => pobocky_normalize_slug((string)($source['slug'] ?? $default['slug'])),
         'poradi' => (int)($source['poradi'] ?? $default['poradi']),
         'stredisko' => trim((string)($source['stredisko'] ?? $default['stredisko'])),
         'galerie_id' => ($galerieIdRaw === '') ? null : (int)$galerieIdRaw,
@@ -686,12 +743,14 @@ function pobocky_normalize_form_data(array $source, string $defaultType = 'prode
         'nazev_en' => trim((string)($source['nazev_en'] ?? $default['nazev_en'])),
         'mobil' => trim((string)($source['mobil'] ?? $default['mobil'])),
         'email' => $email,
+        'email_brigada' => $emailBrigada,
+        'email_kariera' => $emailKariera,
         'adresa' => trim((string)($source['adresa'] ?? $default['adresa'])),
         'gps' => trim((string)($source['gps'] ?? $default['gps'])),
         'vedouci' => trim((string)($source['vedouci'] ?? $default['vedouci'])),
         'image' => trim((string)($source['image'] ?? $default['image'])),
-        'sluzby_cz' => trim((string)($source['sluzby_cz'] ?? $default['sluzby_cz'])),
-        'sluzby_en' => trim((string)($source['sluzby_en'] ?? $default['sluzby_en'])),
+        'sluzby_cz' => editor_html((string)($source['sluzby_cz'] ?? $default['sluzby_cz'])),
+        'sluzby_en' => editor_html((string)($source['sluzby_en'] ?? $default['sluzby_en'])),
         'valid' => isset($source['valid']) ? 1 : 0,
     ];
 
@@ -735,18 +794,26 @@ function pobocky_fetch_one(PDO $pdo, int $id, string $type): ?array
 function pobocky_add(PDO $pdo, array $data): int
 {
     $qnUser = admin_session_user();
+    $type = pobocky_normalize_type((string)$data['typ']);
+    $slug = (string)($data['slug'] ?? '');
+    if ($slug === '') {
+        $slug = pobocky_unique_slug($pdo, $type, (string)$data['nazev_cz']);
+    } elseif (pobocky_slug_exists($pdo, $type, $slug)) {
+        throw new InvalidArgumentException('URL slug uz pouziva jina pobocka stejneho typu.');
+    }
     $stmt = $pdo->prepare(
         'INSERT INTO pobocky (
-            typ, poradi, stredisko, galerie_id, nazev_cz, nazev_en, mobil, email, adresa, gps,
+            typ, slug, poradi, stredisko, galerie_id, nazev_cz, nazev_en, mobil, email, email_brigada, email_kariera, adresa, gps,
             vedouci, image, sluzby_cz, sluzby_en, valid, user_i, user_u
         ) VALUES (
-            :typ, :poradi, :stredisko, :galerie_id, :nazev_cz, :nazev_en, :mobil, :email, :adresa, :gps,
+            :typ, :slug, :poradi, :stredisko, :galerie_id, :nazev_cz, :nazev_en, :mobil, :email, :email_brigada, :email_kariera, :adresa, :gps,
             :vedouci, :image, :sluzby_cz, :sluzby_en, :valid, :user_i, :user_u
         )'
     );
 
     $stmt->execute([
-        ':typ' => pobocky_normalize_type((string)$data['typ']),
+        ':typ' => $type,
+        ':slug' => $slug,
         ':poradi' => (int)$data['poradi'],
         ':stredisko' => $data['stredisko'] !== '' ? (string)$data['stredisko'] : null,
         ':galerie_id' => $data['galerie_id'],
@@ -754,6 +821,8 @@ function pobocky_add(PDO $pdo, array $data): int
         ':nazev_en' => $data['nazev_en'] !== '' ? (string)$data['nazev_en'] : null,
         ':mobil' => $data['mobil'] !== '' ? (string)$data['mobil'] : null,
         ':email' => $data['email'] !== '' ? (string)$data['email'] : null,
+        ':email_brigada' => $data['email_brigada'] !== '' ? (string)$data['email_brigada'] : null,
+        ':email_kariera' => $data['email_kariera'] !== '' ? (string)$data['email_kariera'] : null,
         ':adresa' => $data['adresa'] !== '' ? (string)$data['adresa'] : null,
         ':gps' => $data['gps'] !== '' ? (string)$data['gps'] : null,
         ':vedouci' => $data['vedouci'] !== '' ? (string)$data['vedouci'] : null,
@@ -765,15 +834,30 @@ function pobocky_add(PDO $pdo, array $data): int
         ':user_u' => $qnUser,
     ]);
 
-    return (int)$pdo->lastInsertId();
+    $newId = (int)$pdo->lastInsertId();
+    admin_auto_translate_record('pobocky.record', $newId, $data);
+
+    return $newId;
 }
 
 function pobocky_edit(PDO $pdo, int $id, string $type, array $data): void
 {
     $qnUser = admin_session_user();
+    $newType = pobocky_normalize_type((string)$data['typ']);
+    $slug = (string)($data['slug'] ?? '');
+    if ($slug === '') {
+        $current = pobocky_fetch_one($pdo, $id, $type);
+        $slug = pobocky_normalize_slug((string)($current['slug'] ?? ''));
+    }
+    if ($slug === '') {
+        $slug = pobocky_unique_slug($pdo, $newType, (string)$data['nazev_cz'], $id);
+    } elseif (pobocky_slug_exists($pdo, $newType, $slug, $id)) {
+        throw new InvalidArgumentException('URL slug uz pouziva jina pobocka stejneho typu.');
+    }
     $stmt = $pdo->prepare(
         'UPDATE pobocky SET
             typ = :typ,
+            slug = :slug,
             poradi = :poradi,
             stredisko = :stredisko,
             galerie_id = :galerie_id,
@@ -781,6 +865,8 @@ function pobocky_edit(PDO $pdo, int $id, string $type, array $data): void
             nazev_en = :nazev_en,
             mobil = :mobil,
             email = :email,
+            email_brigada = :email_brigada,
+            email_kariera = :email_kariera,
             adresa = :adresa,
             gps = :gps,
             vedouci = :vedouci,
@@ -793,7 +879,8 @@ function pobocky_edit(PDO $pdo, int $id, string $type, array $data): void
     );
 
     $stmt->execute([
-        ':typ' => pobocky_normalize_type((string)$data['typ']),
+        ':typ' => $newType,
+        ':slug' => $slug,
         ':poradi' => (int)$data['poradi'],
         ':stredisko' => $data['stredisko'] !== '' ? (string)$data['stredisko'] : null,
         ':galerie_id' => $data['galerie_id'],
@@ -801,6 +888,8 @@ function pobocky_edit(PDO $pdo, int $id, string $type, array $data): void
         ':nazev_en' => $data['nazev_en'] !== '' ? (string)$data['nazev_en'] : null,
         ':mobil' => $data['mobil'] !== '' ? (string)$data['mobil'] : null,
         ':email' => $data['email'] !== '' ? (string)$data['email'] : null,
+        ':email_brigada' => $data['email_brigada'] !== '' ? (string)$data['email_brigada'] : null,
+        ':email_kariera' => $data['email_kariera'] !== '' ? (string)$data['email_kariera'] : null,
         ':adresa' => $data['adresa'] !== '' ? (string)$data['adresa'] : null,
         ':gps' => $data['gps'] !== '' ? (string)$data['gps'] : null,
         ':vedouci' => $data['vedouci'] !== '' ? (string)$data['vedouci'] : null,
@@ -812,6 +901,8 @@ function pobocky_edit(PDO $pdo, int $id, string $type, array $data): void
         ':id' => $id,
         ':scope_typ' => pobocky_normalize_type($type),
     ]);
+
+    admin_auto_translate_record('pobocky.record', $id, $data);
 }
 
 function pobocky_delete(PDO $pdo, int $id, string $type): void

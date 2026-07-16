@@ -1,0 +1,114 @@
+<?php
+declare(strict_types=1);
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+require_once __DIR__ . '/../../../functions/bootstrap.php';
+require_once __DIR__ . '/../../../config.php';
+require_once SEC_DIR . '/functions/mysql_connect.php';
+require_once SEC_DIR . '/functions/fun_rep_brigadnici.php';
+
+$autoload = ROOT_DIR . '/vendor/autoload.php';
+if (!is_file($autoload)) {
+    http_response_code(500);
+    echo 'Composer vendor/autoload.php neni dostupny. Spust composer install.';
+    exit;
+}
+require_once $autoload;
+
+function rep_brigadnici_export_columns(string $type): array
+{
+    $columns = [
+        'id' => 'ID',
+        'typ' => 'Typ',
+        'rok' => 'Rok',
+        'reg_date' => 'Registrace',
+        'aktivni' => 'Aktivni',
+        'jmeno' => 'Jmeno',
+        'prijmeni' => 'Prijmeni',
+        'mobil' => 'Mobil',
+        'email' => 'E-mail',
+        'poznamka' => 'Poznamka',
+        'zkusenosti_l' => 'Zkusenosti',
+    ];
+    $columns += [
+        'pobocka_nazev' => 'Pobocka',
+        'pobocka_ref_id' => 'Pobocka ID',
+        'pobocka_typ' => 'Pobocka typ',
+        'pobocka_id' => 'Puvodni pobocka ID',
+        'valid' => 'Valid',
+    ];
+    return $columns;
+}
+
+function rep_brigadnici_export_filename(string $type, array $years, bool $none, int $valid): string
+{
+    $suffix = $none ? 'zadne-roky' : ($years === [] ? 'vsechny-roky' : 'roky-' . implode('-', $years));
+    $validSuffix = $valid === 1 ? 'validni' : 'nevalidni';
+    return 'brigadnici-' . rep_brigadnici_type($type) . '-' . $validSuffix . '-' . $suffix . '-' . date('Ymd-His') . '.xlsx';
+}
+
+try {
+    global $pdo;
+    if (!($pdo instanceof PDO)) {
+        throw new RuntimeException('PDO pripojeni neni dostupne.');
+    }
+    if (!admin_session_is_logged() || !in_array((int)admin_session_prava(), [1, 2], true)) {
+        http_response_code(403);
+        echo 'Forbidden';
+        exit;
+    }
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->exec('SET NAMES utf8mb4');
+
+    $type = rep_brigadnici_type((string)($_GET['type'] ?? 'vo'));
+    $showNoYears = isset($_GET['none']) && (string)$_GET['none'] === '1';
+    $valid = isset($_GET['valid']) && (string)$_GET['valid'] === '0' ? 0 : 1;
+    $years = rep_brigadnici_parse_years($_GET['years'] ?? []);
+    $rows = $showNoYears ? [] : rep_brigadnici_rows($pdo, $type, $years, $valid);
+    $columns = rep_brigadnici_export_columns($type);
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Brigadnici ' . strtoupper($type));
+
+    $colIndex = 1;
+    foreach ($columns as $label) {
+        $sheet->setCellValue([$colIndex, 1], $label);
+        $colIndex++;
+    }
+
+    $rowIndex = 2;
+    foreach ($rows as $row) {
+        $colIndex = 1;
+        foreach ($columns as $column => $label) {
+            $sheet->setCellValue([$colIndex, $rowIndex], $row[$column] ?? null);
+            $colIndex++;
+        }
+        $rowIndex++;
+    }
+
+    $highestColumn = $sheet->getHighestColumn();
+    $sheet->getStyle('A1:' . $highestColumn . '1')->getFont()->setBold(true);
+    $sheet->setAutoFilter('A1:' . $highestColumn . max(1, $rowIndex - 1));
+    $sheet->freezePane('A2');
+    for ($i = 1; $i <= count($columns); $i++) {
+        $sheet->getColumnDimensionByColumn($i)->setAutoSize(true);
+    }
+
+    if (ob_get_length() !== false) {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+    }
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="' . rep_brigadnici_export_filename($type, $years, $showNoYears, $valid) . '"');
+    header('Cache-Control: max-age=0');
+    $writer = new Xlsx($spreadsheet);
+    $writer->save('php://output');
+    exit;
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo 'Export se nepodarilo vytvorit: ' . $e->getMessage();
+}

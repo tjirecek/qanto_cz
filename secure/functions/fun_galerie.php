@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/fun_admin_translate.php';
+
 function galerie_media_root(): string
 {
     return ROOT_DIR . '/media/galerie';
@@ -211,7 +213,9 @@ function galerie_type_save(array $data, ?int $id = null): int
             VALUES (:poradi, :nazev_cz, :nazev_en, :popis_cz, :popis_en, :user_i, :user_u)');
         $payload[':user_i'] = $user;
         $stmt->execute($payload);
-        return (int)$pdo->lastInsertId();
+        $newId = (int)$pdo->lastInsertId();
+        admin_auto_translate_record('galerie.type', $newId, $data);
+        return $newId;
     }
 
     $payload[':id'] = $id;
@@ -220,6 +224,7 @@ function galerie_type_save(array $data, ?int $id = null): int
         SET poradi = :poradi, nazev_cz = :nazev_cz, nazev_en = :nazev_en, popis_cz = :popis_cz, popis_en = :popis_en, valid = :valid, user_u = :user_u
         WHERE id = :id');
     $stmt->execute($payload);
+    admin_auto_translate_record('galerie.type', $id, $data);
 
     return $id;
 }
@@ -296,8 +301,8 @@ function galerie_save(array $data, ?int $id = null): int
         ':nazev_en' => trim((string)($data['nazev_en'] ?? '')),
         ':datum' => galerie_date_db((string)($data['datum'] ?? '')),
         ':galerie_typ' => galerie_int_or_null($data['galerie_typ'] ?? null),
-        ':popis_cz' => (string)($data['popis_cz'] ?? ''),
-        ':popis_en' => (string)($data['popis_en'] ?? ''),
+        ':popis_cz' => editor_html((string)($data['popis_cz'] ?? '')),
+        ':popis_en' => editor_html((string)($data['popis_en'] ?? '')),
         ':user_u' => $user,
     ];
 
@@ -308,6 +313,7 @@ function galerie_save(array $data, ?int $id = null): int
         $stmt->execute($payload);
         $id = (int)$pdo->lastInsertId();
         galerie_ensure_directories($id);
+        admin_auto_translate_record('galerie.record', $id, $data);
         return $id;
     }
 
@@ -319,6 +325,7 @@ function galerie_save(array $data, ?int $id = null): int
         WHERE id = :id');
     $stmt->execute($payload);
     galerie_ensure_directories($id);
+    admin_auto_translate_record('galerie.record', $id, $data);
 
     return $id;
 }
@@ -390,6 +397,7 @@ function galerie_photo_save_meta(int $photoId, array $data): void
         ':user_u' => galerie_user(),
         ':id' => $photoId,
     ]);
+    admin_auto_translate_record('galerie.photo', $photoId, $data);
 }
 
 function galerie_photo_save_order(int $galleryId, array $photoIds): int

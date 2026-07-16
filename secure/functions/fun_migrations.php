@@ -3,22 +3,7 @@ declare(strict_types=1);
 
 function migrations_prepare_table(PDO $pdo): void
 {
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS schema_migrations (
-            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-            migration VARCHAR(190) NOT NULL,
-            checksum CHAR(64) DEFAULT NULL,
-            description VARCHAR(255) DEFAULT NULL,
-            applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            applied_by VARCHAR(160) DEFAULT NULL,
-            environment VARCHAR(40) DEFAULT NULL,
-            note TEXT DEFAULT NULL,
-            PRIMARY KEY (id),
-            UNIQUE KEY uq_schema_migrations_migration (migration),
-            KEY idx_schema_migrations_applied_at (applied_at),
-            KEY idx_schema_migrations_environment (environment)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
+    // The schema_migrations table is created by SQL migrations, not runtime PHP.
 }
 
 function migrations_sql_dir(): string
