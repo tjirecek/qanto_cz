@@ -194,7 +194,16 @@ function rep_akce_upload_pdf(?array $file, int $id, string $title, string $exist
     if ($tmpName === '' || !is_uploaded_file($tmpName)) {
         throw new RuntimeException('Dočasný PDF soubor není dostupný.');
     }
-    $handle = fopen($tmpName, 'rb');
+
+    return rep_akce_store_pdf_file($tmpName, (string)($file['name'] ?? 'nabidka.pdf'), $id, $title, $existingPath, true);
+}
+
+function rep_akce_store_pdf_file(string $sourcePath, string $originalName, int $id, string $title, string $existingPath = '', bool $isUploadedFile = false): array
+{
+    if ($sourcePath === '' || !is_file($sourcePath)) {
+        throw new RuntimeException('PDF soubor není dostupný.');
+    }
+    $handle = fopen($sourcePath, 'rb');
     $header = $handle ? fread($handle, 4) : '';
     if (is_resource($handle)) {
         fclose($handle);
@@ -204,10 +213,16 @@ function rep_akce_upload_pdf(?array $file, int $id, string $title, string $exist
     }
 
     $relativeDir = rep_akce_ensure_offer_dir($id, $title);
-    $baseName = rep_akce_slug(pathinfo((string)($file['name'] ?? 'nabidka'), PATHINFO_FILENAME), 'nabidka');
-    $targetName = $baseName . '-' . date('YmdHis') . '.pdf';
+    $baseName = rep_akce_slug(pathinfo($originalName !== '' ? $originalName : 'nabidka.pdf', PATHINFO_FILENAME), 'nabidka');
+    $targetName = $baseName . '-' . date('YmdHis') . '-' . bin2hex(random_bytes(3)) . '.pdf';
     $relativePath = $relativeDir . '/' . $targetName;
-    if (!move_uploaded_file($tmpName, ROOT_DIR . '/' . $relativePath)) {
+    $targetPath = ROOT_DIR . '/' . $relativePath;
+    $stored = $isUploadedFile ? move_uploaded_file($sourcePath, $targetPath) : rename($sourcePath, $targetPath);
+    if (!$stored && !$isUploadedFile && copy($sourcePath, $targetPath)) {
+        @unlink($sourcePath);
+        $stored = true;
+    }
+    if (!$stored) {
         throw new RuntimeException('PDF se nepodařilo uložit.');
     }
     if ($existingPath !== '' && $existingPath !== $relativePath) {
@@ -216,8 +231,8 @@ function rep_akce_upload_pdf(?array $file, int $id, string $title, string $exist
 
     return [
         'path' => $relativePath,
-        'original_name' => (string)($file['name'] ?? ''),
-        'filesize' => (int)filesize(ROOT_DIR . '/' . $relativePath),
+        'original_name' => $originalName,
+        'filesize' => (int)filesize($targetPath),
         'changed' => true,
     ];
 }

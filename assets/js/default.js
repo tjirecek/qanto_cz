@@ -2056,15 +2056,51 @@
     if (!track) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     let paused = prefersReducedMotion;
     let rafId = 0;
     let lastTime = 0;
+    let offset = 0;
+    let loopWidth = 0;
+    let cardStep = 0;
+    let resumeTimer = 0;
 
-    const getLoopWidth = () => track.scrollWidth / 2;
+    const measure = () => {
+      const cards = Array.from(track.querySelectorAll('.ad-card'));
+      const first = cards[0];
+      const second = cards[1];
+      const halfIndex = Math.max(1, Math.floor(cards.length / 2));
+      const firstOfSecondSet = cards[halfIndex];
+
+      cardStep = first
+        ? (second ? Math.abs(second.offsetLeft - first.offsetLeft) : first.getBoundingClientRect().width + 8)
+        : 548;
+      loopWidth = first && firstOfSecondSet
+        ? Math.abs(firstOfSecondSet.offsetLeft - first.offsetLeft)
+        : Math.max(0, track.scrollWidth / 2);
+    };
+
+    const render = () => {
+      if (loopWidth <= 0) measure();
+      while (loopWidth > 0 && offset >= loopWidth) offset -= loopWidth;
+      while (loopWidth > 0 && offset < 0) offset += loopWidth;
+      track.style.transform = `translate3d(${-Math.round(offset)}px, 0, 0)`;
+    };
+
+    const pauseBriefly = () => {
+      if (prefersReducedMotion) return;
+      paused = true;
+      window.clearTimeout(resumeTimer);
+      resumeTimer = window.setTimeout(() => {
+        paused = false;
+      }, 2200);
+    };
+
     const scrollByCard = (direction) => {
-      const card = track.querySelector('.ad-card');
-      const distance = card ? card.getBoundingClientRect().width + 8 : 548;
-      track.scrollBy({ left: direction * distance, behavior: 'smooth' });
+      measure();
+      offset += direction * cardStep;
+      render();
+      pauseBriefly();
     };
 
     const tick = (time) => {
@@ -2072,24 +2108,52 @@
       const delta = time - lastTime;
       lastTime = time;
 
-      if (!paused) {
-        track.scrollLeft += delta * 0.035;
-        const loopWidth = getLoopWidth();
-        if (loopWidth > 0 && track.scrollLeft >= loopWidth) track.scrollLeft -= loopWidth;
+      if (!paused && document.visibilityState === 'visible') {
+        offset += delta * 0.04;
+        render();
       }
 
       rafId = window.requestAnimationFrame(tick);
     };
 
-    carousel.addEventListener('mouseenter', () => { paused = true; });
-    carousel.addEventListener('mouseleave', () => { paused = prefersReducedMotion; });
-    carousel.addEventListener('focusin', () => { paused = true; });
-    carousel.addEventListener('focusout', () => { paused = prefersReducedMotion; });
-    if (prev) prev.addEventListener('click', () => scrollByCard(-1));
-    if (next) next.addEventListener('click', () => scrollByCard(1));
+    if (finePointer) {
+      carousel.addEventListener('mouseenter', () => {
+        window.clearTimeout(resumeTimer);
+        paused = true;
+      });
+      carousel.addEventListener('mouseleave', () => {
+        paused = prefersReducedMotion;
+      });
+      carousel.addEventListener('focusin', () => { paused = true; });
+      carousel.addEventListener('focusout', () => { paused = prefersReducedMotion; });
+    }
+
+    [prev, next].forEach((button, index) => {
+      if (!button) return;
+      ['pointerdown', 'touchstart', 'mousedown'].forEach((eventName) => {
+        button.addEventListener(eventName, (event) => {
+          event.stopPropagation();
+        }, { passive: true });
+      });
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        scrollByCard(index === 0 ? -1 : 1);
+      });
+    });
+
+    measure();
+    render();
+    window.addEventListener('resize', () => {
+      measure();
+      render();
+    });
 
     rafId = window.requestAnimationFrame(tick);
-    window.addEventListener('beforeunload', () => window.cancelAnimationFrame(rafId), { once: true });
+    window.addEventListener('beforeunload', () => {
+      window.clearTimeout(resumeTimer);
+      window.cancelAnimationFrame(rafId);
+    }, { once: true });
   });
 
   flyerSections.forEach((section) => {

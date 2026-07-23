@@ -69,6 +69,25 @@ $flyerPanels = $flyerCategories !== []
         'items' => $allFlyerItems,
     ]], $flyerCategories)
     : [];
+$adValidityText = static function (array $ad): string {
+    if ((string)($ad['source'] ?? '') !== 'akce_auto') {
+        return '';
+    }
+    $from = function_exists('frontend_akce_date_label') ? frontend_akce_date_label((string)($ad['valid_from'] ?? '')) : '';
+    $to = function_exists('frontend_akce_date_label') ? frontend_akce_date_label((string)($ad['valid_to'] ?? '')) : '';
+
+    if ($from !== '' && $to !== '') {
+        return sprintf(ui_text('flyers.validity_from_to', 'Platí od %s do %s'), $from, $to);
+    }
+    if ($to !== '') {
+        return sprintf(ui_text('flyers.validity_to', 'Platí do %s'), $to);
+    }
+    if ($from !== '') {
+        return sprintf(ui_text('flyers.validity_from', 'Platí od %s'), $from);
+    }
+
+    return '';
+};
 ?>
 <section class="home-router-section" aria-label="<?= htmlspecialchars(ui_text('aria.router', 'Rychlý rozcestník'), ENT_QUOTES, 'UTF-8') ?>">
     <div class="site-shell home-router">
@@ -121,8 +140,12 @@ $flyerPanels = $flyerCategories !== []
                                     <?php if ($hasImage): ?>
                                         <img src="<?= htmlspecialchars((string)$ad['image'], ENT_QUOTES, 'UTF-8') ?>" alt="" loading="lazy">
                                     <?php endif; ?>
+                                    <?php $validity = $adValidityText($ad); ?>
                                     <span class="ad-card__content">
-                                        <strong><?= htmlspecialchars((string)$ad['title'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                        <span class="ad-card__copy">
+                                            <strong><?= htmlspecialchars((string)$ad['title'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                            <?php if ($validity !== ''): ?><small class="ad-card__validity"><?= htmlspecialchars($validity, ENT_QUOTES, 'UTF-8') ?></small><?php endif; ?>
+                                        </span>
                                         <span class="ad-card__button"><?= htmlspecialchars((string)$ad['link_text'], ENT_QUOTES, 'UTF-8') ?></span>
                                     </span>
                                 </a>
@@ -155,8 +178,10 @@ $flyerPanels = $flyerCategories !== []
                         <?php if ($hasImage): ?>
                             <img src="<?= htmlspecialchars((string)$ad['image'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="steady-ad-card__image" loading="lazy">
                         <?php endif; ?>
+                        <?php $validity = $adValidityText($ad); ?>
                         <span class="steady-ad-card__content">
                             <strong><?= htmlspecialchars((string)$ad['title'], ENT_QUOTES, 'UTF-8') ?></strong>
+                            <?php if ($validity !== ''): ?><small class="steady-ad-card__validity"><?= htmlspecialchars($validity, ENT_QUOTES, 'UTF-8') ?></small><?php endif; ?>
                             <span><?= htmlspecialchars((string)$ad['link_text'], ENT_QUOTES, 'UTF-8') ?></span>
                         </span>
                     </a>

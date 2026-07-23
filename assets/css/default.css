@@ -548,26 +548,24 @@ img {
 
 .ad-carousel__viewport {
     overflow: hidden;
+    border-radius: 10px;
 }
 
 .ad-carousel__track {
     display: flex;
     gap: 8px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-}
-
-.ad-carousel__track::-webkit-scrollbar {
-    display: none;
+    width: max-content;
+    overflow: visible;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
 }
 
 .ad-card {
-    width: min(540px, calc(100vw - 44px));
+    width: min(540px, calc(var(--shell) * .43));
+    min-width: min(540px, calc(var(--shell) * .43));
     height: 300px;
     position: relative;
-    flex: 0 0 min(540px, calc(100vw - 44px));
+    flex: 0 0 min(540px, calc(var(--shell) * .43));
     overflow: hidden;
     border-radius: 10px;
     display: flex;
@@ -611,7 +609,9 @@ img {
 }
 
 .ad-card--has-image.ad-card--light::before {
-    background: linear-gradient(180deg, rgba(29, 29, 27, .04), rgba(29, 29, 27, .68));
+    background:
+        linear-gradient(90deg, rgba(29, 29, 27, .68), rgba(29, 29, 27, .18) 58%, rgba(29, 29, 27, .02)),
+        linear-gradient(180deg, rgba(29, 29, 27, .04), rgba(29, 29, 27, .72));
 }
 
 .ad-card__content {
@@ -632,6 +632,34 @@ img {
     font-weight: 650;
     line-height: 1.18;
     letter-spacing: -.025em;
+}
+
+.ad-card__copy {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.ad-card__validity {
+    display: block;
+    color: currentcolor;
+    font-size: .72rem;
+    font-weight: 550;
+    line-height: 1.2;
+    opacity: .84;
+    text-shadow: inherit;
+}
+
+.ad-card--has-image.ad-card--light strong {
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .62);
+}
+
+.ad-card--has-image.ad-card--light .ad-card__validity {
+    text-shadow: 0 2px 12px rgba(0, 0, 0, .58);
+}
+
+.ad-card--has-image.ad-card--light .ad-card__button {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
 }
 
 .ad-card--text-medium strong {
@@ -817,22 +845,28 @@ img {
 
 .ad-carousel__controls {
     position: absolute;
+    z-index: 4;
     right: 16px;
     top: 50%;
     display: flex;
     gap: 8px;
+    pointer-events: auto;
     transform: translateY(-50%);
 }
 
 .ad-carousel__controls button {
     width: 48px;
     height: 48px;
+    position: relative;
+    z-index: 1;
     border: 0;
     border-radius: 50%;
     color: #fff;
     background: rgba(29, 29, 27, .88);
     font-size: 2rem;
     line-height: 1;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .ad-carousel__controls button:hover {
@@ -863,7 +897,7 @@ img {
 
 .steady-ad-card:hover {
     color: inherit;
-    filter: saturate(1.04);
+    filter: none;
     transform: translateY(-2px);
 }
 
@@ -873,6 +907,7 @@ img {
     inset: 0;
     z-index: -2;
     background: linear-gradient(180deg, transparent 28%, rgba(255, 255, 255, .76));
+    transition: background .18s ease;
 }
 
 .steady-ad-card::after {
@@ -887,6 +922,7 @@ img {
     z-index: 1;
     display: grid;
     gap: 12px;
+    transition: background .18s ease, box-shadow .18s ease;
 }
 
 .steady-ad-card__image {
@@ -908,6 +944,16 @@ img {
     letter-spacing: -.045em;
 }
 
+.steady-ad-card__validity {
+    display: block;
+    margin-top: -3px;
+    color: inherit;
+    font-size: clamp(.76rem, .86vw, .88rem);
+    font-weight: 560;
+    line-height: 1.25;
+    opacity: .86;
+}
+
 .steady-ad-card__content > span {
     width: fit-content;
     display: inline-flex;
@@ -921,6 +967,7 @@ img {
     font-size: .76rem;
     font-weight: 500;
     line-height: 1;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
 }
 
 .steady-ad-card__content > span::after {
@@ -933,8 +980,52 @@ img {
     color: #fff;
 }
 
+.steady-ad-card--light:hover {
+    color: #fff;
+}
+
 .steady-ad-card--light::before {
     background: linear-gradient(180deg, transparent 22%, rgba(29, 29, 27, .70));
+}
+
+.steady-ad-card--has-image.steady-ad-card--light::before {
+    background:
+        linear-gradient(90deg, rgba(29, 29, 27, .72), rgba(29, 29, 27, .32) 58%, rgba(29, 29, 27, .04)),
+        linear-gradient(180deg, rgba(29, 29, 27, .06), rgba(29, 29, 27, .72));
+}
+
+.steady-ad-card--has-image.steady-ad-card--light .steady-ad-card__content {
+    max-width: min(82%, 270px);
+    margin: -10px -12px -12px;
+    padding: 10px 12px 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(29, 29, 27, .46), rgba(29, 29, 27, .18));
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+
+.steady-ad-card--has-image.steady-ad-card--light strong {
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .68);
+}
+
+.steady-ad-card--has-image.steady-ad-card--light .steady-ad-card__content > span {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .24);
+}
+
+.steady-ad-card--has-image.steady-ad-card--light:hover::before {
+    background:
+        linear-gradient(90deg, rgba(29, 29, 27, .82), rgba(29, 29, 27, .42) 62%, rgba(29, 29, 27, .08)),
+        linear-gradient(180deg, rgba(29, 29, 27, .12), rgba(29, 29, 27, .82));
+}
+
+.steady-ad-card--has-image.steady-ad-card--light:hover .steady-ad-card__content {
+    background: linear-gradient(135deg, rgba(29, 29, 27, .66), rgba(29, 29, 27, .32));
+    box-shadow: 0 16px 34px rgba(0, 0, 0, .24);
+}
+
+.steady-ad-card--has-image.steady-ad-card--light:hover .steady-ad-card__content > span {
+    color: var(--qanto-black);
+    border-color: #fff;
+    background: #fff;
 }
 
 .akce-page {
@@ -6900,18 +6991,21 @@ body.has-brigada-modal {
     }
 
     .ad-card {
-        width: calc(100vw - 22px);
+        width: calc(var(--shell) - 34px);
+        min-width: calc(var(--shell) - 34px);
         height: 260px;
-        flex-basis: calc(100vw - 22px);
+        flex-basis: calc(var(--shell) - 34px);
         padding: 0 18px 20px;
     }
 
     .ad-card__content {
+        grid-template-columns: 1fr;
+        align-items: end;
         gap: 10px;
     }
 
     .ad-card strong {
-        max-width: 58vw;
+        max-width: 100%;
         font-size: .98rem;
     }
 
@@ -6920,16 +7014,18 @@ body.has-brigada-modal {
     }
 
     .ad-card--text-long strong {
-        max-width: 56vw;
+        max-width: 100%;
         font-size: .78rem;
     }
 
     .ad-card--text-xlong strong {
-        max-width: 54vw;
+        max-width: 100%;
         font-size: .68rem;
     }
 
     .ad-card__button {
+        justify-self: start;
+        max-width: 100%;
         padding: 9px 12px;
         font-size: .72rem;
     }

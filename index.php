@@ -141,6 +141,10 @@ $frontendMapConfig = [
         'lang' => $lang === 'en' ? 'en' : 'cs',
     ],
 ];
+
+if ($page === 'volani' && (string)($_GET['pdf'] ?? '') === '1') {
+    frontend_volani_stream_pdf($pdo, trim((string)($_GET['unify'] ?? '')), isset($_GET['typ']) ? (int)$_GET['typ'] : 1);
+}
 ?>
 <!doctype html>
 <html lang="<?= htmlspecialchars($htmlLang, ENT_QUOTES, 'UTF-8') ?>">

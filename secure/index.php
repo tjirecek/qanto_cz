@@ -200,6 +200,9 @@ $uName = admin_session_user_name();
 <script src="<?= asset_version(BASE_URL . 'assets/js/sec_datatables_cs.js'); ?>"></script>
 <script src="<?= asset_version(BASE_URL . 'assets/js/sec_datatables.js'); ?>"></script>
 <script src="<?= asset_version(BASE_URL . 'assets/js/sec_tinymce.js'); ?>"></script>
+<?php if (is_file(ROOT_DIR . '/assets/js/sec_rep_admin.js')): ?>
+<script src="<?= asset_version(BASE_URL . 'assets/js/sec_rep_admin.js'); ?>"></script>
+<?php endif; ?>
 <script src="<?= asset_version(BASE_URL . 'assets/js/sec/admin.js'); ?>"></script>
 
 </body>

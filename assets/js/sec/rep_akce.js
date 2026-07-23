@@ -42,7 +42,12 @@
     document.head.appendChild(link);
   };
 
-  const initUploader = () => {
+  const loadFilePond = () => {
+    loadStyle(`${libBase}filepond/filepond.min.css`);
+    return loadScript(`${libBase}filepond/filepond.min.js`, () => Boolean(window.FilePond));
+  };
+
+  const initPagesUploader = () => {
     const input = document.querySelector('[data-rep-akce-pages-upload]');
     if (!input) {
       return;
@@ -58,8 +63,7 @@
       return;
     }
 
-    loadStyle(`${libBase}filepond/filepond.min.css`);
-    loadScript(`${libBase}filepond/filepond.min.js`, () => Boolean(window.FilePond))
+    loadFilePond()
       .then(() => {
         const defaultParallelUploads = 4;
         let replacePending = false;
@@ -164,6 +168,119 @@
       })
       .catch((error) => {
         if (status) status.textContent = error.message;
+        console.warn(error.message);
+      });
+  };
+
+  const initPdfUploader = () => {
+    const input = document.querySelector('[data-rep-akce-pdf-upload]');
+    if (!input) {
+      return;
+    }
+
+    const offerId = input.dataset.offerId || '';
+    const csrfToken = input.dataset.csrfToken || '';
+    const status = document.querySelector('[data-rep-akce-pdf-status]');
+    const current = document.querySelector('[data-rep-akce-pdf-current]');
+
+    const setStatus = (message, type = 'muted') => {
+      if (!status) return;
+      status.className = `small text-${type} mt-2`;
+      status.textContent = message;
+    };
+
+    if (!offerId || !csrfToken) {
+      setStatus('Upload PDF je dostupný až po uložení akční nabídky.', 'muted');
+      return;
+    }
+
+    loadFilePond()
+      .then(() => {
+        const endpoint = '/secure/functions/ajax/rep_akce_pdf_upload.php';
+        let pdfUploading = false;
+        const baseHeaders = () => ({
+          'X-CSRF-Token': csrfToken,
+          'X-Offer-Id': offerId,
+        });
+
+        const pond = window.FilePond.create(input, {
+          name: 'pdf_file',
+          allowMultiple: false,
+          allowRevert: false,
+          instantUpload: true,
+          chunkUploads: true,
+          chunkSize: 8 * 1024 * 1024,
+          chunkRetryDelays: [500, 1000, 3000],
+          acceptedFileTypes: ['application/pdf'],
+          labelIdle: 'Přetáhněte PDF nebo <span class="filepond--label-action">vyberte soubor</span>',
+          labelFileProcessing: 'Nahrávám PDF',
+          labelFileProcessingComplete: 'PDF nahráno',
+          labelFileProcessingError: 'Chyba uploadu PDF',
+          labelTapToCancel: 'kliknutím zrušit',
+          labelTapToRetry: 'kliknutím opakovat',
+          labelTapToUndo: 'vrátit',
+          server: {
+            process: {
+              url: endpoint,
+              method: 'POST',
+              headers: baseHeaders(),
+              ondata: (formData) => {
+                formData.append('offer_id', offerId);
+                formData.append('csrf_token', csrfToken);
+                return formData;
+              },
+              onload: (response) => response,
+              onerror: (response) => response,
+            },
+          },
+        });
+
+        pond.on('processfilestart', () => {
+          pdfUploading = true;
+          setStatus('Probíhá nahrávání PDF po částech. Nezavírejte stránku.', 'primary');
+        });
+
+        pond.on('processfile', (error, file) => {
+          pdfUploading = false;
+          if (error) {
+            const message = error.body || error.main || 'Upload PDF se nepodařil.';
+            setStatus(message, 'danger');
+            return;
+          }
+
+          const path = file && file.serverId ? String(file.serverId) : '';
+          const fileName = file && file.filename ? file.filename : 'nahrané PDF';
+          if (current && path) {
+            current.innerHTML = '';
+            const link = document.createElement('a');
+            link.href = `/${path.replace(/^\/+/, '')}`;
+            link.target = '_blank';
+            link.rel = 'noopener';
+            link.textContent = 'aktuální PDF';
+            current.append(link, ` - ${fileName}`);
+          }
+          setStatus('PDF bylo nahráno a uloženo k akční nabídce.', 'success');
+        });
+
+        pond.on('error', (error) => {
+          pdfUploading = false;
+          const message = error && error.body ? error.body : 'Upload PDF se nepodařil.';
+          setStatus(message, 'danger');
+        });
+
+        const form = input.closest('form');
+        if (form) {
+          form.addEventListener('submit', (event) => {
+            if (!pdfUploading) {
+              return;
+            }
+            event.preventDefault();
+            setStatus('Nejdříve počkejte na dokončení uploadu PDF, potom formulář uložte.', 'warning');
+          });
+        }
+      })
+      .catch((error) => {
+        setStatus(error.message, 'danger');
         console.warn(error.message);
       });
   };
@@ -315,7 +432,8 @@
     viewer.tabIndex = 0;
   };
 
-  initUploader();
+  initPagesUploader();
+  initPdfUploader();
 
   const viewers = document.querySelectorAll('[data-rep-akce-viewer]');
   if (viewers.length) {

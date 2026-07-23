@@ -1,0 +1,50 @@
+-- Shared kontaktní osoby a jejich skupiny.
+
+CREATE TABLE IF NOT EXISTS kontakty_lide_skupiny (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    legacy_id INT UNSIGNED NULL,
+    poradi INT NOT NULL DEFAULT 0,
+    nazev_cz VARCHAR(255) NOT NULL,
+    nazev_en VARCHAR(255) NOT NULL DEFAULT '',
+    visible TINYINT(1) NOT NULL DEFAULT 1,
+    valid TINYINT(1) NOT NULL DEFAULT 1,
+    auto_translate_en TINYINT(1) NOT NULL DEFAULT 1,
+    user_i VARCHAR(100) NOT NULL DEFAULT '',
+    user_u VARCHAR(100) NOT NULL DEFAULT '',
+    ts_i TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ts_u TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_kontakty_lide_skupiny_legacy_id (legacy_id),
+    KEY idx_kontakty_lide_skupiny_valid_visible_poradi (valid, visible, poradi),
+    KEY idx_kontakty_lide_skupiny_nazev_cz (nazev_cz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS kontakty_lide (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    legacy_id INT UNSIGNED NULL,
+    skupina_id INT UNSIGNED NULL,
+    legacy_skupina_id INT UNSIGNED NULL,
+    poradi INT NOT NULL DEFAULT 0,
+    jmeno VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL DEFAULT '',
+    mobil VARCHAR(255) NOT NULL DEFAULT '',
+    web VARCHAR(255) NOT NULL DEFAULT '',
+    image VARCHAR(255) NULL,
+    funkce_cz VARCHAR(255) NOT NULL DEFAULT '',
+    funkce_en VARCHAR(255) NOT NULL DEFAULT '',
+    popis_cz TEXT NULL,
+    popis_en TEXT NULL,
+    visible TINYINT(1) NOT NULL DEFAULT 1,
+    valid TINYINT(1) NOT NULL DEFAULT 1,
+    auto_translate_en TINYINT(1) NOT NULL DEFAULT 1,
+    user_i VARCHAR(100) NOT NULL DEFAULT '',
+    user_u VARCHAR(100) NOT NULL DEFAULT '',
+    ts_i TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ts_u TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_kontakty_lide_legacy_id (legacy_id),
+    KEY idx_kontakty_lide_skupina_id (skupina_id),
+    KEY idx_kontakty_lide_valid_visible_poradi (valid, visible, poradi),
+    KEY idx_kontakty_lide_jmeno (jmeno),
+    KEY idx_kontakty_lide_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

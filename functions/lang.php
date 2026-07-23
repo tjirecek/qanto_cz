@@ -1828,6 +1828,10 @@ $ui_texts = [
         'cz' => 'Zpět na přehled',
         'en' => 'Back to overview',
     ],
+    'volani.export_pdf' => [
+        'cz' => 'Export PDF',
+        'en' => 'Export PDF',
+    ],
     'volani.product' => [
         'cz' => 'Produktová řada',
         'en' => 'Product line',

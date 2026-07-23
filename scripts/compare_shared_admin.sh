@@ -129,7 +129,7 @@ is_project_path() {
 asset_class() {
   local rel="$1"
   case "$rel" in
-    assets/js/sec_rep_*|assets/js/sec_rep_*/*|assets/css/sec_rep_*)
+    assets/js/sec/rep_*|assets/js/sec_rep_*|assets/js/sec_rep_*/*|assets/css/sec_rep_*)
       printf 'PROJECT_ADMIN'
       ;;
     assets/js/sec/*|assets/js/sec_*|assets/css/secure.css)
@@ -147,7 +147,7 @@ asset_class() {
 asset_is_decided() {
   local rel="$1"
   case "$rel" in
-    assets/js/sec_rep_*|assets/js/sec_rep_*/*|assets/css/sec_rep_*|assets/js/rep_*|assets/css/rep_*|assets/js/sec/*|assets/js/sec_*|assets/css/default.css|assets/css/secure.css)
+    assets/js/sec/rep_*|assets/js/sec_rep_*|assets/js/sec_rep_*/*|assets/css/sec_rep_*|assets/js/rep_*|assets/css/rep_*|assets/js/sec/*|assets/js/sec_*|assets/css/default.css|assets/css/secure.css)
       return 0
       ;;
     *)
@@ -349,6 +349,7 @@ print_section "Asset Decisions"
 echo '| Pattern/Path | Type | Decision |'
 echo '| --- | --- | --- |'
 echo '| `assets/js/sec_rep_*` | PROJECT_ADMIN | Admin/project JS prefix; vyhodnocovat pred obecnym `sec_*`. |'
+echo '| `assets/js/sec/rep_*` | PROJECT_ADMIN | Agendovy admin/project JS; neni soucast shared baseline. |'
 echo '| `assets/css/sec_rep_*` | PROJECT_ADMIN | Admin/project CSS prefix; vyhodnocovat pred obecnym `rep_*`. |'
 echo '| `assets/js/rep_*` | FRONTEND_PROJECT | Frontend/project JS prefix. |'
 echo '| `assets/css/rep_*` | FRONTEND_PROJECT | Frontend/project CSS prefix. |'
@@ -409,4 +410,4 @@ print_section "Next Review Hints"
 echo '- Treat DIFF in shared/system files and shared admin assets as manual review, not automatic overwrite.'
 echo '- Treat ONLY_PRIMARY as candidate to port to secondary projects only when it is shared/system.'
 echo '- Treat ONLY_<SECONDARY> as candidate to import into qanto_cz only when it is generic shared admin and not project-specific.'
-echo '- Keep rep_*, sec_rep_*, project imports/exports, project cron scripts and project DB tables outside qanto_cz.'
+echo '- Keep rep_*, sec_rep_*, project imports/exports, project cron scripts and project DB tables outside the shared baseline; they belong only in the relevant project layer.'

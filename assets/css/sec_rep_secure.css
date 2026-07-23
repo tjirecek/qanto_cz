@@ -1,7 +1,7 @@
 /* Project admin styles for qanto.cz */
 
 .text-bg-qanto-markety {
-    color: #ffffff !important;
+    color: #fff !important;
     background-color: #1d1d1b !important;
 }
 
@@ -11,7 +11,7 @@
 }
 
 .text-bg-qanto {
-    color: #ffffff !important;
+    color: #fff !important;
     background-color: #005aa9 !important;
 }
 
@@ -153,4 +153,205 @@
 .sec-rep-mapy-logo:hover {
     color: #1d1d1b;
     text-decoration: none;
+}
+
+/* Project admin: Volání */
+
+/* Volání: dlouhé e-maily a tokeny nesmí roztahovat DataTables mimo viewport. */
+[data-rep-volani-list] .rep-volani-email-cell {
+    max-width: 14rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+[data-rep-volani-list] .rep-volani-token-cell {
+    max-width: 8rem;
+}
+
+[data-rep-volani-list] .rep-volani-token-cell code {
+    display: block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: .72rem;
+    line-height: 1.2;
+}
+
+[data-rep-volani-list] table.dataTable thead th.rep-volani-email-cell,
+[data-rep-volani-list] table.dataTable tfoot th.rep-volani-email-cell,
+[data-rep-volani-list] table.dataTable thead th.rep-volani-token-cell,
+[data-rep-volani-list] table.dataTable tfoot th.rep-volani-token-cell {
+    white-space: normal;
+}
+
+[data-rep-volani-list] .rep-volani-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: .55rem;
+}
+
+[data-rep-volani-list] .rep-volani-action-btn .bi {
+    font-size: .95rem;
+    line-height: 1;
+}
+
+/* Project admin: prohlížeč a upload akčních nabídek */
+
+.rep-akce-viewer {
+    --rep-akce-viewer-scale: 1;
+
+    background: radial-gradient(circle at top, #3b3b3b 0, #171717 56%, #0d0d0d 100%);
+    border-radius: 1rem;
+    color: #fff;
+    overflow: hidden;
+    outline: none;
+}
+
+.rep-akce-viewer__toolbar {
+    align-items: center;
+    background: rgba(0, 0, 0, 0.74);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    padding: .75rem;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.rep-akce-viewer__page {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: .84rem;
+    font-weight: 600;
+    min-width: 8.5rem;
+    text-align: center;
+}
+
+.rep-akce-viewer__body {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr) 8rem;
+    padding: 1rem;
+}
+
+.rep-akce-viewer__book-wrap {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 72vh;
+    overscroll-behavior: contain;
+    overflow: auto;
+    padding: 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.rep-akce-viewer__book-wrap.is-zoomed {
+    justify-content: flex-start;
+}
+
+.rep-akce-viewer__book-stage {
+    filter: drop-shadow(0 1.5rem 2.5rem rgba(0, 0, 0, 0.46));
+    transform: scale(var(--rep-akce-viewer-scale));
+    transform-origin: center center;
+    transition: transform .18s ease;
+    width: min(100%, 1100px);
+}
+
+.rep-akce-viewer__book {
+    width: 100%;
+}
+
+.rep-akce-viewer__thumbs {
+    display: grid;
+    gap: .55rem;
+    max-height: 72vh;
+    overscroll-behavior: contain;
+    overflow: auto;
+    padding-right: .25rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.rep-akce-viewer__thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: .65rem;
+    color: rgba(255, 255, 255, 0.78);
+    cursor: pointer;
+    padding: .35rem;
+    text-align: center;
+    transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+
+.rep-akce-viewer__thumb:hover,
+.rep-akce-viewer__thumb.is-active {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #fff;
+    transform: translateY(-1px);
+}
+
+.rep-akce-viewer__thumb img {
+    background: #fff;
+    border-radius: .35rem;
+    display: block;
+    width: 100%;
+}
+
+.rep-akce-viewer__thumb span {
+    display: block;
+    font-size: .72rem;
+    font-weight: 700;
+    margin-top: .25rem;
+}
+
+.rep-akce-viewer:fullscreen {
+    border-radius: 0;
+    height: 100vh;
+}
+
+.rep-akce-viewer:fullscreen .rep-akce-viewer__book-wrap,
+.rep-akce-viewer:fullscreen .rep-akce-viewer__thumbs {
+    max-height: calc(100vh - 5rem);
+}
+
+.filepond--root {
+    font-family: inherit;
+    margin-bottom: 0;
+}
+
+.filepond--panel-root {
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+}
+
+.filepond--drop-label {
+    color: #4b5563;
+    min-height: 4.5rem;
+}
+
+.filepond--label-action {
+    color: #0d6efd;
+    text-decoration-color: rgba(13, 110, 253, 0.35);
+}
+
+@media (max-width: 991.98px) {
+    .rep-akce-viewer__body {
+        grid-template-columns: 1fr;
+    }
+
+    .rep-akce-viewer__book-wrap {
+        min-height: 62vh;
+        padding: .5rem;
+    }
+
+    .rep-akce-viewer__thumbs {
+        grid-auto-flow: column;
+        grid-auto-columns: 4.5rem;
+        max-height: none;
+        overflow: auto hidden;
+    }
 }

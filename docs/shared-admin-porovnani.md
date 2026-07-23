@@ -49,9 +49,9 @@ Skript porovnava pouze shared/admin kandidaty:
 - `assets/js/sec/*`
 - vybrane sdilene helpery ve `functions/`
 
-Agendove admin skripty v `assets/js/sec/*` se nenacitaji primo ze stranek. `secure/index.php` nacita pouze `assets/js/sec/admin.js`, ktery podle aktualni admin routy a DOM prvku pripoji potrebne moduly.
+Agendove admin skripty v `assets/js/sec/*` se nenacitaji primo ze stranek. `secure/index.php` nacita `assets/js/sec/admin.js`, ktery podle aktualni admin routy a DOM prvku pripoji potrebne moduly. Projekt muze pred nim nacist vlastni `assets/js/sec_rep_admin.js`; ten nastavuje `window.QANTO_ADMIN_PROJECT_MODULES` s projektovymi routami a selektory, aby registrace `rep_*` neznecistovaly shared `admin.js`.
 
-Sdilene admin styly patri do `assets/css/secure.css`. Shared/admin PHP soubory nemaji obsahovat inline `<style>` bloky ani `style=""` atributy. Pred pridanim vlastniho CSS vzdy nejdrive over, zda staci Bootstrap komponenta nebo utility tridy; vlastni CSS pridej az pri realne potrebe. Po uprave CSS spust `npm run lint:css`. Inline CSS v HTML e-mailovych sablonach je povolena vyjimka kvuli podpore e-mail klientu.
+Sdilene admin styly patri do `assets/css/secure.css`; projektove styly patri do `assets/css/sec_rep_secure.css`. Shared/admin PHP soubory nemaji obsahovat inline `<style>` bloky ani `style=""` atributy. Pred pridanim vlastniho CSS vzdy nejdrive over, zda staci Bootstrap komponenta nebo utility tridy; vlastni CSS pridej az pri realne potrebe. Po uprave CSS spust `npm run lint:css`. Inline CSS v HTML e-mailovych sablonach je povolena vyjimka kvuli podpore e-mail klientu.
 
 Projektove soubory nejsou synchronizacni kandidati:
 
@@ -64,6 +64,7 @@ Projektove soubory nejsou synchronizacni kandidati:
 - `secure/inc/pages/rep_*`
 - `assets/js/rep_*`
 - `assets/js/sec_rep_*`
+- `assets/js/sec/rep_*`
 - `assets/css/rep_*`
 - `assets/css/sec_rep_*`
 

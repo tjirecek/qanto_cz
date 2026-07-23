@@ -21,6 +21,7 @@ return [
                 '04' => 'pages/rep_qanto/akce',
                 '05' => 'pages/rep_qanto/akce',
                 '06' => 'pages/rep_qanto/akce_users',
+                '07' => 'pages/rep_qanto/akce_send',
             ],
             '03' => [
                 '01' => 'pages/rep_qanto/bannery',

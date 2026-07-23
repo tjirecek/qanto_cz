@@ -151,6 +151,7 @@ if ($type === 3 && $identify !== '') {
                             <?php endif; ?>
                             <a class="volani-action <?= $type !== 2 ? 'is-active' : '' ?>" href="/volani/index.php?typ=1&amp;unify=<?= rawurlencode($unify) ?>"><?= htmlspecialchars(ui_text('volani.summary', 'Souhrn'), ENT_QUOTES, 'UTF-8') ?></a>
                             <a class="volani-action <?= $type === 2 ? 'is-active' : '' ?>" href="/volani/index.php?typ=2&amp;unify=<?= rawurlencode($unify) ?>"><?= htmlspecialchars(ui_text('volani.detail', 'Detail'), ENT_QUOTES, 'UTF-8') ?></a>
+                            <a class="volani-action" href="/volani/index.php?typ=<?= $type === 2 ? 2 : 1 ?>&amp;unify=<?= rawurlencode($unify) ?>&amp;pdf=1"><?= htmlspecialchars(ui_text('volani.export_pdf', 'Export PDF'), ENT_QUOTES, 'UTF-8') ?></a>
                         </div>
                     </div>
 
