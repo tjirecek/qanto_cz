@@ -14,6 +14,66 @@ Tento dokument neni seznam shared admin zmen. Projektove zmeny QRS/QANTOPLUS se 
 | P-001 | QRS + QANTOPLUS | project admin JS | pripraveno | vysoka | Projit projektove stranky a inline JS vyclenit do samostatnych JS souboru. |
 | P-002 | QRS + QANTOPLUS | project admin CSS | prubezne | vysoka | Ne-e-mailove inline styly presunuty; pri dalsich project upravach drzet `assets/css/sec_rep_secure.css`. |
 | P-003 | QRS + QANTOPLUS | project CSS audit | pripraveno | stredni | Pravidelne projit ostatni projektove casti a odstranit nove inline `<style>` / `style=""` mimo e-mail sablony. |
+| P-004 | QRS | Dochazka / single picker | hotovo | vysoka | Dne 2026-08-29 prenesen shared `admin single picker` z `qanto_cz` a nahrazeny jim tri single pickery Uživatel, Manažer a Vedoucí; multiple picker stredisek zustal projektovy. |
+
+## P-004 - Port Single Pickeru Do QRS Dochazky
+
+### Hranice Portu
+
+Autoritativni implementace zustava v `/Users/tjirecek/www_dev/qanto_cz`. Port do `/Users/tjirecek/www_dev/qrs-qanto_cz` byl proveden 2026-08-29; nasledujici seznam zustava zavaznym zaznamem rozsahu a kontrol portu.
+
+Shared soubory k prenosu nebo rucnimu merge do `/Users/tjirecek/www_dev/qrs-qanto_cz`:
+
+1. novy soubor `assets/js/sec/admin_single_picker.js` zkopirovat byte-identical,
+2. do `assets/js/sec/admin.js` prenest selector registraci `.js-admin-single-picker` -> `admin_single_picker.js`; pokud je v QRS shodne nasazeny stary modul `oz_pobocka_modal.js`, odstranit jeho registraci i soubor az po prevodu pole pobočky; neprepisovat QRS project mapovani,
+3. do `assets/css/secure.css` prenest cely blok `Shared single-record picker`, ostatni rozdily CSS neprepisovat,
+4. rucne prenest aktivacni tridu a data atributy do shodnych shared formularu `secure/inc/pages/news/news_add.php`, `secure/inc/pages/news/news_edit.php`, `secure/inc/pages/galerie/galerie_vypis.php`, `secure/inc/pages/kontakty/kontakty_lide.php`, `secure/inc/pages/kontakty/obchodni_zastupci.php`, `secure/inc/settings/users_add.php`, `secure/inc/settings/users_edit.php` a `secure/inc/settings/changelog.php`; u obchodniho zastupce nahradit hidden input a vlastni modal zdrojovym selectem se stejnym `name="pobocka_id"`; vzdy zachovat backendovou logiku,
+5. zavazny standard z `docs/administrace.md` propsat do QRS `docs/shared-admin-baseline.md`; soubor `docs/administrace.md` se do QRS nekopiruje, protoze tam neexistuje.
+
+Project soubory QRS pro nahrazeni dochazkovych pickeru:
+
+- `secure/inc/pages/rep_attendance/rep_attendance_permissions.php`,
+- `assets/js/sec_rep_attendance_permissions.js`,
+- `assets/css/sec_rep_secure.css`,
+- `docs/attendance.md`.
+
+Project nasazeni z qanto.cz (`secure/inc/pages/rep_qanto/*`) se do QRS nekopiruje; slouzi pouze jako lokalni pouziti shared komponenty v autoritativnim projektu.
+
+### Prevod Poli Bez Zmeny Backend Logiky
+
+V `rep_attendance_permissions.php` zachovat stejne nazvy POST poli a scalar hodnoty:
+
+- `user_id`: `<select id="attendanceMemberUser" name="user_id" class="form-select js-admin-single-picker" required>`; options vzniknou z `$users`, nazev je `name`, `data-picker-subtext` je `login`, ikona `bi bi-person`.
+- `manager_user_id`: `<select id="attendanceManagerUser" name="manager_user_id" class="form-select js-admin-single-picker" required>`; options vzniknou z `$memberUsers`, nazev je `name`, doplnek `login`, ikona `bi bi-person-gear`.
+- `owner_user_id`: `<select id="attendanceOwnerUser" name="owner_user_id" class="form-select js-admin-single-picker" required>`; options vzniknou z `$ownerUsers`, nazev je `name`, doplnek spoji `login` a `centers`, ikona `bi bi-person-check`. Hledani tak pokryje jmeno, login i stredisko.
+
+Kazdy select dostane prazdnou `<option value="">`, `data-picker-title`, `data-picker-description`, `data-picker-search-placeholder` a `data-picker-empty-label`. Backendove volani `rep_attendance_admin_member_save()` a `rep_attendance_admin_access_save()` se nemeni.
+
+Z PHP odstranit puvodni hidden inputy, tri trigger buttony a tri cele modalove bloky:
+
+- `#attendanceUserPickerModal`,
+- `#attendanceManagerPickerModal`,
+- `#attendanceOwnerPickerModal`.
+
+`#attendanceCenterPickerModal` a generovani `center_codes[]` ponechat, protoze jde o multiple vyber mimo rozsah shared komponenty.
+
+### Uprava Project JS A CSS
+
+V `assets/js/sec_rep_attendance_permissions.js` odstranit vlastni single-picker implementaci pro uzivatele, manazera a vedouciho: jejich modal reference, vyhledavani, options mapy a `initAccessPicker()`. Ponechat roli, strediska, editaci clena a kontrolu `manažer != vedoucí`.
+
+Programove predvybrani uzivatele pri editaci ma nastavit `attendanceMemberUser.value` a vyvolat bublajici `change`. Kontrola rozdilnosti manazera a vedouciho ma zustat pred odeslanim a chybu zobrazit pres explicitni feedback u `owner_user_id`; nativni `required` zajisti shared picker.
+
+V `assets/css/sec_rep_secure.css` odstranit pouze tridy pouzivane zrusenymi single trigger buttony a tremi modaly. Styly sdilene s multiple pickerem stredisek (`rep-attendance-user-list`, `rep-attendance-user-option`, `rep-attendance-center-*`) ponechat. Shared `admin-single-picker-*` styly nesmi byt duplikovane v project CSS.
+
+### Poradi A Overeni Portu
+
+1. Pred praci ulozit `git status --short` v QRS; Dochazka ma rozpracovane lokalni zmeny, proto nepouzivat plosne kopirovani project souboru.
+2. Spustit `scripts/compare_shared_admin.sh /Users/tjirecek/www_dev/qrs-qanto_cz` z `qanto_cz` a zkontrolovat shared rozdily.
+3. Prenest tri shared asset zmeny a overit loader; `secure/index.php` neportovat.
+4. Rucne prepsat tri pole v project PHP a zjednodusit project JS/CSS podle vyse uvedene mapy.
+5. Aktualizovat QRS `docs/shared-admin-baseline.md` a `docs/attendance.md`.
+6. Spustit `php -l secure/inc/pages/rep_attendance/rep_attendance_permissions.php`, `node --check assets/js/sec/admin_single_picker.js`, `node --check assets/js/sec/admin.js`, `node --check assets/js/sec_rep_attendance_permissions.js` a CSS lint pro `assets/css/secure.css` i `assets/css/sec_rep_secure.css`.
+7. V prohlizeci overit vsechny tri single selecty, hledani bez diakritiky, Enter/Escape, editacni predvyber, required chyby, kontrolu rozdilnych osob, jeden modal pod `<body>` a z-index nad backdropem. Znovu overit multiple vyber stredisek.
 
 ## P-001 - Vycleneni Projektoveho JS
 

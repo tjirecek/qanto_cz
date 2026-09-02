@@ -25,6 +25,8 @@ if ($csrfToken === '') {
 $notice = '';
 $error = '';
 $sendResult = null;
+$testResult = null;
+$testEmail = trim((string)($_POST['test_email'] ?? ''));
 
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -39,6 +41,12 @@ try {
             $sendResult = rep_akce_newsletter_send_campaign($pdo, $sendId);
             $notice = 'Leták byl odeslán: ' . (int)$sendResult['sent'] . ' úspěšně, '
                 . (int)$sendResult['failed'] . ' chyb.';
+        } elseif ((string)($_POST['action'] ?? '') === 'send_akce_newsletter_test') {
+            if ((string)($_POST['test_only'] ?? '') !== '1') {
+                throw new RuntimeException('Chybí potvrzení bezpečného testovacího odeslání.');
+            }
+            $testResult = rep_akce_newsletter_send_test($pdo, $sendId, $testEmail);
+            $notice = 'Test letáku byl odeslán pouze na ' . $testResult['delivered_email'] . '.';
         }
     }
 } catch (Throwable $e) {
@@ -51,7 +59,9 @@ if (!is_array($offer)) {
     return;
 }
 
-$recipientCount = rep_akce_newsletter_delivery_recipients_count($pdo, $offer);
+$newsletterGroup = rep_akce_newsletter_group($offer['typ_newsletter_group'] ?? '');
+$newsletterGroupLabel = rep_akce_newsletter_group_label($newsletterGroup);
+$recipientCount = $newsletterGroup !== '' ? rep_akce_newsletter_delivery_recipients_count($pdo, $offer) : 0;
 $realRecipientCount = rep_akce_newsletter_active_recipients_count($pdo, $offer);
 $localBypassEmail = newsletter_local_bypass_email();
 $isLocalBypass = $localBypassEmail !== '';
@@ -119,8 +129,11 @@ try {
                     <dt class="col-sm-4">Název</dt>
                     <dd class="col-sm-8"><?= rep_akce_newsletter_e($offer['nazev_cz'] ?? '') ?></dd>
 
-                    <dt class="col-sm-4">Typ</dt>
+                    <dt class="col-sm-4">Typ letáku</dt>
                     <dd class="col-sm-8"><?= rep_akce_newsletter_e($offer['typ_nazev_cz'] ?? 'bez typu') ?></dd>
+
+                    <dt class="col-sm-4">Skupina odesílání</dt>
+                    <dd class="col-sm-8"><?= rep_akce_newsletter_e($newsletterGroupLabel) ?></dd>
 
                     <dt class="col-sm-4">Platnost</dt>
                     <dd class="col-sm-8"><?= rep_akce_newsletter_e(rep_akce_newsletter_validity_text($offer) ?: '-') ?></dd>
@@ -141,7 +154,7 @@ try {
                     <dd class="col-sm-8">
                         <?php if ($isLocalBypass): ?>
                             1 lokální testovací e-mail
-                            <div class="text-muted small">Skutečných aktivních odběratelů pro tento typ v DB: <?= (int)$realRecipientCount ?></div>
+                            <div class="text-muted small">Skutečných aktivních odběratelů pro tuto skupinu v DB: <?= (int)$realRecipientCount ?></div>
                         <?php else: ?>
                             <?= (int)$recipientCount ?> aktivních odběratelů
                         <?php endif; ?>
@@ -157,15 +170,43 @@ try {
                     </div>
                 <?php endif; ?>
 
-                <?php if ($previewError !== ''): ?>
+                <div class="border rounded-3 p-3 mb-3">
+                    <h3 class="h6 mb-2">Bezpečné testovací odeslání</h3>
+                    <p class="small text-muted mb-3">Odešle přesně jeden e-mail na níže zadanou adresu. Odběratelé z databáze se při této akci vůbec nenačítají.</p>
+                    <form method="post" class="row g-2 align-items-end" data-rep-akce-confirm="Odeslat jeden testovací e-mail pouze na zadanou adresu?">
+                        <input type="hidden" name="csrf_token" value="<?= rep_akce_newsletter_e($csrfToken) ?>">
+                        <input type="hidden" name="action" value="send_akce_newsletter_test">
+                        <input type="hidden" name="send" value="<?= (int)$sendId ?>">
+                        <input type="hidden" name="test_only" value="1">
+                        <div class="col-sm-8">
+                            <label for="akce_test_email" class="form-label">Testovací e-mail</label>
+                            <input type="email" class="form-control" id="akce_test_email" name="test_email" required autocomplete="email" value="<?= rep_akce_newsletter_e($testEmail) ?>" placeholder="jmeno@qanto.cz">
+                        </div>
+                        <div class="col-sm-4 d-grid">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-send-check me-1"></i> odeslat 1 test
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <?php if ($newsletterGroup === ''): ?>
+                    <div class="alert alert-warning mb-0">
+                        Hromadné odeslání je zablokované. U typu letáku nastavte skupinu pro odesílání.
+                    </div>
+                <?php elseif ($previewError !== ''): ?>
                     <div class="alert alert-warning mb-0">
                         Náhled nelze sestavit: <?= rep_akce_newsletter_e($previewError) ?>
                     </div>
                 <?php elseif ($recipientCount <= 0): ?>
                     <div class="alert alert-warning mb-0">
-                        Leták nelze odeslat, protože pro jeho typ nejsou aktivní odběratelé.
+                        Leták nelze odeslat, protože pro zvolenou skupinu nejsou aktivní odběratelé.
                     </div>
                 <?php else: ?>
+                    <h3 class="h6 mb-2">Hromadné odeslání</h3>
+                    <div class="alert alert-danger py-2 small">
+                        Tato akce odešle leták <?= (int)$recipientCount ?> aktivním odběratelům. Pro zkoušku použij testovací formulář výše.
+                    </div>
                     <form method="post" data-rep-akce-confirm="Opravdu odeslat tento leták odběratelům?">
                         <input type="hidden" name="csrf_token" value="<?= rep_akce_newsletter_e($csrfToken) ?>">
                         <input type="hidden" name="action" value="send_akce_newsletter">
@@ -187,7 +228,7 @@ try {
             <div class="card-body">
                 <div class="alert alert-info mb-0">
                     <div><strong>Služba:</strong> Klerk SMTP, stejné nastavení jako newsletter novinek.</div>
-                    <div><strong>Příjemci:</strong> aktivní odběratelé stejného typu letáku + historický odběr všech akcí.</div>
+                    <div><strong>Příjemci:</strong> aktivní odběratelé skupiny <?= rep_akce_newsletter_e($newsletterGroupLabel) ?> + historický odběr všech akcí.</div>
                     <div><strong>Deduplikace:</strong> stejná e-mailová adresa dostane leták jen jednou.</div>
                     <div><strong>Náhled:</strong> bere se první strana letáku, fallback je obálka.</div>
                     <div><strong>Lokál:</strong> při zapnutém <code>mail_bypass_enabled</code> se posílá jen na testovací e-mail.</div>

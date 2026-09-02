@@ -125,6 +125,9 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
     $isHttps = app_is_https();
 
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+
     session_name(app_session_name());
 
     // cookie pravidla musí být nastavená PŘED session_start()
@@ -143,5 +146,13 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     if (!isset($_SESSION[$initKey])) {
         $_SESSION[$initKey] = 1;
         session_regenerate_id(true);
+    }
+
+    $projectHooks = __DIR__ . '/project_hooks.php';
+    if (is_file($projectHooks)) {
+        require_once $projectHooks;
+    }
+    if (function_exists('app_project_session_started')) {
+        app_project_session_started();
     }
 }

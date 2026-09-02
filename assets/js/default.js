@@ -1,7 +1,7 @@
 (() => {
   const header = document.querySelector('[data-site-header]');
   const scrollTop = document.querySelector('[data-scroll-top]');
-  const adCarousels = document.querySelectorAll('[data-ad-carousel]');
+  const promoCarousels = document.querySelectorAll('[data-promo-carousel]');
   const flyerSections = document.querySelectorAll('[data-home-flyers]');
   const akceViewers = document.querySelectorAll('[data-akce-public-viewer]');
   const careerBranchMaps = document.querySelectorAll('[data-career-branch-map]');
@@ -55,6 +55,19 @@
     }
   };
 
+  const activateViewerFallback = (viewer) => {
+    const fallback = viewer.querySelector('[data-akce-viewer-fallback]');
+    if (!fallback) {
+      return;
+    }
+
+    fallback.querySelectorAll('img[data-src]').forEach((image) => {
+      image.src = image.dataset.src || '';
+      image.removeAttribute('data-src');
+    });
+    fallback.hidden = false;
+  };
+
   const setViewerButtonState = (viewer, currentPage, totalPages) => {
     viewer.querySelectorAll('[data-akce-viewer-action="first"], [data-akce-viewer-action="prev"]').forEach((button) => {
       button.disabled = currentPage <= 0;
@@ -68,6 +81,34 @@
     viewer.querySelectorAll('[data-akce-viewer-thumb]').forEach((button) => {
       button.classList.toggle('is-active', Number(button.dataset.pageIndex) === pageIndex);
     });
+  };
+
+  const observeViewerThumbs = (container) => {
+    const images = Array.from(container.querySelectorAll('img[data-src]'));
+    const loadImage = (image) => {
+      image.src = image.dataset.src || '';
+      image.removeAttribute('data-src');
+    };
+
+    if (!('IntersectionObserver' in window)) {
+      images.slice(0, 12).forEach(loadImage);
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+        loadImage(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, {
+      root: container,
+      rootMargin: '200px 0px',
+    });
+
+    images.forEach((image) => observer.observe(image));
   };
 
   const clampNumber = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -1593,9 +1634,9 @@
       return;
     }
 
-    const closeLabel = lightbox.dataset.labelClose || 'Zavřít';
-    const prevLabel = lightbox.dataset.labelPrev || 'Předchozí';
-    const nextLabel = lightbox.dataset.labelNext || 'Další';
+    const closeLabel = lightbox.dataset.labelClose || '';
+    const prevLabel = lightbox.dataset.labelPrev || '';
+    const nextLabel = lightbox.dataset.labelNext || '';
     let currentIndex = 0;
     let previousFocus = null;
 
@@ -1695,17 +1736,6 @@
     });
   };
 
-  const viewerPageSize = (pages, fallbackWidth = 1200, fallbackHeight = 1674) => {
-    const firstSizedPage = pages.find((page) => Number(page.width) > 0 && Number(page.height) > 0);
-    const width = firstSizedPage ? Number(firstSizedPage.width) : fallbackWidth;
-    const height = firstSizedPage ? Number(firstSizedPage.height) : fallbackHeight;
-
-    return {
-      width: Math.round(clampNumber(width, 280, 1720)),
-      height: Math.round(clampNumber(height, 390, 2400)),
-    };
-  };
-
   const initAkceViewer = (viewer) => {
     const pages = parseViewerPages(viewer);
     const book = viewer.querySelector('[data-akce-viewer-book]');
@@ -1715,15 +1745,22 @@
     const fallback = viewer.querySelector('[data-akce-viewer-fallback]');
     const pageLabel = viewer.querySelector('[data-akce-viewer-page]');
     const zoomReset = viewer.querySelector('[data-akce-viewer-action="zoom-reset"]');
+    const magnifierButton = viewer.querySelector('[data-akce-viewer-action="zoom-toggle"]');
+    const autoplayButton = viewer.querySelector('[data-akce-viewer-action="autoplay"]');
+    const thumbsButton = viewer.querySelector('[data-akce-viewer-action="toggle-thumbs"]');
+    const fullscreenButton = viewer.querySelector('[data-akce-viewer-action="fullscreen"]');
     const closeUrl = viewer.dataset.closeUrl || '';
     const closeMode = viewer.dataset.closeMode || '';
     const isModalViewer = viewer.hasAttribute('data-akce-viewer-modal');
 
-    if (!pages.length || !book || !stage || !bookWrap || !thumbs || !pageLabel || !window.St || !window.St.PageFlip) {
+    if (!pages.length || !book || !stage || !bookWrap || !thumbs || !pageLabel) {
+      activateViewerFallback(viewer);
       return;
     }
 
-    let pageFlip = null;
+    let currentPageIndex = 0;
+    let pagedImage = null;
+    let pagedImageRequest = 0;
     let zoom = 1;
     let panX = 0;
     let panY = 0;
@@ -1732,6 +1769,98 @@
     let panStartY = 0;
     let panOriginX = 0;
     let panOriginY = 0;
+    let autoplayTimer = 0;
+    let panMoved = false;
+    let lastTouchTapTime = 0;
+    let lastTouchTapX = 0;
+    let lastTouchTapY = 0;
+    let ignoreClickUntil = 0;
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const pagePreloadRequests = new Map();
+    const preloadedPageUrls = new Set();
+    const queuedPagePreloadUrls = new Set();
+    const pagePreloadQueue = [];
+    const maximumParallelPagePreloads = 2;
+
+    const pageSource = (page, requestedZoom = zoom) => {
+      const sources = Array.isArray(page.sources) ? [...page.sources] : [];
+      if (!sources.some((source) => source && source.src === page.src)) {
+        sources.push({ src: page.src, width: Number(page.width || 0) });
+      }
+      const usableSources = sources
+        .filter((source) => source && source.src)
+        .sort((first, second) => Number(first.width || 0) - Number(second.width || 0));
+      if (!usableSources.length) {
+        return page.src || '';
+      }
+
+      const pageWidth = Number(page.width || 0);
+      const pageHeight = Number(page.height || 0);
+      const displayedWidth = pageWidth > 0 && pageHeight > 0
+        ? Math.min(bookWrap.clientWidth, bookWrap.clientHeight * pageWidth / pageHeight)
+        : bookWrap.clientWidth;
+      const requiredWidth = displayedWidth
+        * Math.min(2.5, Math.max(1, Number(window.devicePixelRatio || 1)))
+        * Math.max(1, requestedZoom);
+      return (usableSources.find((source) => Number(source.width || 0) >= requiredWidth)
+        || usableSources[usableSources.length - 1]).src;
+    };
+
+    const runPagePreloadQueue = () => {
+      while (pagePreloadRequests.size < maximumParallelPagePreloads && pagePreloadQueue.length) {
+        const url = pagePreloadQueue.shift();
+        queuedPagePreloadUrls.delete(url);
+        if (!url || pagePreloadRequests.has(url) || preloadedPageUrls.has(url)) {
+          continue;
+        }
+        const image = document.createElement('img');
+        const release = (loaded) => {
+          if (loaded) {
+            preloadedPageUrls.add(url);
+          }
+          image.onload = null;
+          image.onerror = null;
+          pagePreloadRequests.delete(url);
+          runPagePreloadQueue();
+        };
+        pagePreloadRequests.set(url, image);
+        image.decoding = 'async';
+        image.onload = () => release(true);
+        image.onerror = () => release(false);
+        image.src = url;
+      }
+    };
+
+    const preloadNearbyPages = (pageIndex) => {
+      pagePreloadQueue.length = 0;
+      queuedPagePreloadUrls.clear();
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const restrictedConnection = Boolean(
+        connection
+        && (connection.saveData || /(^|-)2g$/i.test(String(connection.effectiveType || '')))
+      );
+      const ahead = restrictedConnection ? 1 : 5;
+      const indexes = [];
+      for (let offset = 1; offset <= ahead; offset += 1) {
+        indexes.push(pageIndex + offset);
+      }
+      if (!restrictedConnection) {
+        indexes.push(pageIndex - 1);
+      }
+
+      indexes.forEach((index) => {
+        if (index < 0 || index >= pages.length) {
+          return;
+        }
+        const url = pageSource(pages[index], 1);
+        if (!url || pagePreloadRequests.has(url) || preloadedPageUrls.has(url) || queuedPagePreloadUrls.has(url)) {
+          return;
+        }
+        queuedPagePreloadUrls.add(url);
+        pagePreloadQueue.push(url);
+      });
+      runPagePreloadQueue();
+    };
 
     const clampPan = () => {
       if (zoom <= 1) {
@@ -1756,6 +1885,9 @@
       if (zoomReset) {
         zoomReset.textContent = `${Math.round(zoom * 100)}%`;
       }
+      if (magnifierButton) {
+        magnifierButton.setAttribute('aria-pressed', zoom > 1 ? 'true' : 'false');
+      }
     };
 
     const setZoom = (nextZoom) => {
@@ -1765,6 +1897,19 @@
         panY = 0;
       }
       applyZoom();
+      if (pagedImage && pagedImage.src !== new URL(pageSource(pages[currentPageIndex]), window.location.href).href) {
+        loadPagedImage(currentPageIndex);
+      }
+    };
+
+    const setZoomAt = (nextZoom, clientX = null, clientY = null) => {
+      const safeZoom = clampNumber(Math.round(nextZoom * 100) / 100, 1, 3);
+      if (safeZoom > 1 && zoom <= 1 && Number.isFinite(clientX) && Number.isFinite(clientY)) {
+        const bounds = bookWrap.getBoundingClientRect();
+        panX = (bounds.left + bounds.width / 2 - clientX) * (safeZoom - 1);
+        panY = (bounds.top + bounds.height / 2 - clientY) * (safeZoom - 1);
+      }
+      setZoom(safeZoom);
     };
 
     const setViewerSize = () => {
@@ -1773,10 +1918,10 @@
       viewer.style.setProperty('--akce-viewer-height', `${Math.floor(availableHeight)}px`);
 
       window.requestAnimationFrame(() => {
-        if (pageFlip && typeof pageFlip.update === 'function') {
-          pageFlip.update();
-        }
         applyZoom();
+        if (pagedImage && pagedImage.src !== new URL(pageSource(pages[currentPageIndex]), window.location.href).href) {
+          loadPagedImage(currentPageIndex);
+        }
       });
     };
 
@@ -1790,9 +1935,8 @@
       button.title = page.label || String(index + 1);
 
       const image = document.createElement('img');
-      image.src = page.thumb || page.src;
+      image.dataset.src = page.thumb || page.src;
       image.alt = page.label || String(index + 1);
-      image.loading = 'lazy';
       image.decoding = 'async';
 
       const number = document.createElement('span');
@@ -1800,57 +1944,132 @@
       button.append(image, number);
       thumbs.appendChild(button);
     });
+    observeViewerThumbs(thumbs);
 
     setViewerSize();
 
-    const pageSize = viewerPageSize(pages);
-    pageFlip = new window.St.PageFlip(book, {
-      width: pageSize.width,
-      height: pageSize.height,
-      minWidth: 280,
-      maxWidth: pageSize.width,
-      minHeight: 395,
-      maxHeight: pageSize.height,
-      size: 'stretch',
-      autoSize: true,
-      showCover: true,
-      usePortrait: true,
-      drawShadow: true,
-      flippingTime: 700,
-      maxShadowOpacity: 0.28,
-      mobileScrollSupport: false,
-      swipeDistance: 30,
-    });
-
     const updateUi = (pageIndex) => {
       const safeIndex = Math.max(0, Math.min(pageIndex, pages.length - 1));
+      currentPageIndex = safeIndex;
       const pageWord = pageLabel.dataset.pageWord || '';
-      pageLabel.textContent = `${pageWord} ${safeIndex + 1} / ${pages.length}`.trim();
+      pageLabel.value = `${safeIndex + 1} / ${pages.length}`;
+      pageLabel.setAttribute('aria-label', `${pageWord} ${safeIndex + 1} / ${pages.length}`.trim());
       setViewerButtonState(viewer, safeIndex, pages.length);
       updateViewerThumb(viewer, safeIndex);
     };
 
-    pageFlip.loadFromImages(pages.map((page) => page.src));
-    pageFlip.on('flip', (event) => updateUi(Number(event.data || 0)));
-    pageFlip.on('init', (event) => updateUi(Number(event.data && event.data.page ? event.data.page : 0)));
-    pageFlip.on('changeOrientation', setViewerSize);
-    updateUi(0);
+    const loadPagedImage = (pageIndex, retry = 0, requestId = null) => {
+      const safeIndex = Math.max(0, Math.min(pageIndex, pages.length - 1));
+      const page = pages[safeIndex];
+      const activeRequestId = requestId ?? ++pagedImageRequest;
+      const sourceUrl = pageSource(page);
+
+      if (!pagedImage || activeRequestId !== pagedImageRequest) {
+        return;
+      }
+
+      pagedImage.alt = page.label || String(safeIndex + 1);
+      pagedImage.onload = () => {
+        if (activeRequestId === pagedImageRequest) {
+          pagedImage.classList.remove('is-loading', 'is-error');
+          preloadNearbyPages(safeIndex);
+        }
+      };
+      pagedImage.onerror = () => {
+        if (activeRequestId !== pagedImageRequest) {
+          return;
+        }
+        if (retry < 3) {
+          window.setTimeout(() => {
+            if (activeRequestId !== pagedImageRequest) {
+              return;
+            }
+            loadPagedImage(safeIndex, retry + 1, activeRequestId);
+          }, 800 * (retry + 1));
+          return;
+        }
+        pagedImage.classList.remove('is-loading');
+        pagedImage.classList.add('is-error');
+      };
+      pagedImage.classList.add('is-loading');
+      pagedImage.classList.remove('is-error');
+      const separator = sourceUrl.includes('?') ? '&' : '?';
+      pagedImage.src = retry > 0
+        ? `${sourceUrl}${separator}viewer_retry=${Date.now()}`
+        : sourceUrl;
+      updateUi(safeIndex);
+    };
+
+    book.classList.add('akce-flip-viewer__book--paged');
+    pagedImage = document.createElement('img');
+    pagedImage.decoding = 'async';
+    book.appendChild(pagedImage);
+    loadPagedImage(0);
 
     if (fallback) {
       fallback.hidden = true;
     }
 
     const goPrev = () => {
-      pageFlip.flipPrev('top');
-      window.setTimeout(() => updateUi(pageFlip.getCurrentPageIndex()), 760);
+      loadPagedImage(currentPageIndex - 1);
     };
 
     const goNext = () => {
-      pageFlip.flipNext('top');
-      window.setTimeout(() => updateUi(pageFlip.getCurrentPageIndex()), 760);
+      loadPagedImage(currentPageIndex + 1);
+    };
+
+    const goToPage = (pageIndex) => {
+      const safeIndex = Math.max(0, Math.min(Number(pageIndex) || 0, pages.length - 1));
+      loadPagedImage(safeIndex);
+    };
+
+    const updateAutoplayButton = (isPlaying) => {
+      if (!autoplayButton) {
+        return;
+      }
+      const label = isPlaying ? autoplayButton.dataset.labelStop : autoplayButton.dataset.labelStart;
+      autoplayButton.textContent = isPlaying ? '❚❚' : '▶';
+      autoplayButton.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+      if (label) {
+        autoplayButton.setAttribute('aria-label', label);
+        autoplayButton.title = label;
+      }
+    };
+
+    const stopAutoplay = () => {
+      if (autoplayTimer) {
+        window.clearInterval(autoplayTimer);
+        autoplayTimer = 0;
+      }
+      updateAutoplayButton(false);
+    };
+
+    const toggleAutoplay = () => {
+      if (autoplayTimer) {
+        stopAutoplay();
+        return;
+      }
+      autoplayTimer = window.setInterval(() => {
+        goToPage(currentPageIndex >= pages.length - 1 ? 0 : currentPageIndex + 1);
+      }, 5000);
+      updateAutoplayButton(true);
+    };
+
+    const updateFullscreenButton = () => {
+      if (!fullscreenButton) {
+        return;
+      }
+      const isFullscreen = document.fullscreenElement === viewer;
+      const label = isFullscreen ? fullscreenButton.dataset.labelExit : fullscreenButton.dataset.labelEnter;
+      fullscreenButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
+      if (label) {
+        fullscreenButton.setAttribute('aria-label', label);
+        fullscreenButton.title = label;
+      }
     };
 
     const closeViewer = () => {
+      stopAutoplay();
       if (document.fullscreenElement && document.exitFullscreen) {
         document.exitFullscreen().catch(() => {});
       }
@@ -1903,8 +2122,7 @@
 
       if (thumbButton) {
         const pageIndex = Number(thumbButton.dataset.pageIndex || 0);
-        pageFlip.turnToPage(pageIndex);
-        updateUi(pageIndex);
+        goToPage(pageIndex);
         return;
       }
 
@@ -1916,24 +2134,37 @@
       event.stopPropagation();
 
       const action = actionButton.dataset.akceViewerAction;
-      if (action === 'first') pageFlip.turnToPage(0);
       if (action === 'prev') goPrev();
       if (action === 'next') goNext();
-      if (action === 'last') pageFlip.turnToPage(pages.length - 1);
+      if (action === 'first') loadPagedImage(0);
+      if (action === 'last') loadPagedImage(pages.length - 1);
       if (action === 'zoom-in') setZoom(zoom + 0.25);
       if (action === 'zoom-out') setZoom(zoom - 0.25);
       if (action === 'zoom-reset') setZoom(1);
+      if (action === 'zoom-toggle') setZoom(zoom > 1 ? 1 : 2);
+      if (action === 'autoplay') toggleAutoplay();
+      if (action === 'toggle-thumbs') {
+        const areVisible = !viewer.classList.toggle('is-thumbs-hidden');
+        thumbsButton?.setAttribute('aria-pressed', areVisible ? 'true' : 'false');
+        window.setTimeout(setViewerSize, 40);
+      }
       if (action === 'close') closeViewer();
       if (action === 'fullscreen' && viewer.requestFullscreen) {
-        viewer.requestFullscreen();
+        if (document.fullscreenElement === viewer && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else {
+          const request = viewer.requestFullscreen();
+          if (request && typeof request.catch === 'function') {
+            request.catch(() => {});
+          }
+        }
         window.setTimeout(setViewerSize, 120);
       }
 
-      if (action === 'first') updateUi(0);
-      if (action === 'last') updateUi(pages.length - 1);
     });
 
     bookWrap.addEventListener('pointerdown', (event) => {
+      panMoved = false;
       if (zoom <= 1 || event.target.closest('button')) {
         return;
       }
@@ -1953,6 +2184,10 @@
         return;
       }
 
+      if (Math.abs(event.clientX - panStartX) > 10 || Math.abs(event.clientY - panStartY) > 10) {
+        panMoved = true;
+      }
+
       panX = panOriginX + event.clientX - panStartX;
       panY = panOriginY + event.clientY - panStartY;
       applyZoom();
@@ -1966,10 +2201,87 @@
       applyZoom();
     };
 
-    bookWrap.addEventListener('pointerup', stopPan);
-    bookWrap.addEventListener('pointercancel', stopPan);
+    bookWrap.addEventListener('pointerup', (event) => {
+      stopPan();
+
+      if (!['touch', 'pen'].includes(event.pointerType) || panMoved || event.target.closest('button')) {
+        return;
+      }
+      if (zoom <= 1 && !book.contains(event.target)) {
+        return;
+      }
+
+      ignoreClickUntil = Date.now() + 500;
+      const now = Date.now();
+      const tapDistance = Math.hypot(event.clientX - lastTouchTapX, event.clientY - lastTouchTapY);
+      const isDoubleTap = now - lastTouchTapTime <= 360 && tapDistance <= 36;
+
+      if (isDoubleTap) {
+        event.preventDefault();
+        setZoomAt(zoom > 1 ? 1 : 2, event.clientX, event.clientY);
+        lastTouchTapTime = 0;
+        return;
+      }
+
+      lastTouchTapTime = now;
+      lastTouchTapX = event.clientX;
+      lastTouchTapY = event.clientY;
+    });
+
+    bookWrap.addEventListener('pointercancel', () => {
+      panMoved = true;
+      stopPan();
+    });
+
+    bookWrap.addEventListener('click', (event) => {
+      if (!finePointer.matches || Date.now() < ignoreClickUntil || panMoved || event.target.closest('button')) {
+        return;
+      }
+      if (zoom <= 1 && !book.contains(event.target)) {
+        return;
+      }
+      event.preventDefault();
+      setZoomAt(zoom > 1 ? 1 : 2, event.clientX, event.clientY);
+    });
+
+    bookWrap.addEventListener('wheel', (event) => {
+      if (!event.ctrlKey && !event.metaKey) {
+        return;
+      }
+      event.preventDefault();
+      setZoomAt(zoom + (event.deltaY < 0 ? 0.25 : -0.25), event.clientX, event.clientY);
+    }, { passive: false });
+
+    pageLabel.addEventListener('focus', () => {
+      pageLabel.value = String(currentPageIndex + 1);
+      pageLabel.select();
+    });
+
+    const submitPageNumber = () => {
+      const requestedPage = Number.parseInt(pageLabel.value, 10);
+      if (Number.isFinite(requestedPage)) {
+        goToPage(requestedPage - 1);
+      } else {
+        updateUi(currentPageIndex);
+      }
+    };
+
+    pageLabel.addEventListener('change', submitPageNumber);
+    pageLabel.addEventListener('blur', () => updateUi(currentPageIndex));
+    pageLabel.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') {
+        return;
+      }
+      event.preventDefault();
+      submitPageNumber();
+      pageLabel.blur();
+    });
 
     viewer.addEventListener('keydown', (event) => {
+      const targetTag = String(event.target && event.target.tagName || '').toLowerCase();
+      if (['input', 'textarea', 'select'].includes(targetTag)) {
+        return;
+      }
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         event.stopPropagation();
@@ -2018,10 +2330,15 @@
     });
 
     window.addEventListener('resize', setViewerSize, { passive: true });
-    document.addEventListener('fullscreenchange', setViewerSize);
+    document.addEventListener('fullscreenchange', () => {
+      updateFullscreenButton();
+      setViewerSize();
+    });
 
     viewer.tabIndex = 0;
     viewer.classList.add('is-ready');
+    updateAutoplayButton(false);
+    updateFullscreenButton();
     if (!isModalViewer) {
       document.body.classList.add('has-akce-modal');
     }
@@ -2049,10 +2366,10 @@
     scrollTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
-  adCarousels.forEach((carousel) => {
-    const track = carousel.querySelector('[data-ad-carousel-track]');
-    const prev = carousel.querySelector('[data-ad-carousel-prev]');
-    const next = carousel.querySelector('[data-ad-carousel-next]');
+  promoCarousels.forEach((carousel) => {
+    const track = carousel.querySelector('[data-promo-carousel-track]');
+    const prev = carousel.querySelector('[data-promo-carousel-prev]');
+    const next = carousel.querySelector('[data-promo-carousel-next]');
     if (!track) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2066,7 +2383,7 @@
     let resumeTimer = 0;
 
     const measure = () => {
-      const cards = Array.from(track.querySelectorAll('.ad-card'));
+      const cards = Array.from(track.querySelectorAll('.promo-card'));
       const first = cards[0];
       const second = cards[1];
       const halfIndex = Math.max(1, Math.floor(cards.length / 2));
@@ -2265,10 +2582,7 @@
   wholesaleBranchFilters.forEach(initWholesaleBranchFilter);
 
   if (akceViewers.length) {
-    loadStyle(`${libBase}page-flip/stPageFlip.css`);
-    loadScript(`${libBase}page-flip/page-flip.browser.js`, () => Boolean(window.St && window.St.PageFlip))
-      .then(() => akceViewers.forEach(initAkceViewer))
-      .catch((error) => console.warn(error.message));
+    akceViewers.forEach(initAkceViewer);
   }
 
   if (careerBranchMaps.length || marketsMaps.length || wholesaleMaps.length) {

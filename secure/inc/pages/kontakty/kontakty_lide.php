@@ -177,7 +177,15 @@ $showAllUrl = kontakty_lide_page_url($activeSubpage, ['valid' => $valid, 'limit'
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <label for="kontakty_lide_skupina_id" class="form-label">Skupina</label>
-                            <select name="skupina_id" id="kontakty_lide_skupina_id" class="form-select">
+                            <select
+                                name="skupina_id"
+                                id="kontakty_lide_skupina_id"
+                                class="form-select js-admin-single-picker"
+                                data-picker-title="Vybrat skupinu osoby"
+                                data-picker-description="Vyberte jednu skupinu, do které bude osoba zařazena."
+                                data-picker-search-placeholder="Hledat podle názvu skupiny…"
+                                data-picker-empty-label="Bez skupiny"
+                            >
                                 <?= kontakty_lide_group_options($pdo, isset($personFormValues['skupina_id']) ? (int)$personFormValues['skupina_id'] : null) ?>
                             </select>
                         </div>

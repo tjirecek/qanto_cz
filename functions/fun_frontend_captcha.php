@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-function frontend_captcha_text(string $key, string $fallback): string
+function frontend_captcha_text(string $key): string
 {
-    return function_exists('ui_text') ? ui_text($key, $fallback) : $fallback;
+    return function_exists('ui_text') ? ui_text($key) : $key;
 }
 
 function frontend_captcha_session_key(string $formKey): string
@@ -37,7 +37,7 @@ function frontend_captcha_challenge(string $formKey): array
         $challenge = [
             'token' => bin2hex(random_bytes(16)),
             'answer' => (string)($a + $b),
-            'question' => sprintf(frontend_captcha_text('form.captcha_question_sum', 'Kolik je %d + %d?'), $a, $b),
+            'question' => sprintf(frontend_captcha_text('form.captcha_question_sum'), $a, $b),
             'created_at' => time(),
         ];
         $_SESSION[$sessionKey] = $challenge;
@@ -70,7 +70,7 @@ function frontend_captcha_validate(string $formKey, array $data): array
         return [
             'ok' => false,
             'bot' => false,
-            'message' => frontend_captcha_text('form.captcha_invalid', 'Ověření proti robotům nebylo správné. Zkuste to prosím znovu.'),
+            'message' => frontend_captcha_text('form.captcha_invalid'),
         ];
     }
 
@@ -87,7 +87,7 @@ function frontend_captcha_validate(string $formKey, array $data): array
         return [
             'ok' => false,
             'bot' => false,
-            'message' => frontend_captcha_text('form.captcha_invalid', 'Ověření proti robotům nebylo správné. Zkuste to prosím znovu.'),
+            'message' => frontend_captcha_text('form.captcha_invalid'),
         ];
     }
 
@@ -99,7 +99,7 @@ function frontend_captcha_validate(string $formKey, array $data): array
         return [
             'ok' => false,
             'bot' => false,
-            'message' => frontend_captcha_text('form.captcha_invalid', 'Ověření proti robotům nebylo správné. Zkuste to prosím znovu.'),
+            'message' => frontend_captcha_text('form.captcha_invalid'),
         ];
     }
 
@@ -107,7 +107,7 @@ function frontend_captcha_validate(string $formKey, array $data): array
         return [
             'ok' => false,
             'bot' => false,
-            'message' => frontend_captcha_text('form.captcha_invalid', 'Ověření proti robotům nebylo správné. Zkuste to prosím znovu.'),
+            'message' => frontend_captcha_text('form.captcha_invalid'),
         ];
     }
 
@@ -129,7 +129,7 @@ function frontend_captcha_render(string $formKey, string $idPrefix = 'captcha'):
     <div class="frontend-captcha">
         <input type="hidden" name="captcha_token" value="<?= htmlspecialchars($challenge['token'], ENT_QUOTES, 'UTF-8') ?>">
         <label class="frontend-captcha__label" for="<?= htmlspecialchars($answerId, ENT_QUOTES, 'UTF-8') ?>">
-            <span><?= htmlspecialchars(frontend_captcha_text('form.captcha_label', 'Ověření'), ENT_QUOTES, 'UTF-8') ?></span>
+            <span><?= htmlspecialchars(frontend_captcha_text('form.captcha_label'), ENT_QUOTES, 'UTF-8') ?></span>
             <strong><?= htmlspecialchars($challenge['question'], ENT_QUOTES, 'UTF-8') ?></strong>
         </label>
         <input
@@ -139,10 +139,10 @@ function frontend_captcha_render(string $formKey, string $idPrefix = 'captcha'):
             inputmode="numeric"
             pattern="[0-9]*"
             autocomplete="off"
-            placeholder="<?= htmlspecialchars(frontend_captcha_text('form.captcha_answer', 'Výsledek'), ENT_QUOTES, 'UTF-8') ?>"
+            placeholder="<?= htmlspecialchars(frontend_captcha_text('form.captcha_answer'), ENT_QUOTES, 'UTF-8') ?>"
             required
         >
-        <small><?= htmlspecialchars(frontend_captcha_text('form.captcha_help', 'Pro ochranu proti robotům napište výsledek.'), ENT_QUOTES, 'UTF-8') ?></small>
+        <small><?= htmlspecialchars(frontend_captcha_text('form.captcha_help'), ENT_QUOTES, 'UTF-8') ?></small>
     </div>
     <?php
 }

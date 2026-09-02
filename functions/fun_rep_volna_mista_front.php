@@ -624,25 +624,25 @@ function frontend_volna_mista_store_application_attachment(?array $file, int $ap
 
     $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
     if ($error !== UPLOAD_ERR_OK) {
-        throw new RuntimeException(ui_text('kariera.application.error_upload', 'Přílohu se nepodařilo nahrát.'));
+        throw new RuntimeException(ui_text('kariera.application.error_upload'));
     }
 
     $tmpName = (string)($file['tmp_name'] ?? '');
     if ($tmpName === '' || !is_uploaded_file($tmpName)) {
-        throw new RuntimeException(ui_text('kariera.application.error_upload', 'Přílohu se nepodařilo nahrát.'));
+        throw new RuntimeException(ui_text('kariera.application.error_upload'));
     }
 
     $size = (int)($file['size'] ?? 0);
     $maxSize = 10 * 1024 * 1024;
     if ($size <= 0 || $size > $maxSize) {
-        throw new RuntimeException(ui_text('kariera.application.error_upload_size', 'Příloha může mít maximálně 10 MB.'));
+        throw new RuntimeException(ui_text('kariera.application.error_upload_size'));
     }
 
     $original = trim((string)($file['name'] ?? 'priloha'));
     $extension = strtolower((string)pathinfo($original, PATHINFO_EXTENSION));
     $allowed = ['pdf', 'doc', 'docx'];
     if (!in_array($extension, $allowed, true)) {
-        throw new RuntimeException(ui_text('kariera.application.error_upload_type', 'Příloha musí být PDF, DOC nebo DOCX.'));
+        throw new RuntimeException(ui_text('kariera.application.error_upload_type'));
     }
 
     $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -653,13 +653,13 @@ function frontend_volna_mista_store_application_attachment(?array $file, int $ap
         'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/octet-stream'],
     ];
     if (!in_array($mime, $allowedMimes[$extension], true)) {
-        throw new RuntimeException(ui_text('kariera.application.error_upload_type', 'Příloha musí být PDF, DOC nebo DOCX.'));
+        throw new RuntimeException(ui_text('kariera.application.error_upload_type'));
     }
 
     $relativeDir = 'volna-mista/dotazniky';
     $absoluteDir = frontend_volna_mista_private_storage_root() . '/' . $relativeDir;
     if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
-        throw new RuntimeException(ui_text('kariera.application.error_upload', 'Přílohu se nepodařilo nahrát.'));
+        throw new RuntimeException(ui_text('kariera.application.error_upload'));
     }
 
     $base = frontend_volna_mista_upload_slug(pathinfo($original, PATHINFO_FILENAME), 'priloha');
@@ -667,7 +667,7 @@ function frontend_volna_mista_store_application_attachment(?array $file, int $ap
     $absolutePath = frontend_volna_mista_private_storage_root() . '/' . $relativePath;
 
     if (!move_uploaded_file($tmpName, $absolutePath)) {
-        throw new RuntimeException(ui_text('kariera.application.error_upload', 'Přílohu se nepodařilo nahrát.'));
+        throw new RuntimeException(ui_text('kariera.application.error_upload'));
     }
 
     return [
@@ -722,7 +722,7 @@ function frontend_volna_mista_store_application_attachments(?array $fileInput, i
 
     $maxFiles = 5;
     if (count($files) > $maxFiles) {
-        throw new RuntimeException(ui_text('kariera.application.error_upload_count', 'Nahrát lze maximálně 5 souborů.'));
+        throw new RuntimeException(ui_text('kariera.application.error_upload_count'));
     }
 
     $stored = [];
@@ -792,7 +792,7 @@ function frontend_volna_mista_application_submit(array $post, array $files, stri
 
     try {
         if (!($pdo instanceof PDO)) {
-            throw new RuntimeException(ui_text('kariera.application.error_generic', 'Dotazník se nepodařilo odeslat. Zkuste to prosím znovu.'));
+            throw new RuntimeException(ui_text('kariera.application.error_generic'));
         }
 
         if (function_exists('frontend_captcha_validate')) {
@@ -800,7 +800,7 @@ function frontend_volna_mista_application_submit(array $post, array $files, stri
             if (!empty($captcha['bot'])) {
                 return [
                     'ok' => true,
-                    'message' => ui_text('kariera.application.success', 'Dotazník byl odeslán. Děkujeme.'),
+                    'message' => ui_text('kariera.application.success'),
                     'values' => [],
                     'mail_sent' => false,
                 ];
@@ -813,20 +813,20 @@ function frontend_volna_mista_application_submit(array $post, array $files, stri
         $csrf = (string)($post['csrf_token'] ?? '');
         $expectedCsrf = frontend_volna_mista_application_csrf_token();
         if ($expectedCsrf === '' || !hash_equals($expectedCsrf, $csrf)) {
-            throw new RuntimeException(ui_text('kariera.application.error_security', 'Formulář vypršel, obnovte stránku a zkuste odeslání znovu.'));
+            throw new RuntimeException(ui_text('kariera.application.error_security'));
         }
 
         $jobId = max(0, (int)($post['volne_misto_id'] ?? 0));
         $job = frontend_volna_mista_job_detail($jobId, $lang);
         if ($job === null) {
-            throw new RuntimeException(ui_text('kariera.application.error_position', 'Vybraná pozice není dostupná.'));
+            throw new RuntimeException(ui_text('kariera.application.error_position'));
         }
 
         if ($values['dot_name'] === '' || $values['dot_mobil'] === '' || $values['dot_email'] === '') {
-            throw new RuntimeException(ui_text('kariera.application.error_required', 'Vyplňte prosím jméno, mobil a e-mail.'));
+            throw new RuntimeException(ui_text('kariera.application.error_required'));
         }
         if (!filter_var($values['dot_email'], FILTER_VALIDATE_EMAIL)) {
-            throw new RuntimeException(ui_text('kariera.application.error_email', 'Zadejte prosím platný e-mail.'));
+            throw new RuntimeException(ui_text('kariera.application.error_email'));
         }
 
         $insertValues = [
@@ -920,7 +920,7 @@ function frontend_volna_mista_application_submit(array $post, array $files, stri
 
         return [
             'ok' => true,
-            'message' => ui_text('kariera.application.success', 'Dotazník byl odeslán. Děkujeme.'),
+            'message' => ui_text('kariera.application.success'),
             'values' => [],
             'mail_sent' => $mailSent,
         ];

@@ -90,7 +90,7 @@ $formValues = is_array($editRow) ? $editRow : [
     'name' => '',
     'email' => '',
     'datum_od' => rep_akce_users_today(),
-    'datum_do' => rep_akce_users_zero_date(),
+    'datum_do' => rep_akce_users_open_end_date(),
     'registered' => 1,
     'valid' => 1,
 ];
@@ -185,7 +185,14 @@ foreach ($types as $type) {
 
                     <div class="col-md-6">
                         <label for="akce_typ_id" class="form-label">Typ akčních nabídek</label>
-                        <select name="akce_typ_id" id="akce_typ_id" class="form-select">
+                        <select
+                            name="akce_typ_id"
+                            id="akce_typ_id"
+                            class="form-select js-admin-single-picker"
+                            data-picker-title="Vybrat typ akčních nabídek"
+                            data-picker-description="Vyberte jeden typ odběru pro tohoto odběratele."
+                            data-picker-search-placeholder="Hledat podle názvu typu…"
+                        >
                             <?php foreach ($types as $type): ?>
                                 <option value="<?= (int)$type['id'] ?>" <?= $formTypeId === (int)$type['id'] ? 'selected' : '' ?>><?= rep_akce_users_e($type['nazev_cz']) ?></option>
                             <?php endforeach; ?>
@@ -205,7 +212,7 @@ foreach ($types as $type) {
                     </div>
                     <div class="col-md-3">
                         <label for="datum_do" class="form-label">Datum do</label>
-                        <input type="date" name="datum_do" id="datum_do" class="form-control" value="<?= rep_akce_users_e((string)($formValues['datum_do'] ?? '') === '0000-00-00' ? '' : (string)($formValues['datum_do'] ?? '')) ?>">
+                        <input type="date" name="datum_do" id="datum_do" class="form-control" value="<?= rep_akce_users_e((string)($formValues['datum_do'] ?? '')) ?>">
                     </div>
                     <div class="col-md-6 d-flex align-items-end gap-4">
                         <div class="form-check mb-2"><input type="hidden" name="registered" value="0"><input class="form-check-input" type="checkbox" name="registered" id="registered" value="1" <?= (int)($formValues['registered'] ?? 1) === 1 ? 'checked' : '' ?>><label class="form-check-label" for="registered">aktivní odběr</label></div>

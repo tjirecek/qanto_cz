@@ -9,7 +9,7 @@ function rep_ples_e(mixed $value): string
 function rep_ples_format_updated(mixed $value): string
 {
     $value = trim((string)$value);
-    if ($value === '' || $value === '0000-00-00 00:00:00') {
+    if ($value === '') {
         return '';
     }
 

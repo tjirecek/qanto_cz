@@ -50,18 +50,18 @@ function frontend_brigadnici_branch_record_type(string $branchType): string
 function frontend_brigadnici_branch_group_label(string $branchType): string
 {
     return match ($branchType) {
-        'market' => ui_text('brigada.branch_type_markets', 'Markety'),
-        'prodejna' => ui_text('brigada.branch_type_qantoplus', 'Prodejny Qanto+'),
-        default => ui_text('brigada.branch_type_wholesale', 'Velkoobchody'),
+        'market' => ui_text('brigada.branch_type_markets'),
+        'prodejna' => ui_text('brigada.branch_type_qantoplus'),
+        default => ui_text('brigada.branch_type_wholesale'),
     };
 }
 
 function frontend_brigadnici_branch_type_label(string $branchType): string
 {
     return match ($branchType) {
-        'market' => ui_text('brigada.branch_market', 'market'),
-        'prodejna' => ui_text('brigada.branch_qantoplus', 'prodejna Qanto+'),
-        default => ui_text('brigada.branch_wholesale', 'velkoobchod'),
+        'market' => ui_text('brigada.branch_market'),
+        'prodejna' => ui_text('brigada.branch_qantoplus'),
+        default => ui_text('brigada.branch_wholesale'),
     };
 }
 
@@ -339,7 +339,7 @@ function frontend_brigadnici_submit(array $post, string $lang = 'cz'): array
 
     try {
         if (!($pdo instanceof PDO)) {
-            throw new RuntimeException(ui_text('brigada.error_generic', 'Registraci se nepodařilo odeslat. Zkuste to prosím znovu.'));
+            throw new RuntimeException(ui_text('brigada.error_generic'));
         }
 
         if (function_exists('frontend_captcha_validate')) {
@@ -347,7 +347,7 @@ function frontend_brigadnici_submit(array $post, string $lang = 'cz'): array
             if (!empty($captcha['bot'])) {
                 return [
                     'ok' => true,
-                    'message' => ui_text('brigada.success', 'Registrace byla odeslána. Děkujeme.'),
+                    'message' => ui_text('brigada.success'),
                     'values' => [],
                 ];
             }
@@ -359,19 +359,19 @@ function frontend_brigadnici_submit(array $post, string $lang = 'cz'): array
         $csrf = (string)($post['csrf_token'] ?? '');
         $expectedCsrf = frontend_brigadnici_csrf_token();
         if ($expectedCsrf === '' || !hash_equals($expectedCsrf, $csrf)) {
-            throw new RuntimeException(ui_text('brigada.error_security', 'Formulář vypršel, obnovte stránku a zkuste odeslání znovu.'));
+            throw new RuntimeException(ui_text('brigada.error_security'));
         }
 
         $branch = frontend_brigadnici_branch($pdo, (int)$values['pobocka_id'], $lang);
         if ($branch === null) {
-            throw new RuntimeException(ui_text('brigada.error_branch', 'Vyberte prosím pobočku.'));
+            throw new RuntimeException(ui_text('brigada.error_branch'));
         }
 
         if ($values['jmeno'] === '' || $values['prijmeni'] === '' || $values['mobil'] === '' || $values['email'] === '') {
-            throw new RuntimeException(ui_text('brigada.error_required', 'Vyplňte prosím jméno, příjmení, telefon a e-mail.'));
+            throw new RuntimeException(ui_text('brigada.error_required'));
         }
         if (!filter_var($values['email'], FILTER_VALIDATE_EMAIL)) {
-            throw new RuntimeException(ui_text('brigada.error_email', 'Zadejte prosím platný e-mail.'));
+            throw new RuntimeException(ui_text('brigada.error_email'));
         }
 
         $now = new DateTimeImmutable('now', new DateTimeZone('Europe/Prague'));
@@ -425,7 +425,7 @@ function frontend_brigadnici_submit(array $post, string $lang = 'cz'): array
 
         return [
             'ok' => true,
-            'message' => ui_text('brigada.success', 'Registrace byla odeslána. Děkujeme.'),
+            'message' => ui_text('brigada.success'),
             'values' => [],
             'inserted_id' => $insertedId,
             'mail_sent' => $mailSent,

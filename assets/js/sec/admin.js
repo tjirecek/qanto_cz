@@ -47,8 +47,8 @@
       file: 'admin_filters.js',
     },
     {
-      selector: '[data-oz-pobocka-modal]',
-      file: 'oz_pobocka_modal.js',
+      selector: '.js-admin-single-picker',
+      file: 'admin_single_picker.js',
     },
     {
       selector: '.cron-log-message-btn, #cronLogMessageModal',

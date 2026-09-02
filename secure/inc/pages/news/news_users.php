@@ -68,7 +68,7 @@ $formValues = is_array($editRow) ? $editRow : [
     'name' => '',
     'email' => '',
     'datum_od' => news_users_today(),
-    'datum_do' => news_users_zero_date(),
+    'datum_do' => news_users_open_end_date(),
     'registered' => 1,
     'valid' => 1,
 ];
@@ -151,7 +151,7 @@ $templateUrl = BASE_URL . 'secure/functions/ajax/news_users_xlsx.php?action=temp
 
                     <div class="col-md-4">
                         <label for="datum_do" class="form-label">Datum do</label>
-                        <input type="date" name="datum_do" id="datum_do" class="form-control" value="<?= news_users_e((string)($formValues['datum_do'] ?? '') === '0000-00-00' ? '' : (string)($formValues['datum_do'] ?? '')) ?>">
+                        <input type="date" name="datum_do" id="datum_do" class="form-control" value="<?= news_users_e((string)($formValues['datum_do'] ?? '')) ?>">
                     </div>
 
                     <div class="col-md-4 d-flex align-items-end gap-4">

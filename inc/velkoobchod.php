@@ -53,18 +53,18 @@ if ($wholesaleSlug !== ''):
         ?>
         <section class="markets-page markets-detail-page wholesale-page wholesale-detail-page">
             <div class="site-shell">
-                <nav class="site-breadcrumb" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb', 'Drobečková navigace')) ?>">
+                <nav class="site-breadcrumb" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb')) ?>">
                     <ol>
                         <li>
-                            <a href="/<?= frontend_velkoobchod_e($lang) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.home', 'Domů')) ?>">
+                            <a href="/<?= frontend_velkoobchod_e($lang) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb_home')) ?>">
                                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3.2 3.8 8.3v7.4h4.1v-4.6h4.2v4.6h4.1V8.3L10 3.2Zm0-2.1 8 6.6v9.6h-7.5v-4.6h-1v4.6H2V7.7l8-6.6Z"/></svg>
                             </a>
                         </li>
-                        <li><a href="/<?= frontend_velkoobchod_e($lang) ?>/velkoobchod"><?= frontend_velkoobchod_e(ui_text('velkoobchod.title', 'Velkoobchod')) ?></a></li>
-                        <li><span aria-current="page"><?= frontend_velkoobchod_e(ui_text('common.page_not_found', 'Stránka nebyla nalezena.')) ?></span></li>
+                        <li><a href="/<?= frontend_velkoobchod_e($lang) ?>/velkoobchod"><?= frontend_velkoobchod_e(ui_text('velkoobchod.title')) ?></a></li>
+                        <li><span aria-current="page"><?= frontend_velkoobchod_e(ui_text('common.page_not_found')) ?></span></li>
                     </ol>
                 </nav>
-                <div class="alert alert-warning"><?= frontend_velkoobchod_e(ui_text('velkoobchod.detail_not_found', 'Velkoobchod nebyl nalezen.')) ?></div>
+                <div class="alert alert-warning"><?= frontend_velkoobchod_e(ui_text('velkoobchod.detail_not_found')) ?></div>
             </div>
         </section>
         <?php
@@ -87,14 +87,14 @@ if ($wholesaleSlug !== ''):
     ?>
     <section class="markets-page markets-detail-page wholesale-page wholesale-detail-page">
         <div class="site-shell">
-            <nav class="site-breadcrumb" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb', 'Drobečková navigace')) ?>">
+            <nav class="site-breadcrumb" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb')) ?>">
                 <ol>
                     <li>
-                        <a href="/<?= frontend_velkoobchod_e($lang) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.home', 'Domů')) ?>">
+                        <a href="/<?= frontend_velkoobchod_e($lang) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb_home')) ?>">
                             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3.2 3.8 8.3v7.4h4.1v-4.6h4.2v4.6h4.1V8.3L10 3.2Zm0-2.1 8 6.6v9.6h-7.5v-4.6h-1v4.6H2V7.7l8-6.6Z"/></svg>
                         </a>
                     </li>
-                    <li><a href="/<?= frontend_velkoobchod_e($lang) ?>/velkoobchod"><?= frontend_velkoobchod_e(ui_text('velkoobchod.title', 'Velkoobchod')) ?></a></li>
+                    <li><a href="/<?= frontend_velkoobchod_e($lang) ?>/velkoobchod"><?= frontend_velkoobchod_e(ui_text('velkoobchod.title')) ?></a></li>
                     <li><span aria-current="page"><?= frontend_velkoobchod_e((string)$wholesaleDetail['name']) ?></span></li>
                 </ol>
             </nav>
@@ -115,31 +115,31 @@ if ($wholesaleSlug !== ''):
             <div class="market-detail__hero">
                 <figure class="market-detail__photo<?= $wholesaleUsesLogoImage ? ' is-logo-fallback' : '' ?>">
                     <img src="<?= frontend_velkoobchod_e($wholesaleImage) ?>" alt="<?= frontend_velkoobchod_e((string)$wholesaleDetail['name']) ?>" loading="eager">
-                    <span><?= frontend_velkoobchod_e(ui_text('velkoobchod.detail_photo_label', 'Velkoobchodní sklad')) ?></span>
+                    <span><?= frontend_velkoobchod_e(ui_text('velkoobchod.detail_photo_label')) ?></span>
                 </figure>
                 <div
                     class="markets-map market-detail__map"
                     data-markets-map
                     data-points="<?= frontend_velkoobchod_e(json_encode($wholesaleMapPoints, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]') ?>"
-                    data-empty="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_empty', 'Pro mapu nejsou dostupná data závozových obcí.')) ?>"
-                    data-label-all-cities="<?= frontend_velkoobchod_e(ui_text('markety.all_cities', 'Celá ČR')) ?>"
-                    data-label-branch="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_branch', 'Velkoobchod')) ?>"
+                    data-empty="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_empty')) ?>"
+                    data-label-all-cities="<?= frontend_velkoobchod_e(ui_text('markety.all_cities')) ?>"
+                    data-label-branch="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_branch')) ?>"
                 >
-                    <div class="markets-map__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.map_empty', 'Pro mapu nejsou dostupná data závozových obcí.')) ?></div>
+                    <div class="markets-map__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.map_empty')) ?></div>
                 </div>
             </div>
 
             <div class="market-detail__info-grid">
                 <section class="market-detail-card market-detail-opening" aria-labelledby="wholesale-opening-title">
                     <div class="market-detail-opening__head">
-                        <h2 id="wholesale-opening-title"><?= frontend_velkoobchod_e(ui_text('markety.opening_title', 'Otevírací doba')) ?></h2>
+                        <h2 id="wholesale-opening-title"><?= frontend_velkoobchod_e(ui_text('markety.opening_title')) ?></h2>
                         <span class="market-detail-opening__status <?= !empty($wholesaleDetail['is_open']) ? 'is-open' : 'is-closed' ?>">
-                            <?= frontend_velkoobchod_e(!empty($wholesaleDetail['is_open']) ? ui_text('markety.open_now', 'Otevřeno') : ui_text('markety.closed_now', 'Zavřeno')) ?>
+                            <?= frontend_velkoobchod_e(!empty($wholesaleDetail['is_open']) ? ui_text('markety.open_now') : ui_text('markety.closed_now')) ?>
                         </span>
                     </div>
                     <?php if (!empty($wholesaleDetail['opening_has_exception_today'])): ?>
                         <p class="market-detail-opening__exception">
-                            <?= frontend_velkoobchod_e(ui_text('markety.opening_exception_today', 'Dnes platí upravená otevírací doba.')) ?>
+                            <?= frontend_velkoobchod_e(ui_text('markety.opening_exception_today')) ?>
                         </p>
                     <?php endif; ?>
                     <dl>
@@ -155,14 +155,14 @@ if ($wholesaleSlug !== ''):
                             <div class="<?= frontend_velkoobchod_e(implode(' ', $openingRowClasses)) ?>">
                                 <dt>
                                     <span><?= frontend_velkoobchod_e((string)$row['label']) ?></span>
-                                    <?php if (!empty($row['is_today'])): ?><em><?= frontend_velkoobchod_e(ui_text('markety.today', 'Dnes')) ?></em><?php endif; ?>
-                                    <?php if (!empty($row['is_exception'])): ?><small><?= frontend_velkoobchod_e(ui_text('markety.exception', 'Výjimka')) ?></small><?php endif; ?>
+                                    <?php if (!empty($row['is_today'])): ?><em><?= frontend_velkoobchod_e(ui_text('markety.today')) ?></em><?php endif; ?>
+                                    <?php if (!empty($row['is_exception'])): ?><small><?= frontend_velkoobchod_e(ui_text('markety.exception')) ?></small><?php endif; ?>
                                     <?php if ((string)$row['note'] !== ''): ?><small><?= frontend_velkoobchod_e((string)$row['note']) ?></small><?php endif; ?>
                                 </dt>
                                 <dd>
                                     <?= frontend_velkoobchod_e((string)$row['time']) ?>
                                     <?php if (!empty($row['is_today'])): ?>
-                                        <small><?= frontend_velkoobchod_e(!empty($row['is_open']) ? ui_text('markety.open_now', 'Otevřeno') : ui_text('markety.closed_now', 'Zavřeno')) ?></small>
+                                        <small><?= frontend_velkoobchod_e(!empty($row['is_open']) ? ui_text('markety.open_now') : ui_text('markety.closed_now')) ?></small>
                                     <?php endif; ?>
                                 </dd>
                             </div>
@@ -171,7 +171,7 @@ if ($wholesaleSlug !== ''):
                 </section>
 
                 <section class="market-detail-card market-detail-services" aria-labelledby="wholesale-services-title">
-                    <h2 id="wholesale-services-title"><?= frontend_velkoobchod_e(ui_text('markety.services_title', 'Služby')) ?></h2>
+                    <h2 id="wholesale-services-title"><?= frontend_velkoobchod_e(ui_text('markety.services_title')) ?></h2>
                     <?php if ($wholesaleDetail['services'] !== []): ?>
                         <ul>
                             <?php foreach ((array)$wholesaleDetail['services'] as $service): ?>
@@ -179,25 +179,25 @@ if ($wholesaleSlug !== ''):
                             <?php endforeach; ?>
                         </ul>
                     <?php else: ?>
-                        <p><?= frontend_velkoobchod_e(ui_text('velkoobchod.services_empty', 'Služby pro tento velkoobchod doplníme.')) ?></p>
+                        <p><?= frontend_velkoobchod_e(ui_text('velkoobchod.services_empty')) ?></p>
                     <?php endif; ?>
                 </section>
 
                 <section class="market-detail-card market-detail-contact" aria-labelledby="wholesale-contact-title">
                     <span class="market-detail-contact__icon" aria-hidden="true">↗</span>
-                    <h2 id="wholesale-contact-title"><?= frontend_velkoobchod_e(ui_text('velkoobchod.branch_contact_title', 'Kontakt na velkoobchod')) ?></h2>
+                    <h2 id="wholesale-contact-title"><?= frontend_velkoobchod_e(ui_text('velkoobchod.branch_contact_title')) ?></h2>
                     <?php if ((string)$wholesaleDetail['address'] !== ''): ?><p><span class="market-detail-contact__bullet" aria-hidden="true">⌖</span><span><?= frontend_velkoobchod_e((string)$wholesaleDetail['address']) ?></span></p><?php endif; ?>
                     <?php if ((string)$wholesaleDetail['email'] !== ''): ?><p><span class="market-detail-contact__bullet" aria-hidden="true">✉</span><span><a href="mailto:<?= frontend_velkoobchod_e((string)$wholesaleDetail['email']) ?>"><?= frontend_velkoobchod_e((string)$wholesaleDetail['email']) ?></a></span></p><?php endif; ?>
                     <?php if ((string)$wholesaleDetail['phone'] !== ''): ?><p><span class="market-detail-contact__bullet" aria-hidden="true">☎</span><span><a href="tel:<?= frontend_velkoobchod_e(preg_replace('~\s+~', '', (string)$wholesaleDetail['phone']) ?? '') ?>"><?= frontend_velkoobchod_e((string)$wholesaleDetail['phone']) ?></a></span></p><?php endif; ?>
-                    <?php if ((string)$wholesaleDetail['manager'] !== ''): ?><p><span class="market-detail-contact__bullet" aria-hidden="true">•</span><span><?= frontend_velkoobchod_e(ui_text('markety.manager', 'Vedoucí')) ?>: <?= frontend_velkoobchod_e((string)$wholesaleDetail['manager']) ?></span></p><?php endif; ?>
+                    <?php if ((string)$wholesaleDetail['manager'] !== ''): ?><p><span class="market-detail-contact__bullet" aria-hidden="true">•</span><span><?= frontend_velkoobchod_e(ui_text('markety.manager')) ?>: <?= frontend_velkoobchod_e((string)$wholesaleDetail['manager']) ?></span></p><?php endif; ?>
                 </section>
             </div>
 
             <section class="market-detail-section wholesale-representatives" aria-labelledby="wholesale-detail-representatives-title">
                 <div class="market-detail-section__head">
                     <div>
-                        <h2 id="wholesale-detail-representatives-title"><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_title', 'Obchodní zástupci')) ?></h2>
-                        <p><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_detail_text', 'Obchodní zástupci přiřazení k tomuto velkoobchodnímu skladu.')) ?></p>
+                        <h2 id="wholesale-detail-representatives-title"><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_title')) ?></h2>
+                        <p><?= frontend_velkoobchod_e(stat_vyraz_text('velkoobchod.representatives_detail_text')) ?></p>
                     </div>
                 </div>
                 <?php if ($wholesaleRepresentatives !== []): ?>
@@ -207,12 +207,12 @@ if ($wholesaleSlug !== ''):
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <p class="market-detail__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_detail_empty', 'K tomuto velkoobchodu nejsou přiřazeni žádní obchodní zástupci.')) ?></p>
+                    <p class="market-detail__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_detail_empty')) ?></p>
                 <?php endif; ?>
             </section>
 
             <section class="market-detail-section market-detail-jobs" aria-labelledby="wholesale-jobs-title">
-                <h2 id="wholesale-jobs-title"><?= frontend_velkoobchod_e(ui_text('velkoobchod.jobs_title', 'Volná místa ve velkoobchodu')) ?> <span>(<?= count($wholesaleJobs) ?>)</span></h2>
+                <h2 id="wholesale-jobs-title"><?= frontend_velkoobchod_e(ui_text('velkoobchod.jobs_title')) ?> <span>(<?= count($wholesaleJobs) ?>)</span></h2>
                 <?php if ($wholesaleJobs !== []): ?>
                     <div class="market-detail-jobs__list">
                         <?php foreach ($wholesaleJobs as $job): ?>
@@ -223,17 +223,17 @@ if ($wholesaleSlug !== ''):
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <p class="market-detail__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.jobs_empty', 'V tomto velkoobchodu teď nejsou vypsaná volná místa.')) ?></p>
+                    <p class="market-detail__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.jobs_empty')) ?></p>
                 <?php endif; ?>
             </section>
 
             <section class="market-detail-section market-detail-flyers" aria-labelledby="wholesale-flyers-title">
                 <div class="market-detail-section__head">
                     <div>
-                        <h2 id="wholesale-flyers-title"><?= frontend_velkoobchod_e(ui_text('markety.flyers_title', 'Letáky')) ?></h2>
+                        <h2 id="wholesale-flyers-title"><?= frontend_velkoobchod_e(ui_text('markety.flyers_title')) ?></h2>
                     </div>
                     <a class="market-detail-section__link" href="/<?= frontend_velkoobchod_e($lang) ?>/akce?typ=<?= frontend_velkoobchod_e($wholesaleFlyerType) ?>">
-                        <?= frontend_velkoobchod_e(ui_text('flyers.all', 'Všechny letáky')) ?>
+                        <?= frontend_velkoobchod_e(ui_text('flyers.all')) ?>
                     </a>
                 </div>
                 <?php if ($wholesaleFlyers !== []): ?>
@@ -256,11 +256,11 @@ if ($wholesaleSlug !== ''):
                                 <strong><?= frontend_velkoobchod_e((string)$flyer['title']) ?></strong>
                                 <p><?= frontend_velkoobchod_e(function_exists('frontend_akce_validity_text') ? frontend_akce_validity_text($flyer) : '') ?></p>
                                 <div>
-                                    <?php if ((string)$flyer['pdf'] !== ''): ?><a href="<?= frontend_velkoobchod_e((string)$flyer['pdf']) ?>" target="_blank" rel="noopener"><?= frontend_velkoobchod_e(ui_text('flyers.pdf', 'PDF')) ?></a><?php endif; ?>
+                                    <?php if ((string)$flyer['pdf'] !== ''): ?><a href="<?= frontend_velkoobchod_e((string)$flyer['pdf']) ?>" target="_blank" rel="noopener"><?= frontend_velkoobchod_e(ui_text('flyers.pdf')) ?></a><?php endif; ?>
                                     <?php if ($flyerPages !== []): ?>
-                                        <a href="<?= frontend_velkoobchod_e((string)$flyer['href']) ?>" data-akce-viewer-open="<?= frontend_velkoobchod_e($flyerViewerId) ?>"><?= frontend_velkoobchod_e(ui_text('flyers.browse', 'Prolistovat')) ?></a>
+                                        <a href="<?= frontend_velkoobchod_e((string)$flyer['href']) ?>" data-akce-viewer-open="<?= frontend_velkoobchod_e($flyerViewerId) ?>"><?= frontend_velkoobchod_e(ui_text('flyers.browse')) ?></a>
                                     <?php else: ?>
-                                        <a href="<?= frontend_velkoobchod_e((string)$flyer['href']) ?>"><?= frontend_velkoobchod_e(ui_text('flyers.browse', 'Prolistovat')) ?></a>
+                                        <a href="<?= frontend_velkoobchod_e((string)$flyer['href']) ?>"><?= frontend_velkoobchod_e(ui_text('flyers.browse')) ?></a>
                                     <?php endif; ?>
                                 </div>
                             </article>
@@ -276,37 +276,40 @@ if ($wholesaleSlug !== ''):
                                     <button type="button"
                                             class="akce-flip-viewer__close"
                                             data-akce-viewer-action="close"
-                                            aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.close_viewer', 'Zavřít prohlížeč')) ?>">
+                                            aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.close_viewer')) ?>">
                                         ×
                                     </button>
                                     <div class="akce-flip-viewer__toolbar">
                                         <?php if ((string)$flyer['pdf'] !== ''): ?>
-                                            <a class="akce-flip-viewer__toolbar-link" href="<?= frontend_velkoobchod_e((string)$flyer['pdf']) ?>" target="_blank" rel="noopener"><?= frontend_velkoobchod_e(ui_text('flyers.download_pdf', 'Stáhnout PDF')) ?></a>
+                                            <a class="akce-flip-viewer__toolbar-link akce-flip-viewer__toolbar-link--pdf" href="<?= frontend_velkoobchod_e((string)$flyer['pdf']) ?>" target="_blank" rel="noopener" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.download_pdf')) ?>"><?= frontend_velkoobchod_e(ui_text('flyers.download_pdf')) ?></a>
                                         <?php endif; ?>
-                                        <button type="button" data-akce-viewer-action="first" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.first_page', 'První strana')) ?>">‹‹</button>
-                                        <button type="button" data-akce-viewer-action="prev" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.prev_page', 'Předchozí strana')) ?>">‹</button>
-                                        <span data-akce-viewer-page data-page-word="<?= frontend_velkoobchod_e(ui_text('akce.page', 'Strana')) ?>"><?= frontend_velkoobchod_e(ui_text('akce.page', 'Strana')) ?> 1 / <?= count($flyerPages) ?></span>
-                                        <button type="button" data-akce-viewer-action="next" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.next_page', 'Další strana')) ?>">›</button>
-                                        <button type="button" data-akce-viewer-action="last" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.last_page', 'Poslední strana')) ?>">››</button>
-                                        <button type="button" data-akce-viewer-action="zoom-out" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.zoom_out', 'Zmenšit')) ?>">−</button>
-                                        <button type="button" data-akce-viewer-action="zoom-reset" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.zoom_reset', 'Původní velikost')) ?>">100%</button>
-                                        <button type="button" data-akce-viewer-action="zoom-in" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.zoom_in', 'Zvětšit')) ?>">+</button>
-                                        <button type="button" data-akce-viewer-action="fullscreen" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.fullscreen', 'Celá obrazovka')) ?>">⛶</button>
+                                        <button type="button" data-akce-viewer-action="first" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.first_page')) ?>">‹‹</button>
+                                        <button type="button" data-akce-viewer-action="prev" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.prev_page')) ?>">‹</button>
+                                        <input class="akce-flip-viewer__page-input" type="text" inputmode="numeric" pattern="[0-9]*" value="1 / <?= count($flyerPages) ?>" data-akce-viewer-page data-page-word="<?= frontend_velkoobchod_e(ui_text('akce.page')) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.go_to_page')) ?>">
+                                        <button type="button" data-akce-viewer-action="next" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.next_page')) ?>">›</button>
+                                        <button type="button" data-akce-viewer-action="last" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.last_page')) ?>">››</button>
+                                        <button type="button" data-akce-viewer-action="autoplay" data-label-start="<?= frontend_velkoobchod_e(ui_text('flyers.autoplay')) ?>" data-label-stop="<?= frontend_velkoobchod_e(ui_text('flyers.autoplay_stop')) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.autoplay')) ?>" aria-pressed="false">▶</button>
+                                        <button type="button" data-akce-viewer-action="toggle-thumbs" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.toggle_thumbs')) ?>" title="<?= frontend_velkoobchod_e(ui_text('flyers.toggle_thumbs')) ?>" aria-pressed="true">▦</button>
+                                        <button type="button" data-akce-viewer-action="zoom-out" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.zoom_out')) ?>">−</button>
+                                        <button type="button" data-akce-viewer-action="zoom-reset" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.zoom_reset')) ?>">100%</button>
+                                        <button type="button" data-akce-viewer-action="zoom-in" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.zoom_in')) ?>">+</button>
+                                        <button type="button" class="akce-flip-viewer__magnifier" data-akce-viewer-action="zoom-toggle" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.magnifier')) ?>" title="<?= frontend_velkoobchod_e(ui_text('flyers.magnifier')) ?>" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7v7M7 10.5h7"></path></svg></button>
+                                        <button type="button" data-akce-viewer-action="fullscreen" data-label-enter="<?= frontend_velkoobchod_e(ui_text('flyers.fullscreen')) ?>" data-label-exit="<?= frontend_velkoobchod_e(ui_text('flyers.exit_fullscreen')) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.fullscreen')) ?>" aria-pressed="false">⛶</button>
                                     </div>
                                     <div class="akce-flip-viewer__body">
                                         <div class="akce-flip-viewer__book-wrap">
-                                            <button type="button" class="akce-flip-viewer__side akce-flip-viewer__side--prev" data-akce-viewer-action="prev" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.prev_page', 'Předchozí strana')) ?>">‹</button>
+                                            <button type="button" class="akce-flip-viewer__side akce-flip-viewer__side--prev" data-akce-viewer-action="prev" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.prev_page')) ?>">‹</button>
                                             <div class="akce-flip-viewer__book-stage" data-akce-viewer-stage>
                                                 <div class="akce-flip-viewer__book" data-akce-viewer-book></div>
                                             </div>
-                                            <button type="button" class="akce-flip-viewer__side akce-flip-viewer__side--next" data-akce-viewer-action="next" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.next_page', 'Další strana')) ?>">›</button>
+                                            <button type="button" class="akce-flip-viewer__side akce-flip-viewer__side--next" data-akce-viewer-action="next" aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.next_page')) ?>">›</button>
                                         </div>
-                                        <div class="akce-flip-viewer__thumbs" data-akce-viewer-thumbs aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.page_thumbs', 'Náhledy stran')) ?>"></div>
+                                        <div class="akce-flip-viewer__thumbs" data-akce-viewer-thumbs aria-label="<?= frontend_velkoobchod_e(ui_text('flyers.page_thumbs')) ?>"></div>
                                     </div>
                                     <div class="akce-viewer-simple" data-akce-viewer-fallback>
                                         <?php foreach ($flyerPages as $page): ?>
                                             <figure class="akce-viewer-simple__page">
-                                                <img src="<?= frontend_velkoobchod_e((string)($page['src'] ?? '')) ?>" alt="<?= frontend_velkoobchod_e((string)($page['label'] ?? '')) ?>" loading="lazy">
+                                                <img data-src="<?= frontend_velkoobchod_e((string)($page['src'] ?? '')) ?>" alt="<?= frontend_velkoobchod_e((string)($page['label'] ?? '')) ?>" loading="lazy">
                                                 <figcaption><?= frontend_velkoobchod_e((string)($page['label'] ?? '')) ?></figcaption>
                                             </figure>
                                         <?php endforeach; ?>
@@ -316,7 +319,7 @@ if ($wholesaleSlug !== ''):
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <p class="market-detail__empty"><?= frontend_velkoobchod_e(ui_text('akce.no_current', 'Aktuálně zde nejsou žádné platné letáky.')) ?></p>
+                    <p class="market-detail__empty"><?= frontend_velkoobchod_e(ui_text('akce.no_current')) ?></p>
                 <?php endif; ?>
             </section>
 
@@ -328,8 +331,8 @@ if ($wholesaleSlug !== ''):
                 >
                     <div class="market-detail-section__head">
                         <div>
-                            <h2 id="wholesale-gallery-title"><?= frontend_velkoobchod_e(ui_text('markety.gallery_title', 'Fotogalerie')) ?></h2>
-                            <p><?= frontend_velkoobchod_e(sprintf(ui_text('velkoobchod.gallery_intro', 'Prohlédněte si %d fotografií tohoto velkoobchodu.'), count($wholesalePhotos))) ?></p>
+                            <h2 id="wholesale-gallery-title"><?= frontend_velkoobchod_e(ui_text('markety.gallery_title')) ?></h2>
+                            <p><?= frontend_velkoobchod_e(sprintf(stat_vyraz_text('velkoobchod.gallery_intro'), count($wholesalePhotos))) ?></p>
                         </div>
                     </div>
                     <div class="market-detail-gallery__grid">
@@ -341,7 +344,7 @@ if ($wholesaleSlug !== ''):
                                 data-market-gallery-index="<?= (int)$index ?>"
                                 data-full="<?= frontend_velkoobchod_e((string)$photo['image']) ?>"
                                 data-title="<?= frontend_velkoobchod_e((string)($photo['title'] !== '' ? $photo['title'] : $wholesaleDetail['name'])) ?>"
-                                aria-label="<?= frontend_velkoobchod_e(sprintf(ui_text('markety.gallery_open_photo', 'Otevřít fotografii %d'), $index + 1)) ?>"
+                                aria-label="<?= frontend_velkoobchod_e(sprintf(ui_text('markety.gallery_open_photo'), $index + 1)) ?>"
                             >
                                 <img src="<?= frontend_velkoobchod_e((string)$photo['thumb']) ?>" alt="<?= frontend_velkoobchod_e((string)($photo['title'] !== '' ? $photo['title'] : $wholesaleDetail['name'])) ?>" loading="lazy">
                             </button>
@@ -350,9 +353,9 @@ if ($wholesaleSlug !== ''):
                     <div
                         class="market-gallery-lightbox"
                         data-market-gallery-lightbox
-                        data-label-close="<?= frontend_velkoobchod_e(ui_text('common.close', 'Zavřít')) ?>"
-                        data-label-prev="<?= frontend_velkoobchod_e(ui_text('common.previous', 'Předchozí')) ?>"
-                        data-label-next="<?= frontend_velkoobchod_e(ui_text('common.next', 'Další')) ?>"
+                        data-label-close="<?= frontend_velkoobchod_e(ui_text('common.close')) ?>"
+                        data-label-prev="<?= frontend_velkoobchod_e(ui_text('common.previous')) ?>"
+                        data-label-next="<?= frontend_velkoobchod_e(ui_text('common.next')) ?>"
                         hidden
                     ></div>
                 </section>
@@ -363,11 +366,11 @@ if ($wholesaleSlug !== ''):
                     <svg viewBox="0 0 24 24" focusable="false"><path d="M12 3a8 8 0 0 0-8 8v3.2A2.8 2.8 0 0 0 6.8 17H8v-6H5.8A6.2 6.2 0 0 1 18.2 11H16v6h1.6a4.6 4.6 0 0 1-4.3 3H11v-2h2.3a2.6 2.6 0 0 0 2.4-1.6A2.8 2.8 0 0 0 20 14.2V11a8 8 0 0 0-8-8Z"/></svg>
                 </div>
                 <div>
-                    <h2><?= frontend_velkoobchod_e(ui_text('markety.contact_title', 'Kontaktujte nás')) ?></h2>
-                    <p><?= frontend_velkoobchod_e(ui_text('velkoobchod.contact_text', 'Chcete začít odebírat zboží velkoobchodně? Ozvěte se nám a najdeme vhodné řešení.')) ?></p>
+                    <h2><?= frontend_velkoobchod_e(ui_text('markety.contact_title')) ?></h2>
+                    <p><?= frontend_velkoobchod_e(stat_vyraz_text('velkoobchod.contact_text')) ?></p>
                 </div>
                 <a href="/<?= frontend_velkoobchod_e($lang) ?>/kontakty">
-                    <?= frontend_velkoobchod_e(ui_text('markety.contact_button', 'Zobrazit kontakty')) ?>
+                    <?= frontend_velkoobchod_e(ui_text('markety.contact_button')) ?>
                     <span aria-hidden="true">›</span>
                 </a>
             </section>
@@ -388,14 +391,14 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
 ?>
 <section class="markets-page wholesale-page">
     <div class="site-shell">
-        <nav class="site-breadcrumb" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb', 'Drobečková navigace')) ?>">
+        <nav class="site-breadcrumb" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb')) ?>">
             <ol>
                 <li>
-                    <a href="/<?= frontend_velkoobchod_e($lang) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.home', 'Domů')) ?>">
+                    <a href="/<?= frontend_velkoobchod_e($lang) ?>" aria-label="<?= frontend_velkoobchod_e(ui_text('aria.breadcrumb_home')) ?>">
                         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3.2 3.8 8.3v7.4h4.1v-4.6h4.2v4.6h4.1V8.3L10 3.2Zm0-2.1 8 6.6v9.6h-7.5v-4.6h-1v4.6H2V7.7l8-6.6Z"/></svg>
                     </a>
                 </li>
-                <li><span aria-current="page"><?= frontend_velkoobchod_e(ui_text('velkoobchod.title', 'Velkoobchod')) ?></span></li>
+                <li><span aria-current="page"><?= frontend_velkoobchod_e(ui_text('velkoobchod.title')) ?></span></li>
             </ol>
         </nav>
 
@@ -406,7 +409,7 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
                 </span>
                 <span class="home-router__text">
                     <small>02</small>
-                    <h1><a href="/<?= frontend_velkoobchod_e($lang) ?>/velkoobchod"><?= frontend_velkoobchod_e(ui_text('router.velkoobchod.title', 'velkoobchod')) ?></a></h1>
+                    <h1><a href="/<?= frontend_velkoobchod_e($lang) ?>/velkoobchod"><?= frontend_velkoobchod_e(ui_text('router.velkoobchod.title')) ?></a></h1>
                     <?php if ($wholesaleRouterText !== ''): ?><em><?= frontend_velkoobchod_e($wholesaleRouterText) ?></em><?php endif; ?>
                 </span>
             </div>
@@ -414,41 +417,41 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
                 <?php if ($wholesaleIntro !== ''): ?>
                     <?= $wholesaleIntro ?>
                 <?php else: ?>
-                    <p><?= frontend_velkoobchod_e(ui_text('velkoobchod.intro_fallback', 'Zásobujeme firmy, gastro provozy, prodejny a další zákazníky v regionech, které dlouhodobě obsluhujeme z našich velkoobchodních skladů.')) ?></p>
+                    <p><?= frontend_velkoobchod_e(stat_vyraz_text('velkoobchod.intro_fallback')) ?></p>
                 <?php endif; ?>
             </div>
         </header>
 
-        <section class="markets-finder wholesale-finder" aria-label="<?= frontend_velkoobchod_e(ui_text('velkoobchod.finder_title', 'Velkoobchodní pobočky')) ?>">
+        <section class="markets-finder wholesale-finder" aria-label="<?= frontend_velkoobchod_e(ui_text('velkoobchod.finder_title')) ?>">
             <div class="markets-finder__sidebar">
                 <div class="markets-finder__header">
                     <div>
-                        <h2><?= frontend_velkoobchod_e(ui_text('velkoobchod.finder_title', 'Velkoobchodní pobočky')) ?></h2>
-                        <p><?= frontend_velkoobchod_e(ui_text('velkoobchod.finder_text', 'Seznam skladů a mapa oblastí, do kterých pravidelně zavážíme.')) ?></p>
+                        <h2><?= frontend_velkoobchod_e(ui_text('velkoobchod.finder_title')) ?></h2>
+                        <p><?= frontend_velkoobchod_e(stat_vyraz_text('velkoobchod.finder_text')) ?></p>
                     </div>
 
                     <section
                         class="wholesale-availability wholesale-availability--compact"
                         data-wholesale-availability
-                        data-label-served="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_served', 'Do této obce zavážíme.')) ?>"
-                        data-label-excluded="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_excluded', 'Do této obce standardně nezavážíme.')) ?>"
-                        data-label-review="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_review', 'Dostupnost závozu v této obci ověřujeme.')) ?>"
-                        data-label-not-served="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_not_served', 'Do této obce aktuálně nezavážíme.')) ?>"
-                        data-label-no-result="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_no_result', 'Obec jsme v číselníku nenašli. Zkuste prosím zadat přesnější název nebo PSČ.')) ?>"
-                        data-label-contact="<?= frontend_velkoobchod_e(ui_text('velkoobchod.contact_person', 'Kontaktní osoba')) ?>"
-                        data-label-no-contact="<?= frontend_velkoobchod_e(ui_text('velkoobchod.no_contact', 'Kontakt doplníme.')) ?>"
+                        data-label-served="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_served')) ?>"
+                        data-label-excluded="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_excluded')) ?>"
+                        data-label-review="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_review')) ?>"
+                        data-label-not-served="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_not_served')) ?>"
+                        data-label-no-result="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_no_result')) ?>"
+                        data-label-contact="<?= frontend_velkoobchod_e(ui_text('velkoobchod.contact_person')) ?>"
+                        data-label-no-contact="<?= frontend_velkoobchod_e(ui_text('velkoobchod.no_contact')) ?>"
                     >
                         <form class="wholesale-availability__form" data-wholesale-availability-form>
-                            <label class="visually-hidden" for="wholesale_availability_query"><?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_label', 'Obec nebo PSČ')) ?></label>
+                            <label class="visually-hidden" for="wholesale_availability_query"><?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_label')) ?></label>
                             <div class="wholesale-availability__search">
                                 <input
                                     type="search"
                                     id="wholesale_availability_query"
                                     autocomplete="off"
-                                    placeholder="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_placeholder', 'Např. Svitavy nebo 568 02')) ?>"
+                                    placeholder="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_placeholder')) ?>"
                                     data-wholesale-availability-input
                                 >
-                                <button type="submit" aria-label="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_submit', 'Ověřit')) ?>">
+                                <button type="submit" aria-label="<?= frontend_velkoobchod_e(ui_text('velkoobchod.availability_submit')) ?>">
                                     <span aria-hidden="true"></span>
                                 </button>
                                 <div class="wholesale-availability__suggestions" data-wholesale-availability-suggestions hidden></div>
@@ -462,17 +465,17 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
                         type="button"
                         class="markets-mobile-toggle wholesale-mobile-toggle"
                         data-wholesale-mobile-toggle
-                        data-label-map="<?= frontend_velkoobchod_e(ui_text('markety.show_map', 'Zobrazit mapu')) ?>"
-                        data-label-list="<?= frontend_velkoobchod_e(ui_text('markety.show_list', 'Zobrazit seznam')) ?>"
+                        data-label-map="<?= frontend_velkoobchod_e(ui_text('markety.show_map')) ?>"
+                        data-label-list="<?= frontend_velkoobchod_e(ui_text('markety.show_list')) ?>"
                         aria-pressed="false"
                     >
-                        <span data-wholesale-mobile-toggle-label><?= frontend_velkoobchod_e(ui_text('markety.show_map', 'Zobrazit mapu')) ?></span>
+                        <span data-wholesale-mobile-toggle-label><?= frontend_velkoobchod_e(ui_text('markety.show_map')) ?></span>
                     </button>
                 </div>
 
                 <div class="markets-list wholesale-branches-list">
                     <?php if ($wholesaleBranches === []): ?>
-                        <div class="markets-list__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.branches_empty', 'Aktuálně nejsou dostupné žádné velkoobchodní sklady.')) ?></div>
+                        <div class="markets-list__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.branches_empty')) ?></div>
                     <?php else: ?>
                         <?php foreach ($wholesaleBranches as $branch): ?>
                             <article
@@ -490,7 +493,7 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
                                         <small class="<?= $branch['is_open'] ? 'is-open' : '' ?>"><?= frontend_velkoobchod_e((string)$branch['opening_label']) ?></small>
                                     </span>
                                 </button>
-                                <a class="markets-card__detail" href="<?= frontend_velkoobchod_e(frontend_markety_detail_url($branch, $lang, 'velkoobchod')) ?>"><?= frontend_velkoobchod_e(ui_text('velkoobchod.detail_link', 'Detail velkoobchodu')) ?></a>
+                                <a class="markets-card__detail" href="<?= frontend_velkoobchod_e(frontend_markety_detail_url($branch, $lang, 'velkoobchod')) ?>"><?= frontend_velkoobchod_e(ui_text('velkoobchod.detail_link')) ?></a>
                             </article>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -500,11 +503,11 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
             <div
                 class="wholesale-map"
                 data-wholesale-map
-                data-empty="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_empty', 'Pro mapu nejsou dostupná data závozových obcí.')) ?>"
-                data-label-branch="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_branch', 'Velkoobchod')) ?>"
-                data-label-reset="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_reset', 'Celá ČR')) ?>"
+                data-empty="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_empty')) ?>"
+                data-label-branch="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_branch')) ?>"
+                data-label-reset="<?= frontend_velkoobchod_e(ui_text('velkoobchod.map_reset')) ?>"
             >
-                <div class="markets-map__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.map_empty', 'Pro mapu nejsou dostupná data závozových obcí.')) ?></div>
+                <div class="markets-map__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.map_empty')) ?></div>
                 <script type="application/json" data-wholesale-map-areas><?= frontend_velkoobchod_json($wholesaleAreas) ?></script>
                 <script type="application/json" data-wholesale-map-branches><?= frontend_velkoobchod_json($wholesaleBranchPoints) ?></script>
             </div>
@@ -513,12 +516,12 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
         <section class="wholesale-representatives" aria-labelledby="wholesale-representatives-title">
             <div class="market-detail-section__head">
                 <div>
-                    <h2 id="wholesale-representatives-title"><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_title', 'Obchodní zástupci')) ?></h2>
-                    <p><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_text', 'Vyberte sklad a zobrazte příslušné obchodní zástupce.')) ?></p>
+                    <h2 id="wholesale-representatives-title"><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_title')) ?></h2>
+                    <p><?= frontend_velkoobchod_e(stat_vyraz_text('velkoobchod.representatives_text')) ?></p>
                 </div>
             </div>
             <div class="wholesale-branch-filter" data-wholesale-branch-filter>
-                <button type="button" class="is-active" data-wholesale-branch-filter-button=""><?= frontend_velkoobchod_e(ui_text('velkoobchod.all_warehouses', 'Všechny sklady')) ?></button>
+                <button type="button" class="is-active" data-wholesale-branch-filter-button=""><?= frontend_velkoobchod_e(ui_text('velkoobchod.all_warehouses')) ?></button>
                 <?php foreach ($wholesaleBranches as $branch): ?>
                     <button type="button" data-wholesale-branch-filter-button="<?= (int)$branch['id'] ?>"><?= frontend_velkoobchod_e((string)$branch['name']) ?></button>
                 <?php endforeach; ?>
@@ -530,9 +533,9 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
                         <?php $renderWholesaleRepresentativeCard($person, true); ?>
                     <?php endforeach; ?>
                 </div>
-                <p class="market-detail__empty" data-wholesale-representatives-empty hidden><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_empty_filter', 'Pro vybraný sklad nejsou dostupní žádní obchodní zástupci.')) ?></p>
+                <p class="market-detail__empty" data-wholesale-representatives-empty hidden><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_empty_filter')) ?></p>
             <?php else: ?>
-                <p class="market-detail__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_empty', 'Obchodní zástupce doplníme.')) ?></p>
+                <p class="market-detail__empty"><?= frontend_velkoobchod_e(ui_text('velkoobchod.representatives_empty')) ?></p>
             <?php endif; ?>
         </section>
 
@@ -547,11 +550,11 @@ $wholesaleRouterText = (function_exists('stat_vyraz') && function_exists('plain_
                 <svg viewBox="0 0 24 24" focusable="false"><path d="M12 3a8 8 0 0 0-8 8v3.2A2.8 2.8 0 0 0 6.8 17H8v-6H5.8A6.2 6.2 0 0 1 18.2 11H16v6h1.6a4.6 4.6 0 0 1-4.3 3H11v-2h2.3a2.6 2.6 0 0 0 2.4-1.6A2.8 2.8 0 0 0 20 14.2V11a8 8 0 0 0-8-8Z"/></svg>
             </div>
             <div>
-                <h2><?= frontend_velkoobchod_e(ui_text('markety.contact_title', 'Kontaktujte nás')) ?></h2>
-                <p><?= frontend_velkoobchod_e(ui_text('velkoobchod.contact_text', 'Chcete začít odebírat zboží velkoobchodně? Ozvěte se nám a najdeme vhodné řešení.')) ?></p>
+                <h2><?= frontend_velkoobchod_e(ui_text('markety.contact_title')) ?></h2>
+                <p><?= frontend_velkoobchod_e(stat_vyraz_text('velkoobchod.contact_text')) ?></p>
             </div>
             <a href="/<?= frontend_velkoobchod_e($lang) ?>/kontakty">
-                <?= frontend_velkoobchod_e(ui_text('markety.contact_button', 'Zobrazit kontakty')) ?>
+                <?= frontend_velkoobchod_e(ui_text('markety.contact_button')) ?>
                 <span aria-hidden="true">›</span>
             </a>
         </section>

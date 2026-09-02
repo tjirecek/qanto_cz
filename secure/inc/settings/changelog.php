@@ -641,7 +641,15 @@ $currentYear = (int)date('Y');
 
                     <div class="col-6 col-lg-2">
                         <label for="category" class="form-label">Kategorie</label>
-                        <select name="category" id="category" class="form-select" required>
+                        <select
+                            name="category"
+                            id="category"
+                            class="form-select js-admin-single-picker"
+                            data-picker-title="Vybrat kategorii změny"
+                            data-picker-description="Vyberte jednu kategorii pro evidovanou změnu."
+                            data-picker-search-placeholder="Hledat podle názvu kategorie…"
+                            required
+                        >
                             <?php foreach ($categories as $value => $label): ?>
                                 <option value="<?= changelog_e($value) ?>" <?= (string)$form['category'] === $value ? 'selected' : '' ?>>
                                     <?= changelog_e($label) ?>

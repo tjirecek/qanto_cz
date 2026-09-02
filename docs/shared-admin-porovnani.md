@@ -82,4 +82,6 @@ Projektove soubory nejsou synchronizacni kandidati:
 
 `functions/settings.php` je projektovy frontend routing. QRS muze kanonicky smerovat na `/cz/main`, zatimco verejne weby mohou smerovat na `/cz`; tento rozdil se nepovazuje za shared/admin rozdil.
 
+Projekt může napojit frontendovou inicializaci přes volitelný `functions/project_hooks.php`. Shared `functions/bootstrap.php` volá `app_project_session_started()` a `functions/mysql_connect.php` volá `app_project_database_connected(PDO $pdo)` pouze tehdy, pokud projektový soubor a funkce existují. QRS tím drží denní frontendovou relaci mimo byte-identical shared helpery.
+
 Pri opravach shared adminu se zmena dela nejdrive v `qanto_cz`, potom se po overeni prenasi do sekundarnich projektu.

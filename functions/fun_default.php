@@ -290,6 +290,18 @@ function stat_vyraz(string $code, string $lang = 'cz'): ?string
 }
 
 /**
+ * Plain-text hodnota statického výrazu pro aktuální jazyk webu.
+ * Ve veřejných šablonách používej pro kratší editovatelné věty; pevné UI popisky patří do ui_text().
+ */
+function stat_vyraz_text(string $code, ?string $requestedLang = null): string
+{
+    global $lang;
+
+    $currentLang = $requestedLang ?? (string)($lang ?? 'cz');
+    return plain_text(stat_vyraz($code, $currentLang) ?? '');
+}
+
+/**
  * Právo skupiny na menu (true/false)
  * - původně vracelo počet řádků; teď vracím bool (je přehlednější)
  * - pokud chceš zachovat int, změň return na (int)$stmt->fetchColumn()

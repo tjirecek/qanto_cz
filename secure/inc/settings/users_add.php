@@ -44,7 +44,14 @@ $add = isset($_POST['add']) ? (int)$_POST['add'] : 0;
 
                 <div class="col-12 col-lg-2">
                     <label for="skup_id" class="form-label">Skupina</label>
-                    <select name="skup_id" id="skup_id" class="form-select">
+                    <select
+                        name="skup_id"
+                        id="skup_id"
+                        class="form-select js-admin-single-picker"
+                        data-picker-title="Vybrat skupinu uživatele"
+                        data-picker-description="Vyberte jednu skupinu, do které bude uživatel zařazen."
+                        data-picker-search-placeholder="Hledat podle názvu nebo ID skupiny…"
+                    >
                         <?php users_skup_option_form($skup_id); ?>
                     </select>
                 </div>

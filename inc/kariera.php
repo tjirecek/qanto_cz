@@ -16,27 +16,27 @@ if ($jobDetail && (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') && (string)($_
 $applicationValues = is_array($applicationResult) ? ($applicationResult['values'] ?? []) : [];
 $applicationCsrf = function_exists('frontend_volna_mista_application_csrf_token') ? frontend_volna_mista_application_csrf_token() : '';
 $applicationInputFields = [
-    ['name' => 'dot_name', 'label' => ui_text('kariera.application.name', 'Jméno a příjmení'), 'type' => 'text', 'required' => true],
-    ['name' => 'dot_mobil', 'label' => ui_text('kariera.application.phone', 'Mobil'), 'type' => 'tel', 'required' => true],
-    ['name' => 'dot_email', 'label' => ui_text('kariera.application.email', 'E-mail'), 'type' => 'email', 'required' => true],
-    ['name' => 'dot_adresa', 'label' => ui_text('kariera.application.address', 'Adresa'), 'type' => 'text'],
-    ['name' => 'dot_birthday', 'label' => ui_text('kariera.application.birthdate', 'Datum narození'), 'type' => 'text'],
-    ['name' => 'dot_vzdelani', 'label' => ui_text('kariera.application.education', 'Vzdělání'), 'type' => 'text'],
-    ['name' => 'dot_rp', 'label' => ui_text('kariera.application.license', 'Řidičský průkaz'), 'type' => 'text'],
-    ['name' => 'dot_pracdoba', 'label' => ui_text('kariera.application.work_time', 'Možná pracovní doba'), 'type' => 'text'],
-    ['name' => 'dot_plat', 'label' => ui_text('kariera.application.salary', 'Představa o platu'), 'type' => 'text'],
+    ['name' => 'dot_name', 'label' => ui_text('kariera.application.name'), 'type' => 'text', 'required' => true],
+    ['name' => 'dot_mobil', 'label' => ui_text('kariera.application.phone'), 'type' => 'tel', 'required' => true],
+    ['name' => 'dot_email', 'label' => ui_text('kariera.application.email'), 'type' => 'email', 'required' => true],
+    ['name' => 'dot_adresa', 'label' => ui_text('kariera.application.address'), 'type' => 'text'],
+    ['name' => 'dot_birthday', 'label' => ui_text('kariera.application.birthdate'), 'type' => 'text'],
+    ['name' => 'dot_vzdelani', 'label' => ui_text('kariera.application.education'), 'type' => 'text'],
+    ['name' => 'dot_rp', 'label' => ui_text('kariera.application.license'), 'type' => 'text'],
+    ['name' => 'dot_pracdoba', 'label' => ui_text('kariera.application.work_time'), 'type' => 'text'],
+    ['name' => 'dot_plat', 'label' => ui_text('kariera.application.salary'), 'type' => 'text'],
 ];
 $applicationTextareaFields = [
-    ['name' => 'dot_predchozizam', 'label' => ui_text('kariera.application.previous_employer', 'Předchozí zaměstnavatel')],
-    ['name' => 'dot_funkcezam', 'label' => ui_text('kariera.application.previous_role', 'Funkce')],
-    ['name' => 'dot_delkazam', 'label' => ui_text('kariera.application.previous_duration', 'Délka zaměstnání')],
-    ['name' => 'dot_jazyk', 'label' => ui_text('kariera.application.languages', 'Jazykové znalosti')],
-    ['name' => 'dot_pc', 'label' => ui_text('kariera.application.pc', 'Práce na PC')],
-    ['name' => 'dot_zaliby', 'label' => ui_text('kariera.application.hobbies', 'Záliby')],
-    ['name' => 'dot_onas', 'label' => ui_text('kariera.application.source', 'Jak jste se o nás dozvěděl/a?')],
-    ['name' => 'dot_prinos', 'label' => ui_text('kariera.application.benefit', 'Čím můžete být pro Qanto přínosem?')],
-    ['name' => 'dot_rejstrik', 'label' => ui_text('kariera.application.criminal_record', 'Rejstřík trestů')],
-    ['name' => 'dot_profzivot', 'label' => ui_text('kariera.application.cv_text', 'Profesní životopis')],
+    ['name' => 'dot_predchozizam', 'label' => ui_text('kariera.application.previous_employer')],
+    ['name' => 'dot_funkcezam', 'label' => ui_text('kariera.application.previous_role')],
+    ['name' => 'dot_delkazam', 'label' => ui_text('kariera.application.previous_duration')],
+    ['name' => 'dot_jazyk', 'label' => ui_text('kariera.application.languages')],
+    ['name' => 'dot_pc', 'label' => ui_text('kariera.application.pc')],
+    ['name' => 'dot_zaliby', 'label' => ui_text('kariera.application.hobbies')],
+    ['name' => 'dot_onas', 'label' => ui_text('kariera.application.source')],
+    ['name' => 'dot_prinos', 'label' => ui_text('kariera.application.benefit')],
+    ['name' => 'dot_rejstrik', 'label' => ui_text('kariera.application.criminal_record')],
+    ['name' => 'dot_profzivot', 'label' => ui_text('kariera.application.cv_text')],
 ];
 $detailSidebarItems = $jobDetail && function_exists('frontend_detail_sidebar_ads') ? frontend_detail_sidebar_ads($lang, 3) : [];
 $mapBranches = $jobDetail ? [] : (function_exists('frontend_volna_mista_map_branches') ? frontend_volna_mista_map_branches($lang) : []);
@@ -45,7 +45,7 @@ $jobCityByStredisko = $jobDetail ? [] : (function_exists('frontend_volna_mista_b
 $heroTitle = function_exists('stat_text') ? (stat_text('kariera', $lang, 'nazev') ?? '') : '';
 $heroBody = function_exists('stat_text') ? (stat_text('kariera', $lang) ?? '') : '';
 if ($heroTitle === '') {
-    $heroTitle = ui_text('kariera.hero_title', 'Kariéra v Qanto');
+    $heroTitle = ui_text('kariera.hero_title');
 }
 $processText1 = function_exists('frontend_volna_mista_text') ? frontend_volna_mista_text('kariera.process.text_1', $lang, '') : '';
 $processText2 = function_exists('frontend_volna_mista_text') ? frontend_volna_mista_text('kariera.process.text_2', $lang, '') : '';
@@ -57,18 +57,18 @@ $mapBranchesJson = htmlspecialchars(
 ?>
 <section class="career-page">
     <div class="site-shell">
-        <nav class="site-breadcrumb" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb', 'Drobečková navigace'), ENT_QUOTES, 'UTF-8') ?>">
+        <nav class="site-breadcrumb" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb'), ENT_QUOTES, 'UTF-8') ?>">
             <ol>
                 <li>
-                    <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('aria.home', 'Domů'), ENT_QUOTES, 'UTF-8') ?>">
+                    <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb_home'), ENT_QUOTES, 'UTF-8') ?>">
                         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3.2 3.8 8.3v7.4h4.1v-4.6h4.2v4.6h4.1V8.3L10 3.2Zm0-2.1 8 6.6v9.6h-7.5v-4.6h-1v4.6H2V7.7l8-6.6Z"/></svg>
                     </a>
                 </li>
                 <li>
                     <?php if ($jobDetail): ?>
-                        <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/kariera"><?= htmlspecialchars(ui_text('kariera.breadcrumb', 'Kariéra'), ENT_QUOTES, 'UTF-8') ?></a>
+                        <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/kariera"><?= htmlspecialchars(ui_text('kariera.breadcrumb'), ENT_QUOTES, 'UTF-8') ?></a>
                     <?php else: ?>
-                        <span aria-current="page"><?= htmlspecialchars(ui_text('kariera.breadcrumb', 'Kariéra'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span aria-current="page"><?= htmlspecialchars(ui_text('kariera.breadcrumb'), ENT_QUOTES, 'UTF-8') ?></span>
                     <?php endif; ?>
                 </li>
                 <?php if ($jobDetail): ?>
@@ -84,18 +84,18 @@ $mapBranchesJson = htmlspecialchars(
             ?>
             <div class="detail-page-layout career-detail-layout">
                 <article class="career-detail detail-page-content">
-                    <span class="career-detail__label"><?= htmlspecialchars(ui_text('kariera.position_label', 'Volná pozice'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="career-detail__label"><?= htmlspecialchars(ui_text('kariera.position_label'), ENT_QUOTES, 'UTF-8') ?></span>
                     <h1><?= htmlspecialchars((string)$jobDetail['title'], ENT_QUOTES, 'UTF-8') ?></h1>
                     <p class="career-detail__location"><?= htmlspecialchars($jobDetailLocation, ENT_QUOTES, 'UTF-8') ?></p>
                     <?php if ((int)$jobDetail['count'] > 0): ?>
-                        <p class="career-detail__count"><?= htmlspecialchars((int)$jobDetail['count'] === 1 ? ui_text('kariera.job_count_one', '1 místo') : sprintf(ui_text('kariera.job_count', '%d míst'), (int)$jobDetail['count']), ENT_QUOTES, 'UTF-8') ?></p>
+                        <p class="career-detail__count"><?= htmlspecialchars((int)$jobDetail['count'] === 1 ? ui_text('kariera.job_count_one') : sprintf(ui_text('kariera.job_count'), (int)$jobDetail['count']), ENT_QUOTES, 'UTF-8') ?></p>
                     <?php endif; ?>
                     <div class="career-detail__content">
-                        <?= (string)$jobDetail['content'] !== '' ? (string)$jobDetail['content'] : '<p>' . htmlspecialchars(ui_text('common.text_unavailable', 'Text není aktuálně dostupný.'), ENT_QUOTES, 'UTF-8') . '</p>' ?>
+                        <?= (string)$jobDetail['content'] !== '' ? (string)$jobDetail['content'] : '<p>' . htmlspecialchars(ui_text('common.text_unavailable'), ENT_QUOTES, 'UTF-8') . '</p>' ?>
                     </div>
                     <?php if ((string)$jobDetail['contact_name'] !== '' || (string)$jobDetail['contact_email'] !== '' || (string)$jobDetail['contact_phone'] !== ''): ?>
                         <div class="career-detail__contact">
-                            <strong><?= htmlspecialchars(ui_text('kariera.contact_title', 'Kontakt'), ENT_QUOTES, 'UTF-8') ?></strong>
+                            <strong><?= htmlspecialchars(ui_text('kariera.contact_title'), ENT_QUOTES, 'UTF-8') ?></strong>
                             <?php if ((string)$jobDetail['contact_name'] !== ''): ?><span><?= htmlspecialchars((string)$jobDetail['contact_name'], ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
                             <?php if ((string)$jobDetail['contact_email'] !== ''): ?><a href="mailto:<?= htmlspecialchars((string)$jobDetail['contact_email'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string)$jobDetail['contact_email'], ENT_QUOTES, 'UTF-8') ?></a><?php endif; ?>
                             <?php if ((string)$jobDetail['contact_phone'] !== ''): ?><a href="tel:<?= htmlspecialchars(preg_replace('~\s+~', '', (string)$jobDetail['contact_phone']) ?? '', ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string)$jobDetail['contact_phone'], ENT_QUOTES, 'UTF-8') ?></a><?php endif; ?>
@@ -103,9 +103,9 @@ $mapBranchesJson = htmlspecialchars(
                     <?php endif; ?>
                     <section class="career-application" id="dotaznik">
                         <div class="career-application__head">
-                            <span><?= htmlspecialchars(ui_text('kariera.application_label', 'Online dotazník'), ENT_QUOTES, 'UTF-8') ?></span>
-                            <h2><?= htmlspecialchars(ui_text('kariera.application_title', 'Mám zájem o pozici'), ENT_QUOTES, 'UTF-8') ?></h2>
-                            <p><?= htmlspecialchars(ui_text('kariera.application_intro', 'Vyplňte kontaktní údaje a krátký dotazník. Pokud máte životopis nebo motivační dopis, můžete ho přiložit jako PDF nebo Word.'), ENT_QUOTES, 'UTF-8') ?></p>
+                            <span><?= htmlspecialchars(ui_text('kariera.application_label'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <h2><?= htmlspecialchars(ui_text('kariera.application_title'), ENT_QUOTES, 'UTF-8') ?></h2>
+                            <p><?= htmlspecialchars(stat_vyraz_text('kariera.application_intro'), ENT_QUOTES, 'UTF-8') ?></p>
                         </div>
                         <?php if (is_array($applicationResult)): ?>
                             <div class="career-application__message <?= $applicationResult['ok'] ? 'career-application__message--success' : 'career-application__message--error' ?>">
@@ -124,15 +124,15 @@ $mapBranchesJson = htmlspecialchars(
                                     </label>
                                 <?php endforeach; ?>
                                 <label class="career-application__field">
-                                    <span><?= htmlspecialchars(ui_text('kariera.application.smoking', 'Kouření'), ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span><?= htmlspecialchars(ui_text('kariera.application.smoking'), ENT_QUOTES, 'UTF-8') ?></span>
                                     <select name="dot_koureni">
-                                        <option value=""><?= htmlspecialchars(ui_text('common.select_empty', 'Vyberte'), ENT_QUOTES, 'UTF-8') ?></option>
-                                        <option value="<?= htmlspecialchars(ui_text('common.yes', 'Ano'), ENT_QUOTES, 'UTF-8') ?>"<?= ($applicationValues['dot_koureni'] ?? '') === ui_text('common.yes', 'Ano') ? ' selected' : '' ?>><?= htmlspecialchars(ui_text('common.yes', 'Ano'), ENT_QUOTES, 'UTF-8') ?></option>
-                                        <option value="<?= htmlspecialchars(ui_text('common.no', 'Ne'), ENT_QUOTES, 'UTF-8') ?>"<?= ($applicationValues['dot_koureni'] ?? '') === ui_text('common.no', 'Ne') ? ' selected' : '' ?>><?= htmlspecialchars(ui_text('common.no', 'Ne'), ENT_QUOTES, 'UTF-8') ?></option>
+                                        <option value=""><?= htmlspecialchars(ui_text('common.select_empty'), ENT_QUOTES, 'UTF-8') ?></option>
+                                        <option value="<?= htmlspecialchars(ui_text('common.yes'), ENT_QUOTES, 'UTF-8') ?>"<?= ($applicationValues['dot_koureni'] ?? '') === ui_text('common.yes') ? ' selected' : '' ?>><?= htmlspecialchars(ui_text('common.yes'), ENT_QUOTES, 'UTF-8') ?></option>
+                                        <option value="<?= htmlspecialchars(ui_text('common.no'), ENT_QUOTES, 'UTF-8') ?>"<?= ($applicationValues['dot_koureni'] ?? '') === ui_text('common.no') ? ' selected' : '' ?>><?= htmlspecialchars(ui_text('common.no'), ENT_QUOTES, 'UTF-8') ?></option>
                                     </select>
                                 </label>
                                 <label class="career-application__field">
-                                    <span><?= htmlspecialchars(ui_text('kariera.application.health', 'Zdravotní stav'), ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span><?= htmlspecialchars(ui_text('kariera.application.health'), ENT_QUOTES, 'UTF-8') ?></span>
                                     <input type="text" name="dot_zdravstav" value="<?= frontend_volna_mista_form_value($applicationValues, 'dot_zdravstav') ?>">
                                 </label>
                             </div>
@@ -145,14 +145,14 @@ $mapBranchesJson = htmlspecialchars(
                                 <?php endforeach; ?>
                             </div>
                             <label class="career-application__upload">
-                                <span><?= htmlspecialchars(ui_text('kariera.application.attachment', 'Zde můžete nahrát životopis, motivační dopis'), ENT_QUOTES, 'UTF-8') ?></span>
+                                <span><?= htmlspecialchars(ui_text('kariera.application.attachment'), ENT_QUOTES, 'UTF-8') ?></span>
                                 <input type="file" name="dot_priloha[]" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
-                                <small><?= htmlspecialchars(ui_text('kariera.application.attachment_help', 'Povolené typy: PDF, DOC, DOCX. Maximální velikost 10 MB.'), ENT_QUOTES, 'UTF-8') ?></small>
+                                <small><?= htmlspecialchars(ui_text('kariera.application.attachment_help'), ENT_QUOTES, 'UTF-8') ?></small>
                             </label>
                             <?php if (function_exists('frontend_captcha_render')): ?>
                                 <?php frontend_captcha_render('career_application', 'career-application'); ?>
                             <?php endif; ?>
-                            <button class="career-application__submit" type="submit"><?= htmlspecialchars(ui_text('kariera.application.submit', 'Odeslat dotazník'), ENT_QUOTES, 'UTF-8') ?></button>
+                            <button class="career-application__submit" type="submit"><?= htmlspecialchars(ui_text('kariera.application.submit'), ENT_QUOTES, 'UTF-8') ?></button>
                         </form>
                     </section>
                 </article>
@@ -169,8 +169,8 @@ $mapBranchesJson = htmlspecialchars(
                     <div class="career-hero__text"><?= $heroBody ?></div>
                 <?php endif; ?>
             </div>
-            <div class="career-video" aria-label="<?= htmlspecialchars(ui_text('kariera.video_label', 'Představujeme Qanto'), ENT_QUOTES, 'UTF-8') ?>">
-                <img src="/img/design/career/hero-market.webp" width="1200" height="667" alt="<?= htmlspecialchars(ui_text('kariera.video_label', 'Představujeme Qanto'), ENT_QUOTES, 'UTF-8') ?>" loading="eager">
+            <div class="career-video" aria-label="<?= htmlspecialchars(ui_text('kariera.video_label'), ENT_QUOTES, 'UTF-8') ?>">
+                <img src="/img/design/career/hero-market.webp" width="1200" height="667" alt="<?= htmlspecialchars(ui_text('kariera.video_label'), ENT_QUOTES, 'UTF-8') ?>" loading="eager">
             </div>
         </div>
 
@@ -185,13 +185,13 @@ $mapBranchesJson = htmlspecialchars(
                                 data-career-map-city-trigger
                                 aria-expanded="false"
                             >
-                                <span data-career-map-city-label><?= htmlspecialchars(ui_text('kariera.map_all_cities', 'Celá ČR'), ENT_QUOTES, 'UTF-8') ?></span>
+                                <span data-career-map-city-label><?= htmlspecialchars(ui_text('kariera.map_all_cities'), ENT_QUOTES, 'UTF-8') ?></span>
                             </button>
                             <div
                                 class="markets-city__panel"
                                 data-career-map-city-panel
-                                data-search-placeholder="<?= htmlspecialchars(ui_text('markety.city_search_placeholder', 'Hledat obec'), ENT_QUOTES, 'UTF-8') ?>"
-                                data-search-empty="<?= htmlspecialchars(ui_text('markety.city_search_empty', 'Žádná obec neodpovídá hledání.'), ENT_QUOTES, 'UTF-8') ?>"
+                                data-search-placeholder="<?= htmlspecialchars(ui_text('markety.city_search_placeholder'), ENT_QUOTES, 'UTF-8') ?>"
+                                data-search-empty="<?= htmlspecialchars(ui_text('markety.city_search_empty'), ENT_QUOTES, 'UTF-8') ?>"
                                 role="listbox"
                                 hidden
                             ></div>
@@ -201,15 +201,15 @@ $mapBranchesJson = htmlspecialchars(
                         type="button"
                         class="markets-mobile-toggle career-mobile-toggle"
                         data-career-mobile-toggle
-                        data-label-map="<?= htmlspecialchars(ui_text('markety.show_map', 'Zobrazit mapu'), ENT_QUOTES, 'UTF-8') ?>"
-                        data-label-list="<?= htmlspecialchars(ui_text('markety.show_list', 'Zobrazit seznam'), ENT_QUOTES, 'UTF-8') ?>"
+                        data-label-map="<?= htmlspecialchars(ui_text('markety.show_map'), ENT_QUOTES, 'UTF-8') ?>"
+                        data-label-list="<?= htmlspecialchars(ui_text('markety.show_list'), ENT_QUOTES, 'UTF-8') ?>"
                         aria-pressed="false"
                     >
-                        <span data-career-mobile-toggle-label><?= htmlspecialchars(ui_text('markety.show_map', 'Zobrazit mapu'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span data-career-mobile-toggle-label><?= htmlspecialchars(ui_text('markety.show_map'), ENT_QUOTES, 'UTF-8') ?></span>
                     </button>
                     <div class="career-list">
                         <?php if ($jobs === []): ?>
-                            <div class="career-list__empty"><?= htmlspecialchars(ui_text('kariera.no_jobs', 'Aktuálně zde nejsou žádná volná místa.'), ENT_QUOTES, 'UTF-8') ?></div>
+                            <div class="career-list__empty"><?= htmlspecialchars(ui_text('kariera.no_jobs'), ENT_QUOTES, 'UTF-8') ?></div>
                         <?php else: ?>
                             <?php foreach ($jobs as $job): ?>
                                 <?php
@@ -235,17 +235,17 @@ $mapBranchesJson = htmlspecialchars(
                                 </article>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                        <div class="career-list__empty" data-career-jobs-empty hidden><?= htmlspecialchars(ui_text('kariera.jobs_filter_empty', 'Pro vybrané město nejsou dostupné žádné pozice.'), ENT_QUOTES, 'UTF-8') ?></div>
+                        <div class="career-list__empty" data-career-jobs-empty hidden><?= htmlspecialchars(ui_text('kariera.jobs_filter_empty'), ENT_QUOTES, 'UTF-8') ?></div>
                     </div>
                 </div>
 
-                <div class="career-map" aria-label="<?= htmlspecialchars(ui_text('kariera.map_label', 'Mapa poboček a volných míst'), ENT_QUOTES, 'UTF-8') ?>">
+                <div class="career-map" aria-label="<?= htmlspecialchars(ui_text('kariera.map_label'), ENT_QUOTES, 'UTF-8') ?>">
                     <div class="career-map__toolbar" data-career-map-controls>
                         <button type="button" class="career-map__toggle" data-career-map-jobs-only>
-                            <?= htmlspecialchars(ui_text('kariera.map_only_jobs', 'Jen volná místa'), ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars(ui_text('kariera.map_only_jobs'), ENT_QUOTES, 'UTF-8') ?>
                         </button>
                         <button type="button" class="career-map__reset" data-career-map-reset hidden>
-                            <?= htmlspecialchars(ui_text('kariera.reset_filter', 'Zrušit filtr'), ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars(ui_text('kariera.reset_filter'), ENT_QUOTES, 'UTF-8') ?>
                         </button>
                     </div>
                     <div
@@ -253,27 +253,27 @@ $mapBranchesJson = htmlspecialchars(
                         data-career-branch-map
                         data-points="<?= $mapBranchesJson ?>"
                         data-lang="<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>"
-                        data-label-branch="<?= htmlspecialchars(ui_text('kariera.map_branch', 'Pobočka'), ENT_QUOTES, 'UTF-8') ?>"
-                        data-label-jobs="<?= htmlspecialchars(ui_text('kariera.map_open_jobs', 'Volná místa'), ENT_QUOTES, 'UTF-8') ?>"
-                        data-empty="<?= htmlspecialchars(ui_text('kariera.map_no_gps', 'Pro mapu nejsou dostupné souřadnice poboček.'), ENT_QUOTES, 'UTF-8') ?>"
-                        data-label-all-cities="<?= htmlspecialchars(ui_text('kariera.map_all_cities', 'Celá ČR'), ENT_QUOTES, 'UTF-8') ?>"
-                        data-filter-empty="<?= htmlspecialchars(ui_text('kariera.map_filter_empty', 'Pro vybraný filtr nejsou dostupné žádné pobočky.'), ENT_QUOTES, 'UTF-8') ?>"
+                        data-label-branch="<?= htmlspecialchars(ui_text('kariera.map_branch'), ENT_QUOTES, 'UTF-8') ?>"
+                        data-label-jobs="<?= htmlspecialchars(ui_text('kariera.map_open_jobs'), ENT_QUOTES, 'UTF-8') ?>"
+                        data-empty="<?= htmlspecialchars(ui_text('kariera.map_no_gps'), ENT_QUOTES, 'UTF-8') ?>"
+                        data-label-all-cities="<?= htmlspecialchars(ui_text('kariera.map_all_cities'), ENT_QUOTES, 'UTF-8') ?>"
+                        data-filter-empty="<?= htmlspecialchars(ui_text('kariera.map_filter_empty'), ENT_QUOTES, 'UTF-8') ?>"
                     >
-                        <div class="career-map__empty"><?= htmlspecialchars(ui_text('kariera.map_no_gps', 'Pro mapu nejsou dostupné souřadnice poboček.'), ENT_QUOTES, 'UTF-8') ?></div>
+                        <div class="career-map__empty"><?= htmlspecialchars(ui_text('kariera.map_no_gps'), ENT_QUOTES, 'UTF-8') ?></div>
                     </div>
                     <div class="career-map__filter-empty" data-career-map-filter-empty hidden>
-                        <?= htmlspecialchars(ui_text('kariera.map_filter_empty', 'Pro vybraný filtr nejsou dostupné žádné pobočky.'), ENT_QUOTES, 'UTF-8') ?>
+                        <?= htmlspecialchars(ui_text('kariera.map_filter_empty'), ENT_QUOTES, 'UTF-8') ?>
                     </div>
                     <div class="career-map__legend" aria-hidden="true">
-                        <span><i class="career-map__legend-dot career-map__legend-dot--branch"></i><?= htmlspecialchars(ui_text('kariera.map_legend_branches', 'pobočky'), ENT_QUOTES, 'UTF-8') ?></span>
-                        <span><i class="career-map__legend-dot career-map__legend-dot--jobs"></i><?= htmlspecialchars(ui_text('kariera.map_legend_jobs', 'volná místa'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><i class="career-map__legend-dot career-map__legend-dot--branch"></i><?= htmlspecialchars(ui_text('kariera.map_legend_branches'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><i class="career-map__legend-dot career-map__legend-dot--jobs"></i><?= htmlspecialchars(ui_text('kariera.map_legend_jobs'), ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="career-process">
-            <h2><?= htmlspecialchars(ui_text('kariera.process_title', 'Jak to u nás chodí'), ENT_QUOTES, 'UTF-8') ?></h2>
+            <h2><?= htmlspecialchars(ui_text('kariera.process_title'), ENT_QUOTES, 'UTF-8') ?></h2>
             <div>
                 <?php if ($processText1 !== ''): ?><p><?= htmlspecialchars($processText1, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
                 <?php if ($processText2 !== ''): ?><p><?= htmlspecialchars($processText2, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>

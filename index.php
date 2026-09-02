@@ -16,6 +16,8 @@ require_once ROOT_DIR . '/functions/fun_default.php';
 require_once ROOT_DIR . '/functions/fun_frontend_captcha.php';
 require_once ROOT_DIR . '/functions/fun_news.php';
 require_once ROOT_DIR . '/functions/fun_rep_bannery.php';
+require_once ROOT_DIR . '/functions/fun_rep_akce_unsubscribe.php';
+require_once ROOT_DIR . '/functions/fun_rep_tenis_qcup_front.php';
 require_once ROOT_DIR . '/functions/fun_rep_volna_mista_front.php';
 require_once ROOT_DIR . '/functions/fun_rep_brigadnici_front.php';
 require_once ROOT_DIR . '/functions/fun_contacts_front.php';
@@ -28,7 +30,7 @@ $page = (string)($page ?? 'main');
 if (!preg_match('~^[a-z0-9_]+$~i', $page)) {
     http_response_code(400);
     $page = 'main';
-    $contentError = 'Bad page';
+    $contentError = ui_text('common.bad_page');
 }
 
 $file = INC_DIR . "/{$page}.php";
@@ -42,81 +44,81 @@ if ($page === 'akce' && isset($_GET['akce']) && (int)$_GET['akce'] > 0) {
 $footerLangPrefix = '/' . rawurlencode($lang);
 $footerLinkGroups = [
     [
-        'label' => ui_text('nav.akce', 'Letáky'),
+        'label' => ui_text('nav.akce'),
         'url' => $footerLangPrefix . '/akce',
         'links' => [],
     ],
     [
-        'label' => ui_text('footer.branches_title', 'Pobočky'),
+        'label' => ui_text('footer.branches_title'),
         'url' => '',
         'links' => [
             [
-                'label' => ui_text('nav.markety', 'Markety'),
+                'label' => ui_text('nav.markety'),
                 'url' => $footerLangPrefix . '/markety',
             ],
             [
-                'label' => ui_text('footer.velkoobchody', 'Velkoobchody'),
+                'label' => ui_text('footer.velkoobchody'),
                 'url' => $footerLangPrefix . '/velkoobchod',
             ],
             [
-                'label' => ui_text('nav.prodejny', 'Prodejny'),
+                'label' => ui_text('nav.prodejny'),
                 'url' => $footerLangPrefix . '/prodejny',
             ],
         ],
     ],
     [
-        'label' => ui_text('nav.kariera', 'Kariéra'),
+        'label' => ui_text('nav.kariera'),
         'url' => '',
         'links' => [
             [
-                'label' => ui_text('footer.jobs', 'Volná místa'),
+                'label' => ui_text('footer.jobs'),
                 'url' => $footerLangPrefix . '/kariera',
             ],
             [
-                'label' => ui_text('footer.brigada', 'Brigáda'),
+                'label' => ui_text('footer.brigada'),
                 'url' => $footerLangPrefix . '/brigada',
             ],
         ],
     ],
     [
-        'label' => ui_text('nav.kontakt', 'Kontakty'),
+        'label' => ui_text('nav.kontakt'),
         'url' => $footerLangPrefix . '/kontakty',
         'links' => [],
     ],
 ];
 $footerSocialLinks = [
     [
-        'label' => ui_text('footer.facebook_wholesale', 'Facebook velkoobchod'),
+        'label' => ui_text('footer.facebook_wholesale'),
         'url' => stat_vyraz('footer.social.facebook_velkoobchod.url', $lang) ?: '#',
         'network' => 'facebook',
     ],
     [
-        'label' => ui_text('footer.facebook_retail', 'Facebook markety'),
+        'label' => ui_text('footer.facebook_retail'),
         'url' => stat_vyraz('footer.social.facebook_maloobchod.url', $lang) ?: '#',
         'network' => 'facebook',
     ],
     [
-        'label' => ui_text('footer.instagram_wholesale', 'Instagram velkoobchod'),
+        'label' => ui_text('footer.instagram_wholesale'),
         'url' => stat_vyraz('footer.social.instagram_velkoobchod.url', $lang) ?: '#',
         'network' => 'instagram',
     ],
     [
-        'label' => ui_text('footer.instagram_retail', 'Instagram markety'),
+        'label' => ui_text('footer.instagram_retail'),
         'url' => stat_vyraz('footer.social.instagram_maloobchod.url', $lang) ?: '#',
         'network' => 'instagram',
     ],
 ];
 $footerOtherLinks = [
     [
-        'label' => ui_text('footer.business_terms', 'Obchodní podmínky'),
+        'label' => ui_text('footer.business_terms'),
         'url' => $footerLangPrefix . '/obchodni-podminky',
     ],
     [
-        'label' => ui_text('footer.edi', 'Elektronická výměna dat'),
+        'label' => ui_text('footer.edi'),
         'url' => $footerLangPrefix . '/elektronicka-vymena-dat',
     ],
     [
-        'label' => ui_text('footer.customer_cards', 'Zákaznické karty'),
+        'label' => ui_text('footer.customer_cards'),
         'url' => $footerLangPrefix . '/zakaznicke-karty',
     ],
 ];
@@ -152,6 +154,9 @@ if ($page === 'volani' && (string)($_GET['pdf'] ?? '') === '1') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="<?= htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8') ?>">
+    <?php if (trim((string)($metaRobots ?? '')) !== ''): ?>
+        <meta name="robots" content="<?= htmlspecialchars((string)$metaRobots, ENT_QUOTES, 'UTF-8') ?>">
+    <?php endif; ?>
     <meta name="author" content="Astur & Qanto s.r.o.">
     <title><?= htmlspecialchars((string)($pagetitle ?? 'Qanto'), ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="icon" href="/favicon.png" type="image/png" sizes="256x256">
@@ -176,21 +181,21 @@ if ($page === 'volani' && (string)($_GET['pdf'] ?? '') === '1') {
         <?php include $file; ?>
     <?php else: ?>
         <?php http_response_code(404); ?>
-        <div class="container py-5"><div class="alert alert-warning"><?= htmlspecialchars(ui_text('common.page_not_found', 'Stránka nebyla nalezena.'), ENT_QUOTES, 'UTF-8') ?></div></div>
+        <div class="container py-5"><div class="alert alert-warning"><?= htmlspecialchars(ui_text('common.page_not_found'), ENT_QUOTES, 'UTF-8') ?></div></div>
     <?php endif; ?>
 </main>
 
 <footer class="site-footer">
     <div class="site-shell">
         <div class="site-footer__top">
-            <a class="site-footer__brand" href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('site.name', 'Qanto'), ENT_QUOTES, 'UTF-8') ?>">
+            <a class="site-footer__brand" href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('site.name'), ENT_QUOTES, 'UTF-8') ?>">
                 <img src="/img/design/logo_qanto_light.webp" width="634" height="178" alt="Qanto">
             </a>
-            <p><?= htmlspecialchars(ui_text('footer.claim', 'Velkoobchod, markety a služby pro zákazníky, kteří potřebují spolehlivého partnera v regionech.'), ENT_QUOTES, 'UTF-8') ?></p>
+            <p><?= htmlspecialchars(stat_vyraz_text('footer.claim'), ENT_QUOTES, 'UTF-8') ?></p>
         </div>
 
         <div class="site-footer__main">
-            <nav class="site-footer__nav" aria-label="<?= htmlspecialchars(ui_text('aria.footer_navigation', 'Spodní navigace'), ENT_QUOTES, 'UTF-8') ?>">
+            <nav class="site-footer__nav" aria-label="<?= htmlspecialchars(ui_text('aria.footer_navigation'), ENT_QUOTES, 'UTF-8') ?>">
                 <?php foreach ($footerLinkGroups as $footerLinkGroup): ?>
                     <?php $footerGroupUrl = trim((string)($footerLinkGroup['url'] ?? '')); ?>
                     <div class="site-footer__link-group">
@@ -210,8 +215,8 @@ if ($page === 'volani' && (string)($_GET['pdf'] ?? '') === '1') {
                 <?php endforeach; ?>
             </nav>
 
-            <nav class="site-footer__other" aria-label="<?= htmlspecialchars(ui_text('footer.other_title', 'Ostatní'), ENT_QUOTES, 'UTF-8') ?>">
-                <strong><?= htmlspecialchars(ui_text('footer.other_title', 'Ostatní'), ENT_QUOTES, 'UTF-8') ?></strong>
+            <nav class="site-footer__other" aria-label="<?= htmlspecialchars(ui_text('footer.other_title'), ENT_QUOTES, 'UTF-8') ?>">
+                <strong><?= htmlspecialchars(ui_text('footer.other_title'), ENT_QUOTES, 'UTF-8') ?></strong>
                 <div class="site-footer__other-list">
                     <?php foreach ($footerOtherLinks as $footerOtherLink): ?>
                         <a href="<?= htmlspecialchars((string)$footerOtherLink['url'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string)$footerOtherLink['label'], ENT_QUOTES, 'UTF-8') ?></a>
@@ -219,8 +224,8 @@ if ($page === 'volani' && (string)($_GET['pdf'] ?? '') === '1') {
                 </div>
             </nav>
 
-            <nav class="site-footer__social" aria-label="<?= htmlspecialchars(ui_text('aria.social_navigation', 'Sociální sítě'), ENT_QUOTES, 'UTF-8') ?>">
-                <strong><?= htmlspecialchars(ui_text('footer.social_title', 'Sociální sítě'), ENT_QUOTES, 'UTF-8') ?></strong>
+            <nav class="site-footer__social" aria-label="<?= htmlspecialchars(ui_text('aria.social_navigation'), ENT_QUOTES, 'UTF-8') ?>">
+                <strong><?= htmlspecialchars(ui_text('footer.social_title'), ENT_QUOTES, 'UTF-8') ?></strong>
                 <div class="site-footer__social-list">
                     <?php foreach ($footerSocialLinks as $socialLink): ?>
                         <?php
@@ -243,16 +248,16 @@ if ($page === 'volani' && (string)($_GET['pdf'] ?? '') === '1') {
         </div>
 
         <div class="site-footer__bottom">
-            <div class="site-footer__copy">&copy; <?= date('Y') ?> <?= htmlspecialchars(ui_text('footer.copy', 'Astur & Qanto s.r.o.'), ENT_QUOTES, 'UTF-8') ?></div>
-            <nav class="site-footer__legal" aria-label="<?= htmlspecialchars(ui_text('footer.legal_title', 'Informace'), ENT_QUOTES, 'UTF-8') ?>">
-                <a href="https://cookies-spravne.cz/cookie-policy?key=XUx6mkmT3Ba72MZ&amp;lang=cs" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('footer.cookies', 'Soubory Cookies'), ENT_QUOTES, 'UTF-8') ?></a>
-                <a href="<?= htmlspecialchars($footerLangPrefix . '/osobni-udaje', ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('footer.privacy', 'Zpracování osobních údajů'), ENT_QUOTES, 'UTF-8') ?></a>
+            <div class="site-footer__copy">&copy; <?= date('Y') ?> <?= htmlspecialchars(ui_text('footer.copy'), ENT_QUOTES, 'UTF-8') ?></div>
+            <nav class="site-footer__legal" aria-label="<?= htmlspecialchars(ui_text('footer.legal_title'), ENT_QUOTES, 'UTF-8') ?>">
+                <a href="https://cookies-spravne.cz/cookie-policy?key=XUx6mkmT3Ba72MZ&amp;lang=cs" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('footer.cookies'), ENT_QUOTES, 'UTF-8') ?></a>
+                <a href="<?= htmlspecialchars($footerLangPrefix . '/osobni-udaje', ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('footer.privacy'), ENT_QUOTES, 'UTF-8') ?></a>
             </nav>
         </div>
     </div>
 </footer>
 
-<button type="button" class="scroll-top" data-scroll-top aria-label="<?= htmlspecialchars(ui_text('aria.scroll_top', 'Nahoru'), ENT_QUOTES, 'UTF-8') ?>">↑</button>
+<button type="button" class="scroll-top" data-scroll-top aria-label="<?= htmlspecialchars(ui_text('aria.scroll_top'), ENT_QUOTES, 'UTF-8') ?>">↑</button>
 <script src="<?= asset_version('assets/lib/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
 <script>
 window.qantoMapConfig = <?= json_encode($frontendMapConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;

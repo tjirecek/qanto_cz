@@ -79,7 +79,10 @@ function rep_akce_pdf_upload_save_meta(string $id, array $meta): void
     if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
         rep_akce_pdf_upload_fail('Nepodařilo se vytvořit dočasný adresář uploadu.', 500);
     }
-    file_put_contents(rep_akce_pdf_upload_meta_path($id), json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    $json = json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    if (!is_string($json) || file_put_contents(rep_akce_pdf_upload_meta_path($id), $json, LOCK_EX) === false) {
+        rep_akce_pdf_upload_fail('Nepodařilo se uložit stav uploadu.', 500);
+    }
 }
 
 function rep_akce_pdf_upload_cleanup_old_transfers(): void
@@ -131,16 +134,25 @@ function rep_akce_pdf_upload_offer(PDO $pdo, int $offerId): array
     return $offer;
 }
 
-function rep_akce_pdf_upload_finalize(PDO $pdo, int $offerId, string $sourcePath, string $originalName): string
+function rep_akce_pdf_upload_assert_transfer_offer(array $meta, int $offerId): void
+{
+    if ((int)($meta['offer_id'] ?? 0) !== $offerId) {
+        rep_akce_pdf_upload_fail('Upload nepatří k této akční nabídce.', 409);
+    }
+}
+
+function rep_akce_pdf_upload_json(array $data, int $status = 200): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+function rep_akce_pdf_upload_finalize(PDO $pdo, int $offerId, array $stored): void
 {
     $offer = rep_akce_pdf_upload_offer($pdo, $offerId);
-    $title = trim((string)($offer['nazev_cz'] ?? ''));
-    if ($title === '') {
-        $title = 'akce-' . $offerId;
-    }
-
-    $stored = rep_akce_store_pdf_file($sourcePath, $originalName, $offerId, $title, (string)($offer['pdf_file'] ?? ''), false);
-
     $stmt = $pdo->prepare('UPDATE rep_akce
         SET pdf_file = :pdf_file,
             pdf_original_name = :pdf_original_name,
@@ -155,7 +167,104 @@ function rep_akce_pdf_upload_finalize(PDO $pdo, int $offerId, string $sourcePath
         ':id' => $offerId,
     ]);
 
-    return (string)$stored['path'];
+    $existingPath = trim((string)($offer['pdf_file'] ?? ''));
+    $storedPath = trim((string)($stored['path'] ?? ''));
+    if ($existingPath !== '' && $existingPath !== $storedPath) {
+        rep_akce_safe_delete_media_file($existingPath);
+    }
+}
+
+function rep_akce_pdf_upload_store_completed_file(PDO $pdo, string $id, array $meta): array
+{
+    $status = (string)($meta['status'] ?? 'uploading');
+    if (in_array($status, ['file_stored', 'finalized'], true)) {
+        $stored = is_array($meta['stored'] ?? null) ? $meta['stored'] : [];
+        $storedPath = trim((string)($stored['path'] ?? ''));
+        if ($storedPath === '' || !is_file(ROOT_DIR . '/' . ltrim($storedPath, '/'))) {
+            rep_akce_pdf_upload_fail('Uložené PDF nebylo nalezeno.', 500);
+        }
+        if ($status === 'finalized') {
+            $offer = rep_akce_pdf_upload_offer($pdo, (int)($meta['offer_id'] ?? 0));
+            if (trim((string)($offer['pdf_file'] ?? '')) !== $storedPath) {
+                rep_akce_pdf_upload_fail('K nabídce už bylo mezitím uloženo jiné PDF.', 409);
+            }
+        }
+        return $stored;
+    }
+
+    $offerId = (int)($meta['offer_id'] ?? 0);
+    $offer = rep_akce_pdf_upload_offer($pdo, $offerId);
+    $title = trim((string)($offer['nazev_cz'] ?? ''));
+    if ($title === '') {
+        $title = 'akce-' . $offerId;
+    }
+
+    $sourcePath = rep_akce_pdf_upload_chunk_path($id);
+    $originalName = trim((string)($meta['upload_name'] ?? 'nabidka.pdf'));
+    $stored = rep_akce_store_pdf_file(
+        $sourcePath,
+        $originalName !== '' ? $originalName : 'nabidka.pdf',
+        $offerId,
+        $title,
+        (string)($offer['pdf_file'] ?? ''),
+        false,
+        false
+    );
+
+    $meta['status'] = 'file_stored';
+    $meta['stored'] = $stored;
+    $meta['stored_at'] = time();
+    rep_akce_pdf_upload_save_meta($id, $meta);
+
+    return $stored;
+}
+
+function rep_akce_pdf_upload_handle_finalize(PDO $pdo): never
+{
+    $offerId = rep_akce_pdf_upload_offer_id();
+    rep_akce_pdf_upload_offer($pdo, $offerId);
+
+    $id = rep_akce_pdf_upload_transfer_id();
+    $meta = rep_akce_pdf_upload_meta($id);
+    rep_akce_pdf_upload_assert_transfer_offer($meta, $offerId);
+
+    if ((string)($meta['status'] ?? '') === 'finalized') {
+        $stored = rep_akce_pdf_upload_store_completed_file($pdo, $id, $meta);
+        rep_akce_pdf_upload_json([
+            'ok' => true,
+            'path' => (string)($stored['path'] ?? ''),
+            'original_name' => (string)($stored['original_name'] ?? $meta['upload_name'] ?? ''),
+            'filesize' => (int)($stored['filesize'] ?? 0),
+        ]);
+    }
+
+    $uploadLength = (int)($meta['upload_length'] ?? 0);
+    $path = rep_akce_pdf_upload_chunk_path($id);
+    $actualSize = is_file($path) ? (int)filesize($path) : 0;
+    if ((string)($meta['status'] ?? 'uploading') === 'uploading' && ($uploadLength <= 0 || $actualSize !== $uploadLength)) {
+        header('Upload-Offset: ' . $actualSize);
+        rep_akce_pdf_upload_fail('PDF není kompletní. Přijato ' . $actualSize . ' z ' . $uploadLength . ' bajtů.', 409);
+    }
+
+    $stored = rep_akce_pdf_upload_store_completed_file($pdo, $id, $meta);
+
+    try {
+        rep_akce_pdf_upload_finalize($pdo, $offerId, $stored);
+    } catch (Throwable $e) {
+        rep_akce_pdf_upload_fail('PDF je přenesené, ale nepodařilo se zapsat k nabídce: ' . $e->getMessage(), 500);
+    }
+
+    $meta = rep_akce_pdf_upload_meta($id);
+    $meta['status'] = 'finalized';
+    $meta['finalized_at'] = time();
+    rep_akce_pdf_upload_save_meta($id, $meta);
+
+    rep_akce_pdf_upload_json([
+        'ok' => true,
+        'path' => (string)($stored['path'] ?? ''),
+        'original_name' => (string)($stored['original_name'] ?? $meta['upload_name'] ?? ''),
+        'filesize' => (int)($stored['filesize'] ?? 0),
+    ]);
 }
 
 function rep_akce_pdf_upload_handle_post(PDO $pdo): never
@@ -163,15 +272,22 @@ function rep_akce_pdf_upload_handle_post(PDO $pdo): never
     rep_akce_pdf_upload_assert_access();
     rep_akce_pdf_upload_cleanup_old_transfers();
 
+    if ((string)($_POST['action'] ?? '') === 'finalize') {
+        rep_akce_pdf_upload_handle_finalize($pdo);
+    }
+
     $offerId = rep_akce_pdf_upload_offer_id();
     $offer = rep_akce_pdf_upload_offer($pdo, $offerId);
 
     $uploadLength = rep_akce_pdf_upload_int_header('Upload-Length');
     if ($uploadLength > 0 && empty($_FILES)) {
         $id = bin2hex(random_bytes(16));
+        $chunkSize = rep_akce_pdf_upload_int_header('X-Chunk-Size');
         rep_akce_pdf_upload_save_meta($id, [
             'offer_id' => $offerId,
             'upload_length' => $uploadLength,
+            'chunk_size' => $chunkSize,
+            'status' => 'uploading',
             'created_at' => time(),
         ]);
 
@@ -207,12 +323,18 @@ function rep_akce_pdf_upload_handle_post(PDO $pdo): never
     exit;
 }
 
-function rep_akce_pdf_upload_handle_head(): never
+function rep_akce_pdf_upload_handle_head(PDO $pdo): never
 {
     rep_akce_pdf_upload_assert_access();
     $id = rep_akce_pdf_upload_transfer_id();
+    $meta = rep_akce_pdf_upload_meta($id);
+    $offerId = rep_akce_pdf_upload_offer_id();
+    rep_akce_pdf_upload_offer($pdo, $offerId);
+    rep_akce_pdf_upload_assert_transfer_offer($meta, $offerId);
     $path = rep_akce_pdf_upload_chunk_path($id);
     header('Upload-Offset: ' . (is_file($path) ? (int)filesize($path) : 0));
+    header('Upload-Length: ' . (int)($meta['upload_length'] ?? 0));
+    header('Cache-Control: no-store');
     http_response_code(204);
     exit;
 }
@@ -225,15 +347,20 @@ function rep_akce_pdf_upload_handle_patch(PDO $pdo): never
     $meta = rep_akce_pdf_upload_meta($id);
     $offerId = (int)($meta['offer_id'] ?? 0);
     rep_akce_pdf_upload_offer($pdo, $offerId);
+    rep_akce_pdf_upload_assert_transfer_offer($meta, rep_akce_pdf_upload_offer_id());
+    if ((string)($meta['status'] ?? 'uploading') !== 'uploading') {
+        rep_akce_pdf_upload_fail('Upload už byl dokončen.', 409);
+    }
 
     $offset = rep_akce_pdf_upload_int_header('Upload-Offset');
-    $length = rep_akce_pdf_upload_int_header('Upload-Length');
+    $requestLength = rep_akce_pdf_upload_int_header('Upload-Length');
+    $length = (int)($meta['upload_length'] ?? 0);
     $name = rep_akce_pdf_upload_header('Upload-Name', (string)($meta['upload_name'] ?? 'nabidka.pdf'));
     if ($length <= 0) {
-        $length = (int)($meta['upload_length'] ?? 0);
-    }
-    if ($length <= 0) {
         rep_akce_pdf_upload_fail('Chybí velikost uploadu.', 400);
+    }
+    if ($requestLength > 0 && $requestLength !== $length) {
+        rep_akce_pdf_upload_fail('Velikost uploadu se během přenosu změnila.', 409);
     }
 
     $path = rep_akce_pdf_upload_chunk_path($id);
@@ -243,32 +370,89 @@ function rep_akce_pdf_upload_handle_patch(PDO $pdo): never
         rep_akce_pdf_upload_fail('Nesouhlasí offset chunk uploadu.', 409);
     }
 
+    $contentLength = max(0, (int)($_SERVER['CONTENT_LENGTH'] ?? 0));
+    $remaining = $length - $currentSize;
+    if ($remaining <= 0) {
+        if ($remaining === 0 && $contentLength === 0) {
+            header('Upload-Offset: ' . $currentSize);
+            header('Cache-Control: no-store');
+            http_response_code(204);
+            exit;
+        }
+        rep_akce_pdf_upload_fail('Upload už obsahuje deklarovaný počet bajtů.', 409);
+    }
+
+    $declaredChunkSize = rep_akce_pdf_upload_int_header('X-Chunk-Size');
+    $storedChunkSize = (int)($meta['chunk_size'] ?? 0);
+    if ($storedChunkSize <= 0) {
+        $storedChunkSize = $declaredChunkSize > 0 ? $declaredChunkSize : $contentLength;
+    }
+    if ($storedChunkSize <= 0) {
+        rep_akce_pdf_upload_fail('Chybí velikost chunku.', 400);
+    }
+    if ($declaredChunkSize > 0 && $declaredChunkSize !== $storedChunkSize) {
+        rep_akce_pdf_upload_fail('Velikost chunku se během přenosu změnila.', 409);
+    }
+
+    $expectedBytes = min($storedChunkSize, $remaining);
+    if ($contentLength > 0 && $contentLength !== $expectedBytes) {
+        header('Upload-Offset: ' . $currentSize);
+        rep_akce_pdf_upload_fail('Chunk má neplatnou délku. Očekáváno ' . $expectedBytes . ' bajtů, přijato ' . $contentLength . '.', 400);
+    }
+
     $input = fopen('php://input', 'rb');
-    $output = fopen($path, 'ab');
+    $output = fopen($path, 'c+b');
     if (!$input || !$output) {
         rep_akce_pdf_upload_fail('Chunk se nepodařilo uložit.', 500);
     }
-    stream_copy_to_stream($input, $output);
+
+    if (!flock($output, LOCK_EX)) {
+        fclose($input);
+        fclose($output);
+        rep_akce_pdf_upload_fail('Chunk se nepodařilo uzamknout pro zápis.', 500);
+    }
+    $lockedSize = (int)(fstat($output)['size'] ?? 0);
+    if ($lockedSize !== $currentSize || $offset !== $lockedSize || fseek($output, 0, SEEK_END) !== 0) {
+        flock($output, LOCK_UN);
+        fclose($input);
+        fclose($output);
+        header('Upload-Offset: ' . $lockedSize);
+        rep_akce_pdf_upload_fail('Nesouhlasí offset chunk uploadu.', 409);
+    }
+
+    $written = stream_copy_to_stream($input, $output, $expectedBytes + 1);
+    fflush($output);
+    if ($written !== $expectedBytes) {
+        ftruncate($output, $currentSize);
+        fflush($output);
+        flock($output, LOCK_UN);
+        fclose($input);
+        fclose($output);
+        header('Upload-Offset: ' . $currentSize);
+        rep_akce_pdf_upload_fail(
+            'Chunk se nepodařilo přijmout celý. Očekáváno ' . $expectedBytes . ' bajtů, uloženo ' . (int)$written . '. Upload bude opakován.',
+            500
+        );
+    }
+
+    flock($output, LOCK_UN);
     fclose($input);
     fclose($output);
 
     clearstatcache(true, $path);
     $newSize = is_file($path) ? (int)filesize($path) : 0;
+    if ($newSize !== $currentSize + $expectedBytes || $newSize > $length) {
+        header('Upload-Offset: ' . $currentSize);
+        rep_akce_pdf_upload_fail('Po uložení chunku nesouhlasí velikost souboru.', 500);
+    }
     $meta['upload_name'] = $name;
     $meta['upload_length'] = $length;
+    $meta['chunk_size'] = $storedChunkSize;
     $meta['updated_at'] = time();
     rep_akce_pdf_upload_save_meta($id, $meta);
 
-    if ($newSize >= $length) {
-        $storedPath = rep_akce_pdf_upload_finalize($pdo, $offerId, $path, $name);
-        @unlink(rep_akce_pdf_upload_meta_path($id));
-        @rmdir(rep_akce_pdf_upload_transfer_dir($id));
-        header('Content-Type: text/plain; charset=utf-8');
-        echo $storedPath;
-        exit;
-    }
-
     header('Upload-Offset: ' . $newSize);
+    header('Cache-Control: no-store');
     http_response_code(204);
     exit;
 }
@@ -289,7 +473,7 @@ try {
         rep_akce_pdf_upload_handle_patch($pdo);
     }
     if ($method === 'HEAD') {
-        rep_akce_pdf_upload_handle_head();
+        rep_akce_pdf_upload_handle_head($pdo);
     }
 
     rep_akce_pdf_upload_fail('Method not allowed', 405);

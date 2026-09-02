@@ -9,7 +9,7 @@ function rep_tenis_qcup_e(mixed $value): string
 function rep_tenis_qcup_format_updated(mixed $value): string
 {
     $value = trim((string)$value);
-    if ($value === '' || $value === '0000-00-00 00:00:00') {
+    if ($value === '') {
         return '';
     }
 
@@ -51,14 +51,16 @@ function rep_tenis_qcup_parse_years(mixed $value): array
 /**
  * @return array<int, array<string, mixed>>
  */
-function rep_tenis_qcup_years(PDO $pdo): array
+function rep_tenis_qcup_years(PDO $pdo, int $valid = 1): array
 {
-    $stmt = $pdo->query(
-        'SELECT rok, COUNT(*) AS total, SUM(valid = 1) AS valid_count
+    $stmt = $pdo->prepare(
+        'SELECT rok, COUNT(*) AS total
          FROM rep_tenis_qcup_registrace
+         WHERE valid = :valid
          GROUP BY rok
          ORDER BY rok DESC'
     );
+    $stmt->execute([':valid' => $valid === 1 ? 1 : 0]);
 
     return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }

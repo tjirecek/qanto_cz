@@ -5,6 +5,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 require_once SEC_DIR . '/functions/fun_rep_akce.php';
 require_once SEC_DIR . '/functions/fun_newsletter.php';
+require_once ROOT_DIR . '/functions/fun_email_log.php';
+require_once ROOT_DIR . '/functions/fun_rep_akce_unsubscribe.php';
 
 function rep_akce_newsletter_e(mixed $value): string
 {
@@ -14,7 +16,8 @@ function rep_akce_newsletter_e(mixed $value): string
 function rep_akce_newsletter_offer(PDO $pdo, int $offerId): ?array
 {
     $stmt = $pdo->prepare(
-        'SELECT a.*, t.nazev_cz AS typ_nazev_cz, t.nazev_en AS typ_nazev_en, t.code AS typ_code, t.legacy_id AS typ_legacy_id
+        'SELECT a.*, t.nazev_cz AS typ_nazev_cz, t.nazev_en AS typ_nazev_en, t.code AS typ_code, t.legacy_id AS typ_legacy_id,
+                t.newsletter_group AS typ_newsletter_group
          FROM rep_akce a
          LEFT JOIN rep_akce_typ t ON t.id = a.typ_id
          WHERE a.id = :id
@@ -29,11 +32,11 @@ function rep_akce_newsletter_offer(PDO $pdo, int $offerId): ?array
 function rep_akce_newsletter_date_label(mixed $date): string
 {
     $date = trim((string)$date);
-    if ($date === '' || $date === '0000-00-00') {
+    if ($date === '') {
         return '';
     }
 
-    return function_exists('format_date_www') ? (string)format_date_www($date) : $date;
+    return rep_akce_date_www($date);
 }
 
 function rep_akce_newsletter_validity_text(array $offer): string
@@ -102,31 +105,39 @@ function rep_akce_newsletter_subject(array $offer): string
 
 function rep_akce_newsletter_active_recipients(PDO $pdo, array $offer): array
 {
-    $typeId = (int)($offer['typ_id'] ?? 0);
-    $legacyTypeId = (int)($offer['typ_legacy_id'] ?? 0);
+    $newsletterGroup = rep_akce_newsletter_group($offer['typ_newsletter_group'] ?? '');
+    if ($newsletterGroup === '') {
+        return [];
+    }
+
+    $recipientGroupCondition = match ($newsletterGroup) {
+        'maloobchod' => '(u.akce_typ_id IS NULL OR u.akce_typ_id = 0'
+            . ' OR ut.newsletter_group IN (:newsletter_group, "obe_skupiny")'
+            . ' OR (ut.id IS NULL AND u.legacy_akce_typ IN (2, 3)))',
+        'velkoobchod' => '(u.akce_typ_id IS NULL OR u.akce_typ_id = 0'
+            . ' OR ut.newsletter_group IN (:newsletter_group, "obe_skupiny")'
+            . ' OR (ut.id IS NULL AND u.legacy_akce_typ = 1))',
+        'obe_skupiny' => '(u.akce_typ_id IS NULL OR u.akce_typ_id = 0'
+            . ' OR ut.newsletter_group IN ("maloobchod", "velkoobchod", "obe_skupiny")'
+            . ' OR (ut.id IS NULL AND u.legacy_akce_typ IN (1, 2, 3)))',
+    };
 
     $where = [
         'u.valid = 1',
         'u.registered = 1',
-        '(u.datum_do IS NULL OR u.datum_do = "0000-00-00" OR u.datum_do >= CURDATE())',
+        '(u.datum_do IS NULL OR u.datum_do >= CURDATE())',
+        $recipientGroupCondition,
     ];
-    $params = [];
-
-    if ($typeId > 0) {
-        $where[] = '(u.akce_typ_id = :type_id OR u.akce_typ_id IS NULL OR u.akce_typ_id = 0 OR u.legacy_akce_typ = 0' . ($legacyTypeId > 0 ? ' OR u.legacy_akce_typ = :legacy_type_id' : '') . ')';
-        $params[':type_id'] = $typeId;
-        if ($legacyTypeId > 0) {
-            $params[':legacy_type_id'] = $legacyTypeId;
-        }
-    }
+    $params = $newsletterGroup === 'obe_skupiny' ? [] : [':newsletter_group' => $newsletterGroup];
 
     $sql = 'SELECT u.id, u.name, u.email
             FROM rep_akce_users u
+            LEFT JOIN rep_akce_typ ut ON ut.id = u.akce_typ_id
             WHERE ' . implode(' AND ', $where) . '
             ORDER BY u.id ASC';
     $stmt = $pdo->prepare($sql);
     foreach ($params as $key => $value) {
-        $stmt->bindValue($key, (int)$value, PDO::PARAM_INT);
+        $stmt->bindValue($key, $value, PDO::PARAM_STR);
     }
     $stmt->execute();
 
@@ -168,7 +179,7 @@ function rep_akce_newsletter_delivery_recipients_count(PDO $pdo, array $offer): 
     return newsletter_is_local_bypass_enabled() ? 1 : rep_akce_newsletter_active_recipients_count($pdo, $offer);
 }
 
-function rep_akce_newsletter_body_html(PDO $pdo, array $offer): string
+function rep_akce_newsletter_body_html(PDO $pdo, array $offer, ?array $recipient = null): string
 {
     $title = trim((string)($offer['nazev_cz'] ?? ''));
     $typeLabel = trim((string)($offer['typ_nazev_cz'] ?? ''));
@@ -179,6 +190,7 @@ function rep_akce_newsletter_body_html(PDO $pdo, array $offer): string
     $logoUrl = newsletter_logo_url();
     $brandName = newsletter_brand_name();
     $accentColor = newsletter_accent_color();
+    $unsubscribeUrl = rep_akce_unsubscribe_url($recipient);
     $year = date('Y');
 
     $subtitleParts = array_filter([$typeLabel, $validity], static fn(string $value): bool => $value !== '');
@@ -235,6 +247,7 @@ function rep_akce_newsletter_body_html(PDO $pdo, array $offer): string
           <tr>
             <td style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:24px 38px;font-size:13px;line-height:1.55;color:#64748b;">
               <p style="margin:0 0 8px 0;">Tento e-mail dostáváte, protože jste přihlášený odběratel akčních nabídek ' . rep_akce_newsletter_e($brandName) . '.</p>
+              <p style="margin:0 0 12px 0;"><a href="' . rep_akce_newsletter_e($unsubscribeUrl) . '" style="color:#64748b;text-decoration:underline;">Odhlásit odběr akčních nabídek</a></p>
               <p style="margin:0;">&copy; ' . rep_akce_newsletter_e($brandName) . ' :: Astur &amp; Qanto s.r.o. ' . $year . '</p>
             </td>
           </tr>
@@ -246,33 +259,100 @@ function rep_akce_newsletter_body_html(PDO $pdo, array $offer): string
 </html>';
 }
 
-function rep_akce_newsletter_body_text(PDO $pdo, array $offer): string
+function rep_akce_newsletter_body_text(PDO $pdo, array $offer, ?array $recipient = null): string
 {
     $title = trim((string)($offer['nazev_cz'] ?? ''));
     $validity = rep_akce_newsletter_validity_text($offer);
     $offerUrl = rep_akce_newsletter_offer_url($offer);
     $pdfUrl = rep_akce_newsletter_pdf_url($offer);
+    $unsubscribeUrl = rep_akce_unsubscribe_url($recipient);
 
     return trim($title . "\n" .
         ($validity !== '' ? $validity . "\n\n" : "\n") .
         'Leták: ' . $offerUrl . "\n" .
-        ($pdfUrl !== '' ? 'PDF: ' . $pdfUrl . "\n" : ''));
+        ($pdfUrl !== '' ? 'PDF: ' . $pdfUrl . "\n" : '') .
+        "\nOdhlášení odběru akčních nabídek: " . $unsubscribeUrl);
 }
 
-function rep_akce_newsletter_send_one(PDO $pdo, array $offer, array $recipient): void
+function rep_akce_newsletter_send_one(PDO $pdo, array $offer, array $recipient, bool $testOnly = false): void
 {
     $email = newsletter_email_for_mailer((string)($recipient['email'] ?? ''));
     if (!PHPMailer::validateAddress($email)) {
         throw new InvalidArgumentException('Neplatný e-mail příjemce: ' . $email);
     }
 
-    $mail = newsletter_mailer();
-    $mail->addAddress($email, trim((string)($recipient['name'] ?? '')));
-    $mail->isHTML(true);
-    $mail->Subject = (newsletter_is_local_bypass_enabled() ? '[LOCAL TEST] ' : '') . rep_akce_newsletter_subject($offer);
-    $mail->Body = rep_akce_newsletter_body_html($pdo, $offer);
-    $mail->AltBody = rep_akce_newsletter_body_text($pdo, $offer);
-    $mail->send();
+    $subject = ($testOnly ? '[TEST] ' : '')
+        . (newsletter_is_local_bypass_enabled() ? '[LOCAL TEST] ' : '')
+        . rep_akce_newsletter_subject($offer);
+    $bodyRecipient = (int)($recipient['id'] ?? 0) > 0 ? $recipient : null;
+    $bodyHtml = rep_akce_newsletter_body_html($pdo, $offer, $bodyRecipient);
+    $bodyText = rep_akce_newsletter_body_text($pdo, $offer, $bodyRecipient);
+    $config = newsletter_config();
+    $logId = email_log_create($pdo, [
+        'context' => 'rep_akce',
+        'template_code' => $testOnly ? 'flyer_test' : 'flyer_campaign',
+        'subject' => $subject,
+        'recipient_email' => $email,
+        'recipient_name' => trim((string)($recipient['name'] ?? '')) ?: null,
+        'sender_email' => newsletter_config_string('klerk_smtp_from'),
+        'sender_name' => newsletter_config_string('klerk_smtp_from_name', 'Qanto'),
+        'related_table' => 'rep_akce',
+        'related_id' => (int)($offer['id'] ?? 0),
+        'provider' => newsletter_config_string('klerk_smtp_host', 'Klerk SMTP'),
+        'payload' => [
+            'test_only' => $testOnly,
+            'recipient_id' => (int)($recipient['id'] ?? 0),
+            'offer_id' => (int)($offer['id'] ?? 0),
+            'campaign_id_present' => trim((string)($config['klerk_campaign_id'] ?? '')) !== '',
+        ],
+        'body_text' => $bodyText,
+        'body_html' => $bodyHtml,
+    ]);
+
+    try {
+        $mail = newsletter_mailer();
+        $mail->addAddress($email, trim((string)($recipient['name'] ?? '')));
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = $bodyHtml;
+        $mail->AltBody = $bodyText;
+        $mail->send();
+        $providerMessageId = method_exists($mail, 'getLastMessageID') ? $mail->getLastMessageID() : null;
+        email_log_mark_sent($pdo, $logId, is_string($providerMessageId) ? $providerMessageId : null);
+    } catch (Throwable $e) {
+        email_log_mark_failed($pdo, $logId, $e->getMessage());
+        throw $e;
+    }
+}
+
+function rep_akce_newsletter_send_test(PDO $pdo, int $offerId, string $requestedEmail): array
+{
+    $offer = rep_akce_newsletter_offer($pdo, $offerId);
+    if (!is_array($offer)) {
+        throw new RuntimeException('Akční nabídka nebyla nalezena.');
+    }
+
+    $requestedEmail = newsletter_email_for_mailer($requestedEmail);
+    if (!PHPMailer::validateAddress($requestedEmail)) {
+        throw new InvalidArgumentException('Zadej platnou testovací e-mailovou adresu.');
+    }
+
+    $deliveryEmail = newsletter_local_bypass_email();
+    if ($deliveryEmail === '') {
+        $deliveryEmail = $requestedEmail;
+    }
+
+    rep_akce_newsletter_send_one($pdo, $offer, [
+        'id' => 0,
+        'name' => 'Test letáku',
+        'email' => $deliveryEmail,
+    ], true);
+
+    return [
+        'requested_email' => $requestedEmail,
+        'delivered_email' => $deliveryEmail,
+        'local_bypass' => newsletter_is_local_bypass_enabled(),
+    ];
 }
 
 function rep_akce_newsletter_send_campaign(PDO $pdo, int $offerId): array
@@ -280,6 +360,9 @@ function rep_akce_newsletter_send_campaign(PDO $pdo, int $offerId): array
     $offer = rep_akce_newsletter_offer($pdo, $offerId);
     if (!is_array($offer)) {
         throw new RuntimeException('Akční nabídka nebyla nalezena.');
+    }
+    if (rep_akce_newsletter_group($offer['typ_newsletter_group'] ?? '') === '') {
+        throw new RuntimeException('Typ letáku nemá nastavenou skupinu pro odesílání. Hromadné odeslání je zablokované.');
     }
 
     if (function_exists('set_time_limit')) {

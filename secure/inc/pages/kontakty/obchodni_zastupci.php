@@ -136,13 +136,6 @@ $tableClasses = 'table table-striped table-hover table-bordered table-sm align-m
 $tableWrapClasses = 'table-responsive';
 $stateKey = $hasOpenForm ? 'obchodni-zastupci-detail-v1' : 'obchodni-zastupci-compact-v1';
 $filterPlacement = 'header';
-$selectedPobockaLabel = '';
-foreach ($pobockyOptions as $pobockaOption) {
-    if ((int)($formValues['pobocka_id'] ?? 0) === (int)($pobockaOption['id'] ?? 0)) {
-        $selectedPobockaLabel = obchodni_zastupci_pobocka_label($pobockaOption);
-        break;
-    }
-}
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -194,34 +187,34 @@ foreach ($pobockyOptions as $pobockaOption) {
             <form method="post" enctype="multipart/form-data" autocomplete="off">
                 <div class="row g-3 mb-3">
                     <div class="col-lg-5">
-                        <label for="pobocka_display" class="form-label">Pobočka</label>
-                        <input
-                            type="hidden"
+                        <label for="pobocka_id" class="form-label">Pobočka</label>
+                        <select
                             name="pobocka_id"
                             id="pobocka_id"
-                            value="<?= (int)($formValues['pobocka_id'] ?? 0) ?>"
-                            data-oz-pobocka-id
+                            class="form-select js-admin-single-picker"
+                            data-picker-title="Vybrat pobočku"
+                            data-picker-description="Vyberte jednu pobočku pro obchodního zástupce."
+                            data-picker-search-placeholder="Hledat podle názvu, typu nebo adresy…"
+                            data-picker-empty-label="Vyberte pobočku"
+                            required
                         >
-                        <div class="input-group">
-                            <input
-                                type="text"
-                                id="pobocka_display"
-                                class="form-control"
-                                value="<?= htmlspecialchars($selectedPobockaLabel, ENT_QUOTES) ?>"
-                                placeholder="Vyberte pobočku"
-                                readonly
-                                data-oz-pobocka-display
-                            >
-                            <button
-                                type="button"
-                                class="btn btn-outline-primary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#ozPobockaModal"
-                            >
-                                vybrat
-                            </button>
-                        </div>
-                        <div class="form-text">Pobočka je povinná; vyberte ji ze seznamu v modalu.</div>
+                            <option value="">Vyberte pobočku</option>
+                            <?php foreach ($pobockyOptions as $pobocka): ?>
+                                <?php
+                                $pobockaName = trim((string)($pobocka['nazev_cz'] ?? ''));
+                                $pobockaType = mb_convert_case(trim((string)($pobocka['typ'] ?? '')), MB_CASE_TITLE, 'UTF-8');
+                                $pobockaAddress = trim((string)($pobocka['adresa'] ?? ''));
+                                $pobockaMeta = implode(' · ', array_filter([$pobockaType, $pobockaAddress], static fn (string $value): bool => $value !== ''));
+                                ?>
+                                <option
+                                    value="<?= (int)$pobocka['id'] ?>"
+                                    data-picker-subtext="<?= htmlspecialchars($pobockaMeta, ENT_QUOTES) ?>"
+                                    data-picker-icon="bi bi-shop"
+                                    <?= (int)($formValues['pobocka_id'] ?? 0) === (int)$pobocka['id'] ? 'selected' : '' ?>
+                                ><?= htmlspecialchars($pobockaName !== '' ? $pobockaName : obchodni_zastupci_pobocka_label($pobocka), ENT_QUOTES) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text">Pobočka je povinná.</div>
                     </div>
 
                     <div class="col-lg-2 col-md-4">
@@ -337,75 +330,6 @@ foreach ($pobockyOptions as $pobockaOption) {
                 </div>
             </form>
 
-            <div class="modal fade" id="ozPobockaModal" tabindex="-1" aria-labelledby="ozPobockaModalLabel" aria-hidden="true" data-oz-pobocka-modal>
-                <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <div>
-                                <h5 class="modal-title" id="ozPobockaModalLabel">Vybrat pobočku</h5>
-                                <div class="small text-muted">Kliknutím na řádek vyberete pobočku pro obchodního zástupce.</div>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavřít"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="ozPobockaSearch" class="form-label">Hledat pobočku</label>
-                                <input
-                                    type="search"
-                                    id="ozPobockaSearch"
-                                    class="form-control"
-                                    placeholder="Název, typ nebo adresa"
-                                    autocomplete="off"
-                                    data-oz-pobocka-search
-                                >
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover align-middle">
-                                    <thead class="table-light">
-                                    <tr>
-                                        <th>Typ</th>
-                                        <th>Název</th>
-                                        <th>Adresa</th>
-                                        <th class="text-end">Akce</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <?php foreach ($pobockyOptions as $pobocka): ?>
-                                        <?php
-                                        $pobockaLabel = obchodni_zastupci_pobocka_label($pobocka);
-                                        $pobockaType = (string)($pobocka['typ'] ?? '');
-                                        $pobockaName = (string)($pobocka['nazev_cz'] ?? '');
-                                        $pobockaAddress = (string)($pobocka['adresa'] ?? '');
-                                        ?>
-                                        <tr data-oz-pobocka-row>
-                                            <td><?= htmlspecialchars($pobockaType, ENT_QUOTES) ?></td>
-                                            <td class="fw-semibold"><?= htmlspecialchars($pobockaName, ENT_QUOTES) ?></td>
-                                            <td><?= htmlspecialchars($pobockaAddress, ENT_QUOTES) ?></td>
-                                            <td class="text-end">
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-sm btn-primary"
-                                                    data-oz-pobocka-choice
-                                                    data-pobocka-id="<?= (int)$pobocka['id'] ?>"
-                                                    data-pobocka-label="<?= htmlspecialchars($pobockaLabel, ENT_QUOTES) ?>"
-                                                >
-                                                    vybrat
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="alert alert-warning mb-0 d-none" data-oz-pobocka-empty>
-                                Nenalezena žádná pobočka pro zadaný filtr.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 <?php endif; ?>

@@ -12,6 +12,11 @@ php_flag  display_startup_errors off
 php_value error_reporting 32767
 php_flag  log_errors on
 
+<IfModule mod_mime.c>
+    AddType text/javascript .mjs
+    AddType application/wasm .wasm
+</IfModule>
+
 RewriteEngine on
 
 # Private runtime files. Apache respects this; Nginx needs equivalent server config.
@@ -38,6 +43,9 @@ RewriteRule ^ https://www.qanto.cz/cz/tenisqcup [R=301,L]
 
 RewriteCond %{HTTP_HOST} ^inventury\.qanto\.cz$ [NC]
 RewriteRule ^ https://www.qanto.cz/cz/inventury [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^drevo\.qanto\.cz$ [NC]
+RewriteRule ^ https://qantoplus.cz/cz/objednavka [R=301,L]
 
 # Legacy customer phone billing links.
 RewriteRule ^volani/index\.php$ /index.php?section=volani&lang=cz [L,QSA]

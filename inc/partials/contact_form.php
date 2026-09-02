@@ -15,8 +15,8 @@ $contactFormValue = is_callable($contactFormValue ?? null)
         <span class="contacts-form-section__icon" aria-hidden="true">
             <span class="contacts-icon contacts-icon--mail"></span>
         </span>
-        <h2 id="contacts-form-title"><?= frontend_contacts_e(ui_text('contacts.form_title', 'Připomínka nebo dotaz')) ?></h2>
-        <p><?= frontend_contacts_e(ui_text('contacts.form_text', 'Napište nám, s čím vám můžeme pomoci. Dotaz pošleme na správné oddělení podle vybrané kategorie.')) ?></p>
+        <h2 id="contacts-form-title"><?= frontend_contacts_e(ui_text('contacts.form_title')) ?></h2>
+        <p><?= frontend_contacts_e(stat_vyraz_text('contacts.form_text')) ?></p>
         <div class="contacts-form-section__illustration" aria-hidden="true">
             <img src="/img/design/contact-question.png" alt="" loading="lazy">
         </div>
@@ -33,9 +33,9 @@ $contactFormValue = is_callable($contactFormValue ?? null)
             <input type="hidden" name="csrf_token" value="<?= frontend_contacts_e($contactFormToken) ?>">
 
             <div class="contacts-form__field contacts-form__field--select" data-contact-select>
-                <label for="contacts_category"><?= frontend_contacts_e(ui_text('contacts.form_category', 'Typ dotazu')) ?> *</label>
+                <label for="contacts_category"><?= frontend_contacts_e(ui_text('contacts.form_category')) ?> *</label>
                 <select name="category_id" id="contacts_category" required data-contact-select-native>
-                    <option value=""><?= frontend_contacts_e(ui_text('common.select_empty', 'Vyberte')) ?></option>
+                    <option value=""><?= frontend_contacts_e(ui_text('common.select_empty')) ?></option>
                     <?php foreach ($contactFormCategories as $category): ?>
                         <?php $categoryId = (int)$category['id']; ?>
                         <option value="<?= $categoryId ?>" <?= $selectedContactCategory === $categoryId ? 'selected' : '' ?>>
@@ -45,11 +45,11 @@ $contactFormValue = is_callable($contactFormValue ?? null)
                 </select>
                 <div class="contacts-custom-select" data-contact-select-ui>
                     <button type="button" class="contacts-custom-select__trigger" data-contact-select-trigger aria-haspopup="listbox" aria-expanded="false">
-                        <span data-contact-select-label><?= frontend_contacts_e(ui_text('common.select_empty', 'Vyberte')) ?></span>
+                        <span data-contact-select-label><?= frontend_contacts_e(ui_text('common.select_empty')) ?></span>
                     </button>
                     <div class="contacts-custom-select__panel" data-contact-select-panel role="listbox" hidden>
                         <button type="button" class="contacts-custom-select__option" data-contact-select-option data-value="" role="option" aria-selected="<?= $selectedContactCategory === 0 ? 'true' : 'false' ?>">
-                            <?= frontend_contacts_e(ui_text('common.select_empty', 'Vyberte')) ?>
+                            <?= frontend_contacts_e(ui_text('common.select_empty')) ?>
                         </button>
                         <?php foreach ($contactFormCategories as $category): ?>
                             <?php $categoryId = (int)$category['id']; ?>
@@ -62,34 +62,34 @@ $contactFormValue = is_callable($contactFormValue ?? null)
             </div>
 
             <div class="contacts-form__field">
-                <label for="contacts_name"><?= frontend_contacts_e(ui_text('contacts.form_name', 'Vaše jméno a příjmení')) ?> *</label>
-                <input type="text" name="name" id="contacts_name" autocomplete="name" required placeholder="<?= frontend_contacts_e(ui_text('contacts.form_name_placeholder', 'Vaše jméno')) ?>" value="<?= frontend_contacts_e($contactFormValue('name')) ?>">
+                <label for="contacts_name"><?= frontend_contacts_e(ui_text('contacts.form_name')) ?> *</label>
+                <input type="text" name="name" id="contacts_name" autocomplete="name" required placeholder="<?= frontend_contacts_e(ui_text('contacts.form_name_placeholder')) ?>" value="<?= frontend_contacts_e($contactFormValue('name')) ?>">
             </div>
 
             <div class="contacts-form__field">
-                <label for="contacts_email"><?= frontend_contacts_e(ui_text('contacts.form_email', 'Váš e-mail')) ?> *</label>
-                <input type="email" name="email" id="contacts_email" autocomplete="email" required placeholder="<?= frontend_contacts_e(ui_text('contacts.form_email_placeholder', 'Váš e-mail')) ?>" value="<?= frontend_contacts_e($contactFormValue('email')) ?>">
+                <label for="contacts_email"><?= frontend_contacts_e(ui_text('contacts.form_email')) ?> *</label>
+                <input type="email" name="email" id="contacts_email" autocomplete="email" required placeholder="<?= frontend_contacts_e(ui_text('contacts.form_email_placeholder')) ?>" value="<?= frontend_contacts_e($contactFormValue('email')) ?>">
             </div>
 
             <div class="contacts-form__field">
-                <label for="contacts_phone"><?= frontend_contacts_e(ui_text('contacts.form_phone', 'Váš telefon')) ?></label>
-                <input type="tel" name="phone" id="contacts_phone" autocomplete="tel" placeholder="<?= frontend_contacts_e(ui_text('contacts.form_phone_placeholder', 'Váš telefon')) ?>" value="<?= frontend_contacts_e($contactFormValue('phone')) ?>">
+                <label for="contacts_phone"><?= frontend_contacts_e(ui_text('contacts.form_phone')) ?></label>
+                <input type="tel" name="phone" id="contacts_phone" autocomplete="tel" placeholder="<?= frontend_contacts_e(ui_text('contacts.form_phone_placeholder')) ?>" value="<?= frontend_contacts_e($contactFormValue('phone')) ?>">
             </div>
 
             <div class="contacts-form__field">
-                <label for="contacts_message"><?= frontend_contacts_e(ui_text('contacts.form_message', 'Zpráva')) ?> *</label>
-                <textarea name="message" id="contacts_message" rows="5" required placeholder="<?= frontend_contacts_e(ui_text('contacts.form_message_placeholder', 'Co máte na srdci?')) ?>"><?= frontend_contacts_e($contactFormValue('message')) ?></textarea>
+                <label for="contacts_message"><?= frontend_contacts_e(ui_text('contacts.form_message')) ?> *</label>
+                <textarea name="message" id="contacts_message" rows="5" required placeholder="<?= frontend_contacts_e(ui_text('contacts.form_message_placeholder')) ?>"><?= frontend_contacts_e($contactFormValue('message')) ?></textarea>
             </div>
 
             <?php if (function_exists('frontend_captcha_render')): ?>
                 <?php frontend_captcha_render('contacts_form', 'contacts-form'); ?>
             <?php endif; ?>
 
-            <button type="submit"><?= frontend_contacts_e(ui_text('contacts.form_submit', 'Odeslat zprávu')) ?></button>
+            <button type="submit"><?= frontend_contacts_e(ui_text('contacts.form_submit')) ?></button>
 
             <p class="contacts-form__consent">
-                <?= frontend_contacts_e(ui_text('contacts.form_consent', 'Odesláním souhlasíte se')) ?>
-                <a href="/<?= frontend_contacts_e($lang) ?>/osobni-udaje"><?= frontend_contacts_e(ui_text('contacts.form_privacy_link', 'zpracováním osobních údajů')) ?></a>.
+                <?= frontend_contacts_e(ui_text('contacts.form_consent')) ?>
+                <a href="/<?= frontend_contacts_e($lang) ?>/osobni-udaje"><?= frontend_contacts_e(ui_text('contacts.form_privacy_link')) ?></a>.
             </p>
         </form>
     </div>

@@ -6,11 +6,6 @@ function frontend_contacts_e(mixed $value): string
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-function frontend_contacts_text(string $key, string $fallback): string
-{
-    return function_exists('ui_text') ? ui_text($key, $fallback) : $fallback;
-}
-
 function frontend_contacts_expr(string $code, string $lang, string $fallback = ''): string
 {
     $value = function_exists('stat_vyraz') ? stat_vyraz($code, $lang) : null;
@@ -97,9 +92,9 @@ function frontend_contacts_form_token(): string
     return $token;
 }
 
-function frontend_contacts_message(string $key, string $fallback): string
+function frontend_contacts_message(string $key): string
 {
-    return function_exists('ui_text') ? ui_text($key, $fallback) : $fallback;
+    return function_exists('ui_text') ? ui_text($key) : $key;
 }
 
 /**
@@ -234,13 +229,13 @@ function frontend_contacts_form_save(array $data): array
     global $pdo;
 
     if (!($pdo instanceof PDO)) {
-        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_error', 'Zprávu se nepodařilo odeslat. Zkuste to prosím později.')];
+        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_error')];
     }
 
     if (function_exists('frontend_captcha_validate')) {
         $captcha = frontend_captcha_validate('contacts_form', $data);
         if (!empty($captcha['bot'])) {
-            return ['ok' => true, 'message' => frontend_contacts_message('contacts.form_success', 'Zpráva byla přijata. Děkujeme.')];
+            return ['ok' => true, 'message' => frontend_contacts_message('contacts.form_success')];
         }
         if (empty($captcha['ok'])) {
             return ['ok' => false, 'message' => (string)$captcha['message']];
@@ -250,12 +245,12 @@ function frontend_contacts_form_save(array $data): array
     $sessionToken = session_status() === PHP_SESSION_ACTIVE ? (string)($_SESSION['contacts_form_token'] ?? '') : '';
     $postedToken = (string)($data['csrf_token'] ?? '');
     if ($sessionToken === '' || $postedToken === '' || !hash_equals($sessionToken, $postedToken)) {
-        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_invalid', 'Formulář vypršel. Odešlete ho prosím znovu.')];
+        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_invalid')];
     }
 
     $category = frontend_contacts_form_category((int)($data['category_id'] ?? 0));
     if ($category === null) {
-        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_category_error', 'Vyberte prosím typ dotazu.')];
+        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_category_error')];
     }
 
     $values = [
@@ -266,13 +261,13 @@ function frontend_contacts_form_save(array $data): array
     ];
 
     if ($values['name'] === '') {
-        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_name_error', 'Zadejte prosím jméno a příjmení.')];
+        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_name_error')];
     }
     if ($values['email'] === '' || filter_var($values['email'], FILTER_VALIDATE_EMAIL) === false) {
-        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_email_error', 'Zadejte prosím platný e-mail.')];
+        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_email_error')];
     }
     if ($values['message'] === '') {
-        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_message_error', 'Napište prosím zprávu.')];
+        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_message_error')];
     }
 
     try {
@@ -301,9 +296,9 @@ function frontend_contacts_form_save(array $data): array
             $_SESSION['contacts_form_token'] = bin2hex(random_bytes(24));
         }
 
-        return ['ok' => true, 'message' => frontend_contacts_message('contacts.form_success', 'Zpráva byla přijata. Děkujeme.')];
+        return ['ok' => true, 'message' => frontend_contacts_message('contacts.form_success')];
     } catch (Throwable) {
-        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_error', 'Zprávu se nepodařilo odeslat. Zkuste to prosím později.')];
+        return ['ok' => false, 'message' => frontend_contacts_message('contacts.form_error')];
     }
 }
 

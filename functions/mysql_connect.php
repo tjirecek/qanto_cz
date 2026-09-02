@@ -15,13 +15,16 @@ if (!defined('SEC_DIR')) {
     define('SEC_DIR', ROOT_DIR . '/secure');
 }
 
-/** Detekce prostředí: lokál = *.local / 127.0.0.1 / ::1 */
+/** Detekce prostředí: lokál = localhost / *.local / *.test / loopback IP */
 $hostHeader = (string)($_SERVER['HTTP_HOST'] ?? '');
+$hostName   = strtolower((string)(preg_replace('/:\d+$/', '', $hostHeader) ?? $hostHeader));
 $remoteIp   = (string)($_SERVER['REMOTE_ADDR'] ?? '');
 $serverAddr = (string)($_SERVER['SERVER_ADDR'] ?? '');
 
 $isLocal = (
-    str_contains($hostHeader, '.local')
+    $hostName === 'localhost'
+    || str_ends_with($hostName, '.local')
+    || str_ends_with($hostName, '.test')
     || in_array($remoteIp, ['127.0.0.1', '::1'], true)
     || in_array($serverAddr, ['127.0.0.1', '::1'], true)
 );
@@ -64,4 +67,12 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
     throw new RuntimeException('Chyba připojení k DB: ' . $e->getMessage(), (int)$e->getCode());
+}
+
+$projectHooks = ROOT_DIR . '/functions/project_hooks.php';
+if (is_file($projectHooks)) {
+    require_once $projectHooks;
+}
+if (function_exists('app_project_database_connected')) {
+    app_project_database_connected($pdo);
 }

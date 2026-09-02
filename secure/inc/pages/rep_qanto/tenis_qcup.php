@@ -46,7 +46,7 @@ try {
         }
     }
 
-    $yearRows = rep_tenis_qcup_years($pdo);
+    $yearRows = rep_tenis_qcup_years($pdo, $valid);
     if (!$showAllYears && !$showNoYears && !$filterSubmitted && !isset($_GET['years']) && $selectedYears === [] && isset($yearRows[0]['rok'])) {
         $selectedYears = [(int)$yearRows[0]['rok']];
     }
@@ -93,6 +93,9 @@ $invalidCount = ($pdo instanceof PDO) ? rep_tenis_qcup_count($pdo, 0) : 0;
         <span class="btn btn-sm btn-light shadow-sm">načteno: <?= number_format(count($rows), 0, ',', ' ') ?></span>
         <span class="btn btn-sm btn-success shadow-sm">validní: <?= number_format($validCount, 0, ',', ' ') ?></span>
         <span class="btn btn-sm btn-secondary shadow-sm">nevalidní: <?= number_format($invalidCount, 0, ',', ' ') ?></span>
+        <a class="btn btn-sm btn-primary shadow-sm" href="/cz/tenisqcup" target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Registrační stránka
+        </a>
         <a class="btn btn-sm btn-success shadow-sm" href="<?= rep_tenis_qcup_e($exportUrl) ?>">
             <i class="bi bi-file-earmark-excel me-1"></i> Export XLSX
         </a>

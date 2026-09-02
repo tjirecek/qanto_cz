@@ -36,12 +36,9 @@ $viewOffer = null;
 $viewPages = [];
 $editPages = [];
 $editPageCount = 0;
-$pageOutputFormat = function_exists('sp_hodnota_text') ? strtolower(trim((string)(sp_hodnota_text('rep_akce_page_output_format') ?? 'webp'))) : 'webp';
-if (!in_array($pageOutputFormat, ['webp', 'jpg', 'jpeg', 'png'], true)) {
-    $pageOutputFormat = 'webp';
-}
-$pageImageQuality = function_exists('sp_hodnota') ? (int)(sp_hodnota('rep_akce_page_image_quality') ?? 82) : 82;
-$pageImageQuality = max(1, min(100, $pageImageQuality));
+$pageOutputFormat = rep_akce_page_output_format();
+$pageImageQuality = rep_akce_page_image_quality();
+$pageTargetKb = rep_akce_page_target_kb();
 
 try {
     if (!($pdo instanceof PDO)) {
@@ -157,7 +154,7 @@ $validTypeCount = ($pdo instanceof PDO) ? rep_akce_type_count($pdo, 1) : 0;
 $invalidTypeCount = ($pdo instanceof PDO) ? rep_akce_type_count($pdo, 0) : 0;
 
 $formOffer = $editOffer ?? rep_akce_default_offer();
-$formType = $editType ?? ['id' => 0, 'code' => '', 'poradi' => 0, 'nazev_cz' => '', 'nazev_en' => '', 'color' => '', 'valid' => 1];
+$formType = $editType ?? ['id' => 0, 'code' => '', 'poradi' => 0, 'nazev_cz' => '', 'nazev_en' => '', 'color' => '', 'newsletter_group' => '', 'valid' => 1];
 $offersActive = in_array($tab, ['01', '03', '05'], true);
 $typesActive = in_array($tab, ['02', '04'], true);
 ?>
@@ -219,7 +216,7 @@ $typesActive = in_array($tab, ['02', '04'], true);
                     <input type="hidden" name="list_year" value="<?= (int)($year ?? 0) ?>">
                     <?php foreach ($typeIds as $typeId): ?><input type="hidden" name="types[]" value="<?= (int)$typeId ?>"><?php endforeach; ?>
 
-                    <div class="col-md-4"><label for="akce_typ_id" class="form-label">Typ</label><select name="typ_id" id="akce_typ_id" class="form-select"><option value="">Bez typu</option><?php foreach ($types as $type): ?><option value="<?= (int)$type['id'] ?>" <?= (int)$type['id'] === (int)($formOffer['typ_id'] ?? 0) ? 'selected' : '' ?>><?= rep_akce_e($type['nazev_cz']) ?></option><?php endforeach; ?></select></div>
+                    <div class="col-md-4"><label for="akce_typ_id" class="form-label">Typ</label><select name="typ_id" id="akce_typ_id" class="form-select js-admin-single-picker" data-picker-title="Vybrat typ akční nabídky" data-picker-description="Vyberte jeden obsahový typ akční nabídky." data-picker-search-placeholder="Hledat podle názvu typu…" data-picker-empty-label="Bez typu"><option value="">Bez typu</option><?php foreach ($types as $type): ?><option value="<?= (int)$type['id'] ?>" <?= (int)$type['id'] === (int)($formOffer['typ_id'] ?? 0) ? 'selected' : '' ?>><?= rep_akce_e($type['nazev_cz']) ?></option><?php endforeach; ?></select></div>
                     <div class="col-md-2"><label for="akce_datum_od" class="form-label">Datum od</label><input type="date" name="datum_od" id="akce_datum_od" class="form-control" value="<?= rep_akce_e(rep_akce_date_form($formOffer['datum_od'] ?? '')) ?>"></div>
                     <div class="col-md-2"><label for="akce_datum_do" class="form-label">Datum do</label><input type="date" name="datum_do" id="akce_datum_do" class="form-control" value="<?= rep_akce_e(rep_akce_date_form($formOffer['datum_do'] ?? '')) ?>"></div>
                     <div class="col-md-2"><label for="akce_viewer_mode" class="form-label">Prohlížení</label><select name="viewer_mode" id="akce_viewer_mode" class="form-select"><option value="pdf" <?= (string)($formOffer['viewer_mode'] ?? 'pdf') === 'pdf' ? 'selected' : '' ?>>PDF</option><option value="images" <?= (string)($formOffer['viewer_mode'] ?? '') === 'images' ? 'selected' : '' ?>>Obrázky</option><option value="legacy_flip" <?= (string)($formOffer['viewer_mode'] ?? '') === 'legacy_flip' ? 'selected' : '' ?>>Legacy flip</option></select></div>
@@ -230,7 +227,7 @@ $typesActive = in_array($tab, ['02', '04'], true);
                         <?php if ((int)$formOffer['id'] > 0): ?>
                             <input type="file" id="akce_pdf_file" class="form-control" accept="application/pdf,.pdf" data-rep-akce-pdf-upload data-offer-id="<?= (int)$formOffer['id'] ?>" data-csrf-token="<?= rep_akce_e($csrfToken) ?>">
                             <div class="form-text" data-rep-akce-pdf-current><?php if ($pdfPath !== ''): ?><a href="<?= rep_akce_e(rep_akce_file_url($pdfPath)) ?>" target="_blank" rel="noopener">aktuální PDF</a><?php if ((string)($formOffer['pdf_original_name'] ?? '') !== ''): ?> - <?= rep_akce_e($formOffer['pdf_original_name']) ?><?php endif; ?><?php else: ?>PDF zatím není nahrané.<?php endif; ?></div>
-                            <div class="small text-muted mt-2" data-rep-akce-pdf-status>PDF se nahrává samostatně po částech; formulář není nutné ukládat pro nahrání PDF.</div>
+                            <div class="small text-muted mt-2" data-rep-akce-pdf-status>PDF se nahrává samostatně po 4MB částech; jako uložené se označí až po kontrole celkové velikosti a zápisu k nabídce. Formulář není nutné ukládat.</div>
                         <?php else: ?>
                             <input type="file" id="akce_pdf_file" class="form-control" accept="application/pdf,.pdf" disabled>
                             <div class="form-text">PDF bude možné nahrát po prvním uložení akční nabídky.</div>
@@ -243,13 +240,41 @@ $typesActive = in_array($tab, ['02', '04'], true);
                             <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
                                 <div>
                                     <div class="fw-semibold">Stránky pro flip prohlížeč</div>
-                                    <div class="small text-muted">Nahrávej velké obrázky stran v pořadí podle názvu souboru. PDF zůstává pouze jako download.</div>
-                                    <div class="small text-danger mt-1">Stránky se pro web ukládají podle systémových proměnných: formát <?= rep_akce_e($pageOutputFormat) ?>, kvalita <?= (int)$pageImageQuality ?>. Pro ostrý leták exportuj z tiskového PDF kvalitní zdroj, ideálně cca 1720 × 2400 px na stránku; menší stránky okolo 860 × 1200 px budou na Retina displejích a při lupě měkčí.</div>
+                                    <div class="small text-muted">Stránky lze vytvořit z nahraného PDF nebo ručně nahrát jako hotové obrázky. PDF zůstává také ke stažení.</div>
+                                    <div class="small text-danger mt-1">Maximální kvalita se načítá ze systémové proměnné <code>rep_akce_page_image_quality</code> (aktuálně <?= (int)$pageImageQuality ?>), cílová velikost z <code>rep_akce_page_target_kb</code> (aktuálně <?= (int)$pageTargetKb ?> kB) a formát z <code>rep_akce_page_output_format</code> (aktuálně <?= rep_akce_e($pageOutputFormat) ?>). Převod pro každou stranu použije nejvyšší kvalitu, která se vejde do cílové velikosti. Výška zůstává 2400 px; pouze mimořádně složitá strana se může zmenšit, nejvýše na 1800 px.</div>
                                 </div>
-                                <span class="badge text-bg-secondary align-self-start">aktuálně <?= number_format($editPageCount, 0, ',', ' ') ?> stran</span>
+                                <span class="badge text-bg-secondary align-self-start" data-rep-akce-page-count>aktuálně <?= number_format($editPageCount, 0, ',', ' ') ?> stran</span>
                             </div>
                             <?php if ((int)$formOffer['id'] > 0): ?>
-                                <label for="akce_page_images" class="form-label">Nahrát stránky</label>
+                                <div
+                                    class="border rounded-3 bg-white p-3 mb-3"
+                                    data-rep-akce-pdf-pages-converter
+                                    data-offer-id="<?= (int)$formOffer['id'] ?>"
+                                    data-csrf-token="<?= rep_akce_e($csrfToken) ?>"
+                                    data-pdf-url="<?= $pdfPath !== '' ? rep_akce_e(rep_akce_file_url($pdfPath)) : '' ?>"
+                                    data-page-format="<?= rep_akce_e($pageOutputFormat) ?>"
+                                    data-page-quality="<?= (int)$pageImageQuality ?>"
+                                    data-page-target-kb="<?= (int)$pageTargetKb ?>"
+                                >
+                                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                                        <div>
+                                            <div class="fw-semibold">Vytvořit stránky z nahraného PDF</div>
+                                            <div class="small text-muted">PDF se zpracuje přímo v tomto prohlížeči po jedné stránce. Během převodu kartu nezavírejte.</div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-primary" data-rep-akce-pdf-pages-start <?= $pdfPath === '' ? 'disabled' : '' ?>><i class="bi bi-file-earmark-image me-1"></i> vytvořit stránky</button>
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="akce_pdf_replace_pages" value="1" data-rep-akce-pdf-replace-pages checked>
+                                        <label class="form-check-label" for="akce_pdf_replace_pages">Nahradit stávající stránky výsledkem převodu</label>
+                                    </div>
+                                    <div class="progress mt-3" role="progressbar" aria-label="Průběh převodu PDF" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-rep-akce-pdf-pages-progress>
+                                        <div class="progress-bar progress-bar-striped" data-rep-akce-pdf-pages-progress-bar>0 %</div>
+                                    </div>
+                                    <div class="small text-muted mt-2" data-rep-akce-pdf-pages-status><?= $pdfPath !== '' ? 'Připraveno k převodu aktuálního PDF.' : 'Nejdříve nahrajte PDF k této nabídce.' ?></div>
+                                </div>
+
+                                <div class="fw-semibold mb-1">Nebo nahrát hotové obrázky stran</div>
+                                <label for="akce_page_images" class="form-label visually-hidden">Nahrát hotové obrázky stran</label>
                                 <input type="file" id="akce_page_images" class="form-control" accept="image/jpeg,image/png,image/webp" multiple data-rep-akce-pages-upload data-offer-id="<?= (int)$formOffer['id'] ?>" data-csrf-token="<?= rep_akce_e($csrfToken) ?>">
                                 <div class="form-check mt-2">
                                     <input class="form-check-input" type="checkbox" name="replace_pages" id="akce_replace_pages" value="1" data-rep-akce-replace-pages>
@@ -354,7 +379,8 @@ $typesActive = in_array($tab, ['02', '04'], true);
                     <div class="col-md-4"><label for="typ_nazev_cz" class="form-label">Název CZ</label><input type="text" name="nazev_cz" id="typ_nazev_cz" class="form-control" required value="<?= rep_akce_e($formType['nazev_cz'] ?? '') ?>"></div>
                     <div class="col-md-4"><label for="typ_nazev_en" class="form-label">Název EN</label><input type="text" name="nazev_en" id="typ_nazev_en" class="form-control" value="<?= rep_akce_e($formType['nazev_en'] ?? '') ?>"></div>
                     <div class="col-md-6"><label for="typ_color" class="form-label">Barva / CSS třída</label><input type="text" name="color" id="typ_color" class="form-control" value="<?= rep_akce_e($formType['color'] ?? '') ?>" placeholder="např. text-bg-qanto-velkoobchod"><div class="form-text">Stejný princip jako u štítků novinek, ukládá se CSS třída badge.</div></div>
-                    <div class="col-md-6"><label class="form-label d-block">Náhled</label><span class="badge <?= rep_akce_e(rep_akce_badge_class((string)($formType['color'] ?? ''))) ?>"><?= rep_akce_e($formType['nazev_cz'] ?: 'Ukázka typu') ?></span></div>
+                    <div class="col-md-3"><label for="typ_newsletter_group" class="form-label">Skupina pro odesílání</label><select name="newsletter_group" id="typ_newsletter_group" class="form-select"><option value="" <?= rep_akce_newsletter_group($formType['newsletter_group'] ?? '') === '' ? 'selected' : '' ?>>Neodesílat</option><option value="maloobchod" <?= rep_akce_newsletter_group($formType['newsletter_group'] ?? '') === 'maloobchod' ? 'selected' : '' ?>>Maloobchodní odběratelé</option><option value="velkoobchod" <?= rep_akce_newsletter_group($formType['newsletter_group'] ?? '') === 'velkoobchod' ? 'selected' : '' ?>>Velkoobchodní odběratelé</option><option value="obe_skupiny" <?= rep_akce_newsletter_group($formType['newsletter_group'] ?? '') === 'obe_skupiny' ? 'selected' : '' ?>>Maloobchodní i velkoobchodní odběratelé</option></select><div class="form-text">Určuje distribuční seznam nezávisle na veřejném typu letáku.</div></div>
+                    <div class="col-md-3"><label class="form-label d-block">Náhled</label><span class="badge <?= rep_akce_e(rep_akce_badge_class((string)($formType['color'] ?? ''))) ?>"><?= rep_akce_e($formType['nazev_cz'] ?: 'Ukázka typu') ?></span></div>
                     <div class="col-12"><?= admin_auto_translate_checkbox($formType ?? null, 'rep_akce_type_auto_translate_en') ?></div>
                     <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="valid" id="typ_valid" value="1" <?= (int)($formType['valid'] ?? 1) === 1 ? 'checked' : '' ?>><label class="form-check-label" for="typ_valid">Validní</label></div></div>
                     <div class="col-12"><button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Uložit</button></div>
@@ -407,7 +433,7 @@ $typesActive = in_array($tab, ['02', '04'], true);
     <?php elseif ($tab === '02'): ?>
         <div class="card shadow mb-4" data-rep-akce>
             <div class="card-header py-3"><h6 class="m-0 fw-bold text-primary d-sm-inline">Typy akčních nabídek</h6><span class="d-none d-sm-inline-block ms-2">validní <?= number_format($validTypeCount, 0, ',', ' ') ?> / nevalidní <?= number_format($invalidTypeCount, 0, ',', ' ') ?></span></div>
-            <div class="card-body"><div class="table-responsive"><table class="table table-striped table-hover table-bordered table-sm js-datatable align-middle w-100" data-order='[[ 1, "asc" ]]' data-page-length="100"><thead class="table-dark"><tr><th>ID</th><th>Pořadí</th><th>Kód</th><th>Název CZ</th><th>Název EN</th><th>Barva</th><th>Akcí</th><th>Valid</th><th>Upraveno</th><th class="no-sort no-filter">Akce</th></tr></thead><tfoot class="table-light"><tr><th>ID</th><th>Pořadí</th><th>Kód</th><th>Název CZ</th><th>Název EN</th><th>Barva</th><th>Akcí</th><th>Valid</th><th>Upraveno</th><th>Akce</th></tr></tfoot><tbody><?php foreach ($typeRows as $type): ?><tr><td><?= (int)$type['id'] ?></td><td><?= (int)$type['poradi'] ?></td><td><?= rep_akce_e($type['code'] ?? '') ?></td><td class="fw-semibold"><?= rep_akce_e($type['nazev_cz'] ?? '') ?></td><td><?= rep_akce_e($type['nazev_en'] ?? '') ?></td><td data-search="<?= rep_akce_e($type['color'] ?? '') ?>"><?= rep_akce_type_badge($type) ?><div class="small text-muted mt-1"><?= rep_akce_e($type['color'] ?? '') ?></div></td><td class="text-end"><?= (int)$type['akce_count'] ?></td><td class="text-center" data-search="<?= rep_akce_e(rep_akce_bool_label($type['valid'] ?? 0)) ?>"><?= rep_akce_bool_badge($type['valid'] ?? 0) ?></td><td data-order="<?= rep_akce_e($type['ts_u'] ?? '') ?>"><?= rep_akce_updated_cell($type) ?></td><td class="text-nowrap"><a href="index.php?section=02&amp;page=02&amp;sec_page=04&amp;edit=<?= (int)$type['id'] ?>" class="btn btn-sm btn-success" title="Upravit"><i class="bi bi-pencil-square"></i></a> <form method="post" class="d-inline" data-rep-akce-confirm="<?= (int)$type['valid'] === 1 ? 'Znevalidnit typ?' : 'Obnovit typ?' ?>"><input type="hidden" name="csrf_token" value="<?= rep_akce_e($csrfToken) ?>"><input type="hidden" name="action" value="<?= (int)$type['valid'] === 1 ? 'invalidate_type' : 'validate_type' ?>"><input type="hidden" name="id" value="<?= (int)$type['id'] ?>"><input type="hidden" name="list_valid" value="<?= (int)$valid ?>"><button type="submit" class="btn btn-<?= (int)$type['valid'] === 1 ? 'danger' : 'success' ?> btn-sm" title="<?= (int)$type['valid'] === 1 ? 'Smazat' : 'Obnovit' ?>"><i class="bi bi-<?= (int)$type['valid'] === 1 ? 'trash' : 'arrow-counterclockwise' ?>"></i></button></form></td></tr><?php endforeach; ?></tbody></table></div></div>
+            <div class="card-body"><div class="table-responsive"><table class="table table-striped table-hover table-bordered table-sm js-datatable align-middle w-100" data-order='[[ 1, "asc" ]]' data-page-length="100"><thead class="table-dark"><tr><th>ID</th><th>Pořadí</th><th>Kód</th><th>Název CZ</th><th>Název EN</th><th>Barva</th><th>Odesílání</th><th>Akcí</th><th>Valid</th><th>Upraveno</th><th class="no-sort no-filter">Akce</th></tr></thead><tfoot class="table-light"><tr><th>ID</th><th>Pořadí</th><th>Kód</th><th>Název CZ</th><th>Název EN</th><th>Barva</th><th>Odesílání</th><th>Akcí</th><th>Valid</th><th>Upraveno</th><th>Akce</th></tr></tfoot><tbody><?php foreach ($typeRows as $type): ?><tr><td><?= (int)$type['id'] ?></td><td><?= (int)$type['poradi'] ?></td><td><?= rep_akce_e($type['code'] ?? '') ?></td><td class="fw-semibold"><?= rep_akce_e($type['nazev_cz'] ?? '') ?></td><td><?= rep_akce_e($type['nazev_en'] ?? '') ?></td><td data-search="<?= rep_akce_e($type['color'] ?? '') ?>"><?= rep_akce_type_badge($type) ?><div class="small text-muted mt-1"><?= rep_akce_e($type['color'] ?? '') ?></div></td><td><?= rep_akce_e(rep_akce_newsletter_group_label($type['newsletter_group'] ?? '')) ?></td><td class="text-end"><?= (int)$type['akce_count'] ?></td><td class="text-center" data-search="<?= rep_akce_e(rep_akce_bool_label($type['valid'] ?? 0)) ?>"><?= rep_akce_bool_badge($type['valid'] ?? 0) ?></td><td data-order="<?= rep_akce_e($type['ts_u'] ?? '') ?>"><?= rep_akce_updated_cell($type) ?></td><td class="text-nowrap"><a href="index.php?section=02&amp;page=02&amp;sec_page=04&amp;edit=<?= (int)$type['id'] ?>" class="btn btn-sm btn-success" title="Upravit"><i class="bi bi-pencil-square"></i></a> <form method="post" class="d-inline" data-rep-akce-confirm="<?= (int)$type['valid'] === 1 ? 'Znevalidnit typ?' : 'Obnovit typ?' ?>"><input type="hidden" name="csrf_token" value="<?= rep_akce_e($csrfToken) ?>"><input type="hidden" name="action" value="<?= (int)$type['valid'] === 1 ? 'invalidate_type' : 'validate_type' ?>"><input type="hidden" name="id" value="<?= (int)$type['id'] ?>"><input type="hidden" name="list_valid" value="<?= (int)$valid ?>"><button type="submit" class="btn btn-<?= (int)$type['valid'] === 1 ? 'danger' : 'success' ?> btn-sm" title="<?= (int)$type['valid'] === 1 ? 'Smazat' : 'Obnovit' ?>"><i class="bi bi-<?= (int)$type['valid'] === 1 ? 'trash' : 'arrow-counterclockwise' ?>"></i></button></form></td></tr><?php endforeach; ?></tbody></table></div></div>
         </div>
     <?php else: ?>
         <?php

@@ -38,7 +38,16 @@ $galleries = function_exists('galerie_all') ? galerie_all(null, 1, 0) : [];
 
                 <div class="col-md-4">
                     <label for="news_typ" class="form-label">Typ novinky</label>
-                    <select name="news_typ" id="news_typ" class="form-select" required>
+                    <select
+                        name="news_typ"
+                        id="news_typ"
+                        class="form-select js-admin-single-picker"
+                        data-picker-title="Vybrat typ novinky"
+                        data-picker-description="Vyberte právě jeden typ, do kterého bude novinka zařazena."
+                        data-picker-search-placeholder="Hledat podle názvu typu…"
+                        data-picker-empty-label="Vyberte typ"
+                        required
+                    >
                         <option value="">Vyberte typ</option>
                         <?php news_typ_option_form((string)$news_typ); ?>
                     </select>
@@ -63,7 +72,15 @@ $galleries = function_exists('galerie_all') ? galerie_all(null, 1, 0) : [];
 
                 <div class="col-md-6">
                     <label for="galerie_id" class="form-label">Přiřazená fotogalerie</label>
-                    <select name="galerie_id" id="galerie_id" class="form-select">
+                    <select
+                        name="galerie_id"
+                        id="galerie_id"
+                        class="form-select js-admin-single-picker"
+                        data-picker-title="Vybrat fotogalerii"
+                        data-picker-description="Volitelně přiřaďte k novince jednu fotogalerii."
+                        data-picker-search-placeholder="Hledat podle názvu galerie…"
+                        data-picker-empty-label="Bez galerie"
+                    >
                         <option value="0">Bez galerie</option>
                         <?php foreach ($galleries as $gallery): ?>
                             <option value="<?= (int)$gallery['id'] ?>" <?= (int)$gallery['id'] === $galerie_id ? 'selected' : '' ?>>

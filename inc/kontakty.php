@@ -21,34 +21,34 @@ $contactFormValue = static function (string $key) use ($keepContactFormValues): 
 };
 $selectedContactCategory = $keepContactFormValues ? (int)($_POST['category_id'] ?? 0) : 0;
 
-$companyName = frontend_contacts_expr('contact.company.name', $lang, 'Astur & Qanto s.r.o.');
-$companyAddress = frontend_contacts_expr('contact.company.address', $lang, 'Na Slatince 3279/3, Záběhlice, Praha 10, 106 00');
-$companyVat = frontend_contacts_expr('contact.company.vat', $lang, 'CZ03392341');
-$companyId = frontend_contacts_expr('contact.company.id', $lang, '03392341');
-$companyNote = frontend_contacts_expr('contact.company.note', $lang, 'Firma Astur & Qanto s.r.o. byla zapsána do OR, vedeného Městským soudem v Praze 11.9.2014 pod oddílem C, vložka 231019');
-$adminLabel = frontend_contacts_expr('contact.admin.label', $lang, 'Qanto');
-$adminAddress = frontend_contacts_expr('contact.admin.address', $lang, 'Pražská 73a/2340, Svitavy');
-$adminEmail = frontend_contacts_expr('contact.admin.email', $lang, 'mail@qanto.cz');
+$companyName = frontend_contacts_expr('contact.company.name', $lang);
+$companyAddress = frontend_contacts_expr('contact.company.address', $lang);
+$companyVat = frontend_contacts_expr('contact.company.vat', $lang);
+$companyId = frontend_contacts_expr('contact.company.id', $lang);
+$companyNote = frontend_contacts_expr('contact.company.note', $lang);
+$adminLabel = frontend_contacts_expr('contact.admin.label', $lang);
+$adminAddress = frontend_contacts_expr('contact.admin.address', $lang);
+$adminEmail = frontend_contacts_expr('contact.admin.email', $lang);
 ?>
 <section class="contacts-page">
     <div class="site-shell">
-        <nav class="site-breadcrumb" aria-label="<?= frontend_contacts_e(ui_text('aria.breadcrumb', 'Drobečková navigace')) ?>">
+        <nav class="site-breadcrumb" aria-label="<?= frontend_contacts_e(ui_text('aria.breadcrumb')) ?>">
             <ol>
                 <li>
-                    <a href="/<?= frontend_contacts_e($lang) ?>" aria-label="<?= frontend_contacts_e(ui_text('aria.home', 'Domů')) ?>">
+                    <a href="/<?= frontend_contacts_e($lang) ?>" aria-label="<?= frontend_contacts_e(ui_text('aria.breadcrumb_home')) ?>">
                         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3.2 3.8 8.3v7.4h4.1v-4.6h4.2v4.6h4.1V8.3L10 3.2Zm0-2.1 8 6.6v9.6h-7.5v-4.6h-1v4.6H2V7.7l8-6.6Z"/></svg>
                     </a>
                 </li>
-                <li><span aria-current="page"><?= frontend_contacts_e(ui_text('contacts.title', 'Kontakty')) ?></span></li>
+                <li><span aria-current="page"><?= frontend_contacts_e(ui_text('contacts.title')) ?></span></li>
             </ol>
         </nav>
 
         <header class="contacts-page__head">
-            <h1><?= frontend_contacts_e(ui_text('contacts.title', 'Kontakty')) ?></h1>
+            <h1><?= frontend_contacts_e(ui_text('contacts.title')) ?></h1>
             <div class="contacts-page__quick">
                 <?php if ($branches !== []): ?>
                     <div class="contacts-page__quick-block">
-                        <strong><?= frontend_contacts_e(ui_text('contacts.jump_wholesale', 'Přejděte na kontakty pro velkoobchodní pobočky')) ?></strong>
+                        <strong><?= frontend_contacts_e(ui_text('contacts.jump_wholesale')) ?></strong>
                         <div>
                             <?php foreach ($branches as $branch): ?>
                                 <a href="#<?= frontend_contacts_e((string)$branch['anchor']) ?>"><?= frontend_contacts_e((string)$branch['short_name']) ?></a>
@@ -57,20 +57,20 @@ $adminEmail = frontend_contacts_expr('contact.admin.email', $lang, 'mail@qanto.c
                     </div>
                 <?php endif; ?>
                 <div class="contacts-page__quick-block">
-                    <strong><?= frontend_contacts_e(ui_text('contacts.contact_us', 'Kontaktujte nás')) ?></strong>
-                    <div><a href="#kontaktni-formular"><?= frontend_contacts_e(ui_text('contacts.form_link', 'Využijte kontaktní formulář')) ?></a></div>
+                    <strong><?= frontend_contacts_e(ui_text('contacts.contact_us')) ?></strong>
+                    <div><a href="#kontaktni-formular"><?= frontend_contacts_e(ui_text('contacts.form_link')) ?></a></div>
                 </div>
             </div>
         </header>
 
-        <section class="contacts-company" aria-label="<?= frontend_contacts_e(ui_text('contacts.company_section', 'Firemní a administrativní kontakt')) ?>">
+        <section class="contacts-company" aria-label="<?= frontend_contacts_e(ui_text('contacts.company_section')) ?>">
             <article class="contacts-company__block">
-                <h2><?= frontend_contacts_e(ui_text('contacts.company_contact', 'Firemní kontakt')) ?></h2>
+                <h2><?= frontend_contacts_e(ui_text('contacts.company_contact')) ?></h2>
                 <address>
                     <strong><?= frontend_contacts_e($companyName) ?></strong><br>
-                    <?= frontend_contacts_e(ui_text('contacts.company_address_label', 'Sídlo')) ?>: <?= frontend_contacts_e($companyAddress) ?><br>
-                    <?= frontend_contacts_e(ui_text('contacts.company_vat_label', 'DIČ')) ?>: <?= frontend_contacts_e($companyVat) ?><br>
-                    <?= frontend_contacts_e(ui_text('contacts.company_id_label', 'IČ')) ?>: <?= frontend_contacts_e($companyId) ?>
+                    <?= frontend_contacts_e(ui_text('contacts.company_address_label')) ?>: <?= frontend_contacts_e($companyAddress) ?><br>
+                    <?= frontend_contacts_e(ui_text('contacts.company_vat_label')) ?>: <?= frontend_contacts_e($companyVat) ?><br>
+                    <?= frontend_contacts_e(ui_text('contacts.company_id_label')) ?>: <?= frontend_contacts_e($companyId) ?>
                 </address>
                 <?php if ($companyNote !== ''): ?>
                     <p><?= frontend_contacts_e($companyNote) ?></p>
@@ -78,7 +78,7 @@ $adminEmail = frontend_contacts_expr('contact.admin.email', $lang, 'mail@qanto.c
             </article>
 
             <article class="contacts-company__block contacts-company__block--admin">
-                <h2><?= frontend_contacts_e(ui_text('contacts.admin_contact', 'Administrativní kontakt')) ?></h2>
+                <h2><?= frontend_contacts_e(ui_text('contacts.admin_contact')) ?></h2>
                 <div class="contacts-admin-card">
                     <div class="contacts-admin-card__logo" aria-hidden="true"><?= frontend_contacts_e($adminLabel) ?></div>
                     <div class="contacts-admin-card__links">
@@ -99,7 +99,7 @@ $adminEmail = frontend_contacts_expr('contact.admin.email', $lang, 'mail@qanto.c
 
         <?php if ($peopleGroups !== []): ?>
             <section class="contacts-people">
-                <h2><?= frontend_contacts_e(ui_text('contacts.people_title', 'Lidé ve společnosti')) ?></h2>
+                <h2><?= frontend_contacts_e(ui_text('contacts.people_title')) ?></h2>
                 <?php foreach ($peopleGroups as $group): ?>
                     <?php if (empty($group['people'])) continue; ?>
                     <section class="contacts-people__group">
@@ -141,7 +141,7 @@ $adminEmail = frontend_contacts_expr('contact.admin.email', $lang, 'mail@qanto.c
 
         <?php if ($branches !== []): ?>
             <section class="contacts-branches">
-                <h2><?= frontend_contacts_e(ui_text('contacts.wholesale_title', 'Velkoobchodní pobočky')) ?></h2>
+                <h2><?= frontend_contacts_e(ui_text('contacts.wholesale_title')) ?></h2>
                 <div class="contacts-branches__grid">
                     <?php foreach ($branches as $branch): ?>
                         <article class="contacts-branch" id="<?= frontend_contacts_e((string)$branch['anchor']) ?>">
@@ -149,7 +149,7 @@ $adminEmail = frontend_contacts_expr('contact.admin.email', $lang, 'mail@qanto.c
                             <?php if ((string)$branch['address'] !== ''): ?><a href="https://www.google.com/maps/search/?api=1&amp;query=<?= rawurlencode((string)$branch['address']) ?>" target="_blank" rel="noopener"><span class="contacts-icon contacts-icon--pin" aria-hidden="true"></span><?= frontend_contacts_e((string)$branch['address']) ?></a><?php endif; ?>
                             <?php if ((string)$branch['phone'] !== ''): ?><a href="tel:<?= frontend_contacts_e(preg_replace('~[^0-9+]+~', '', (string)$branch['phone']) ?? '') ?>"><span class="contacts-icon contacts-icon--phone" aria-hidden="true"></span><?= frontend_contacts_e((string)$branch['phone']) ?></a><?php endif; ?>
                             <?php if ((string)$branch['email'] !== ''): ?><a href="mailto:<?= frontend_contacts_e((string)$branch['email']) ?>"><span class="contacts-icon contacts-icon--mail" aria-hidden="true"></span><?= frontend_contacts_e((string)$branch['email']) ?></a><?php endif; ?>
-                            <?php if ((string)$branch['manager'] !== ''): ?><p><?= frontend_contacts_e(ui_text('contacts.branch_manager', 'Vedoucí')) ?>: <?= frontend_contacts_e((string)$branch['manager']) ?></p><?php endif; ?>
+                            <?php if ((string)$branch['manager'] !== ''): ?><p><?= frontend_contacts_e(ui_text('contacts.branch_manager')) ?>: <?= frontend_contacts_e((string)$branch['manager']) ?></p><?php endif; ?>
                         </article>
                     <?php endforeach; ?>
                 </div>

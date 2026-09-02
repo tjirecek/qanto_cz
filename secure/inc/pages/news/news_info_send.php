@@ -56,7 +56,7 @@ try {
 }
 
 $infoSend = (string)($news['info_send'] ?? '');
-$infoSendText = ($infoSend === '' || $infoSend === '0000-00-00') ? 'NE' : format_date_www($infoSend);
+$infoSendText = $infoSend === '' ? 'NE' : format_date_www($infoSend);
 $visibleText = match ((int)($news['visible'] ?? 0)) {
     1 => 'CZ/EN',
     2 => 'CZ',

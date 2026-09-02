@@ -186,13 +186,6 @@ $activeCount = $tab === '02' || $tab === '06' || $tab === '07' ? count($typeRows
 $activeValidCount = $tab === '02' || $tab === '06' || $tab === '07' ? $typeValidCount : ($tab === '03' ? $applicationValidCount : $jobValidCount);
 $activeInvalidCount = $tab === '02' || $tab === '06' || $tab === '07' ? $typeInvalidCount : ($tab === '03' ? $applicationInvalidCount : $jobInvalidCount);
 $selectedContactId = (int)($formJob['kontakt_lide_id'] ?? 0);
-$selectedContactLabel = 'bez přiřazené osoby';
-foreach ($contacts as $contact) {
-    if ((int)$contact['id'] === $selectedContactId) {
-        $selectedContactLabel = rep_volna_mista_contact_label($contact);
-        break;
-    }
-}
 $visibleFilterUrls = [
     ['label' => 'Vše', 'value' => null, 'active' => $visibleFilter === null],
     ['label' => 'Ano', 'value' => 1, 'active' => $visibleFilter === 1],
@@ -282,7 +275,16 @@ $detailFields = [
 
                     <div class="col-md-6">
                         <label for="job_typ_id" class="form-label">Skupina</label>
-                        <select name="typ_id" id="job_typ_id" class="form-select" required>
+                        <select
+                            name="typ_id"
+                            id="job_typ_id"
+                            class="form-select js-admin-single-picker"
+                            data-picker-title="Vybrat skupinu pracovního místa"
+                            data-picker-description="Vyberte jednu skupinu, do které bude pracovní místo zařazeno."
+                            data-picker-search-placeholder="Hledat podle názvu nebo kódu střediska…"
+                            data-picker-empty-label="Vyberte skupinu"
+                            required
+                        >
                             <option value="">Vyber skupinu</option>
                             <?php foreach ($types as $type): ?>
                                 <option value="<?= (int)$type['id'] ?>" <?= (int)($formJob['typ_id'] ?? 0) === (int)$type['id'] ? 'selected' : '' ?>><?= rep_volna_mista_e($type['nazev_cz']) ?><?php if ((int)$type['stredisko_kod'] > 0): ?> (<?= (int)$type['stredisko_kod'] ?>)<?php endif; ?></option>
@@ -311,45 +313,33 @@ $detailFields = [
                         <label for="job_nazev_en" class="form-label">Název EN</label>
                         <input type="text" name="nazev_en" id="job_nazev_en" class="form-control" value="<?= rep_volna_mista_e($formJob['nazev_en'] ?? '') ?>">
                     </div>
-                    <div class="col-12" data-rep-volna-mista-contact-picker>
-                        <label class="form-label">Kontaktní osoba</label>
-                        <div class="d-flex flex-wrap align-items-center gap-2">
-                            <span class="badge text-bg-light border text-dark" data-rep-volna-mista-contact-label><?= rep_volna_mista_e($selectedContactLabel) ?></span>
-                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#repVolnaMistaContactModal"><i class="bi bi-person-lines-fill me-1"></i> Vybrat osobu</button>
-                        </div>
-
-                        <div class="modal fade" id="repVolnaMistaContactModal" tabindex="-1" aria-labelledby="repVolnaMistaContactModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="repVolnaMistaContactModalLabel">Vybrat kontaktní osobu</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavřít"></button>
-                                    </div>
-                                    <div class="modal-body p-0">
-                                        <div class="admin-filter-head">
-                                            <input type="search" class="form-control form-control-sm admin-filter-search" placeholder="Hledat osobu..." data-admin-filter-search aria-label="Hledat osobu">
-                                        </div>
-                                        <div class="admin-filter-options" data-admin-filter-options>
-                                            <label class="admin-filter-option" data-admin-filter-item data-admin-filter-text="bez kontaktu">
-                                                <input class="form-check-input" type="radio" name="kontakt_lide_id" value="0" data-contact-label="bez přiřazené osoby" <?= $selectedContactId === 0 ? 'checked' : '' ?>>
-                                                <span class="admin-filter-option-label">Bez přiřazené osoby</span>
-                                            </label>
-                                            <?php foreach ($contacts as $contact): ?>
-                                                <?php $contactLabel = rep_volna_mista_contact_label($contact); ?>
-                                                <label class="admin-filter-option" data-admin-filter-item data-admin-filter-text="<?= rep_volna_mista_e($contactLabel) ?>">
-                                                    <input class="form-check-input" type="radio" name="kontakt_lide_id" value="<?= (int)$contact['id'] ?>" data-contact-label="<?= rep_volna_mista_e($contactLabel) ?>" <?= $selectedContactId === (int)$contact['id'] ? 'checked' : '' ?>>
-                                                    <span class="admin-filter-option-label"><?= rep_volna_mista_e($contact['jmeno']) ?><span class="text-muted ms-1"><?= rep_volna_mista_e($contact['funkce_cz'] ?? '') ?></span></span>
-                                                    <span class="admin-filter-count"><?= rep_volna_mista_e($contact['skupina_nazev'] ?? '') ?></span>
-                                                </label>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Použít</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-12">
+                        <label for="job_kontakt_lide_id" class="form-label">Kontaktní osoba</label>
+                        <select
+                            name="kontakt_lide_id"
+                            id="job_kontakt_lide_id"
+                            class="form-select js-admin-single-picker"
+                            data-picker-title="Vybrat kontaktní osobu"
+                            data-picker-description="Volitelně přiřaďte k pracovnímu místu jednu kontaktní osobu."
+                            data-picker-search-placeholder="Hledat podle jména, funkce nebo skupiny…"
+                            data-picker-empty-label="Bez přiřazené osoby"
+                        >
+                            <option value="0" <?= $selectedContactId === 0 ? 'selected' : '' ?>>Bez přiřazené osoby</option>
+                            <?php foreach ($contacts as $contact): ?>
+                                <?php
+                                $contactMeta = implode(' · ', array_filter([
+                                    trim((string)($contact['funkce_cz'] ?? '')),
+                                    trim((string)($contact['skupina_nazev'] ?? '')),
+                                ], static fn (string $value): bool => $value !== ''));
+                                ?>
+                                <option
+                                    value="<?= (int)$contact['id'] ?>"
+                                    data-picker-subtext="<?= rep_volna_mista_e($contactMeta) ?>"
+                                    data-picker-icon="bi bi-person-lines-fill"
+                                    <?= $selectedContactId === (int)$contact['id'] ? 'selected' : '' ?>
+                                ><?= rep_volna_mista_e($contact['jmeno']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-12">
                         <ul class="nav nav-tabs" id="jobTextTabs" role="tablist">

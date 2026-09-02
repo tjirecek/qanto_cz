@@ -66,7 +66,7 @@ function galerie_date_db(?string $date): ?string
 function galerie_date_form(?string $date): string
 {
     $date = trim((string)$date);
-    if ($date === '' || $date === '0000-00-00') {
+    if ($date === '') {
         return date('Y-m-d');
     }
 
@@ -76,7 +76,7 @@ function galerie_date_form(?string $date): string
 function galerie_datetime_www(mixed $date): string
 {
     $date = trim((string)$date);
-    if ($date === '' || $date === '0000-00-00 00:00:00') {
+    if ($date === '') {
         return '';
     }
 

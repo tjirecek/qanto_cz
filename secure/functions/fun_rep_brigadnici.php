@@ -19,7 +19,7 @@ function rep_brigadnici_type_label(string $type): string
 function rep_brigadnici_format_datetime(mixed $value): string
 {
     $value = trim((string)$value);
-    if ($value === '' || $value === '0000-00-00 00:00:00') {
+    if ($value === '') {
         return '';
     }
 

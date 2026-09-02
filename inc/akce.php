@@ -5,10 +5,10 @@ $lang = (string)($lang ?? 'cz');
 $offerId = isset($_GET['akce']) ? (int)$_GET['akce'] : 0;
 $requestedFlyerType = preg_replace('~[^a-z0-9_-]+~i', '', (string)($_GET['typ'] ?? '')) ?? '';
 $offer = $offerId > 0 && function_exists('frontend_akce_offer_detail') ? frontend_akce_offer_detail($offerId, $lang) : null;
-$overview = function_exists('frontend_akce_page_overview') ? frontend_akce_page_overview($lang, 0) : [
+$overview = function_exists('frontend_akce_page_overview') ? frontend_akce_page_overview($lang) : [
     'current_panels' => [],
     'upcoming_panels' => [],
-    'archive_panels' => [],
+    'expired_panels' => [],
 ];
 $subscribeResult = null;
 $subscribeTypes = function_exists('frontend_akce_subscription_types') ? frontend_akce_subscription_types($lang) : [];
@@ -39,7 +39,7 @@ $renderFlyerCard = static function (array $item): void {
             <?php if ((string)($item['image'] ?? '') !== ''): ?>
                 <img src="<?= htmlspecialchars((string)$item['image'], ENT_QUOTES, 'UTF-8') ?>" alt="" loading="lazy">
             <?php else: ?>
-                <span><?= htmlspecialchars(ui_text('flyers.preview_missing', 'Náhled se připravuje'), ENT_QUOTES, 'UTF-8') ?></span>
+                <span><?= htmlspecialchars(ui_text('flyers.preview_missing'), ENT_QUOTES, 'UTF-8') ?></span>
             <?php endif; ?>
         </a>
         <div class="flyer-card__body">
@@ -54,9 +54,9 @@ $renderFlyerCard = static function (array $item): void {
                 <p><?= htmlspecialchars($validityText, ENT_QUOTES, 'UTF-8') ?></p>
             <?php endif; ?>
             <div class="flyer-card__actions">
-                <a href="<?= htmlspecialchars((string)$item['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('flyers.browse', 'Prolistovat'), ENT_QUOTES, 'UTF-8') ?></a>
+                <a href="<?= htmlspecialchars((string)$item['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('flyers.browse'), ENT_QUOTES, 'UTF-8') ?></a>
                 <?php if ((string)($item['pdf'] ?? '') !== ''): ?>
-                    <a href="<?= htmlspecialchars((string)$item['pdf'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('flyers.pdf', 'PDF'), ENT_QUOTES, 'UTF-8') ?></a>
+                    <a href="<?= htmlspecialchars((string)$item['pdf'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('flyers.pdf'), ENT_QUOTES, 'UTF-8') ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -72,9 +72,9 @@ $renderSubscribeBlock = static function (string $modifier = '') use ($subscribeT
     ?>
     <section class="<?= htmlspecialchars($class, ENT_QUOTES, 'UTF-8') ?>" aria-labelledby="akce-subscribe-title">
         <div class="akce-subscribe__content">
-            <span><?= htmlspecialchars(ui_text('flyers.subscribe_kicker', 'Odběr letáků'), ENT_QUOTES, 'UTF-8') ?></span>
-            <h2 id="akce-subscribe-title"><?= htmlspecialchars(ui_text('flyers.subscribe_title', 'Nový leták vám pošleme přímo na e-mail'), ENT_QUOTES, 'UTF-8') ?></h2>
-            <p><?= htmlspecialchars(ui_text('flyers.subscribe_text', 'Vyberte si typy letáků, které chcete dostávat.'), ENT_QUOTES, 'UTF-8') ?></p>
+            <span><?= htmlspecialchars(ui_text('flyers.subscribe_kicker'), ENT_QUOTES, 'UTF-8') ?></span>
+            <h2 id="akce-subscribe-title"><?= htmlspecialchars(ui_text('flyers.subscribe_title'), ENT_QUOTES, 'UTF-8') ?></h2>
+            <p><?= htmlspecialchars(stat_vyraz_text('flyers.subscribe_text'), ENT_QUOTES, 'UTF-8') ?></p>
 
             <?php if (is_array($subscribeResult)): ?>
                 <div class="akce-subscribe__message <?= (bool)($subscribeResult['ok'] ?? false) ? 'is-success' : 'is-error' ?>" role="status">
@@ -86,18 +86,18 @@ $renderSubscribeBlock = static function (string $modifier = '') use ($subscribeT
                 <input type="hidden" name="action" value="akce_subscribe">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($subscribeToken, ENT_QUOTES, 'UTF-8') ?>">
                 <div class="akce-subscribe__row">
-                    <label class="visually-hidden" for="akce_subscribe_email"><?= htmlspecialchars(ui_text('flyers.subscribe_email', 'Váš e-mail'), ENT_QUOTES, 'UTF-8') ?></label>
+                    <label class="visually-hidden" for="akce_subscribe_email"><?= htmlspecialchars(ui_text('flyers.subscribe_email'), ENT_QUOTES, 'UTF-8') ?></label>
                     <input type="email"
                            name="email"
                            id="akce_subscribe_email"
                            required
                            autocomplete="email"
-                           placeholder="<?= htmlspecialchars(ui_text('flyers.subscribe_email', 'Váš e-mail'), ENT_QUOTES, 'UTF-8') ?>"
+                           placeholder="<?= htmlspecialchars(ui_text('flyers.subscribe_email'), ENT_QUOTES, 'UTF-8') ?>"
                            value="<?= is_array($subscribeResult) && !(bool)($subscribeResult['ok'] ?? false) ? htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES, 'UTF-8') : '' ?>">
-                    <button type="submit"><?= htmlspecialchars(ui_text('flyers.subscribe_button', 'Odebírat'), ENT_QUOTES, 'UTF-8') ?> <span aria-hidden="true">›</span></button>
+                    <button type="submit"><?= htmlspecialchars(ui_text('flyers.subscribe_button'), ENT_QUOTES, 'UTF-8') ?> <span aria-hidden="true">›</span></button>
                 </div>
 
-                <div class="akce-subscribe__types" aria-label="<?= htmlspecialchars(ui_text('flyers.subscribe_types', 'Typy letáků'), ENT_QUOTES, 'UTF-8') ?>">
+                <div class="akce-subscribe__types" aria-label="<?= htmlspecialchars(ui_text('flyers.subscribe_types'), ENT_QUOTES, 'UTF-8') ?>">
                     <?php foreach ($subscribeTypes as $type): ?>
                         <?php
                         $typeId = (int)$type['id'];
@@ -115,9 +115,9 @@ $renderSubscribeBlock = static function (string $modifier = '') use ($subscribeT
                 <?php endif; ?>
 
                 <p class="akce-subscribe__consent">
-                    <?= htmlspecialchars(ui_text('flyers.subscribe_consent', 'Odběrem souhlasíte se'), ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars(ui_text('flyers.subscribe_consent'), ENT_QUOTES, 'UTF-8') ?>
                     <a href="/<?= htmlspecialchars((string)($GLOBALS['lang'] ?? 'cz'), ENT_QUOTES, 'UTF-8') ?>/osobni-udaje">
-                        <?= htmlspecialchars(ui_text('flyers.subscribe_privacy_link', 'zpracováním osobních údajů'), ENT_QUOTES, 'UTF-8') ?>
+                        <?= htmlspecialchars(ui_text('flyers.subscribe_privacy_link'), ENT_QUOTES, 'UTF-8') ?>
                     </a>.
                 </p>
             </form>
@@ -127,7 +127,7 @@ $renderSubscribeBlock = static function (string $modifier = '') use ($subscribeT
     <?php
 };
 
-$renderPanelSection = static function (string $sectionId, string $titleKey, string $titleFallback, string $textKey, string $textFallback, array $panels, string $emptyKey, string $emptyFallback, string $modifier = '', bool $showFilters = true) use ($renderFlyerCard, $requestedFlyerType): void {
+$renderPanelSection = static function (string $sectionId, string $titleKey, string $textExpressionCode, array $panels, string $emptyKey, string $modifier = '', bool $showFilters = true) use ($renderFlyerCard, $requestedFlyerType): void {
     $class = trim('akce-list-section ' . $modifier);
     $itemsPerPage = 35;
     $visiblePanels = array_values($panels);
@@ -147,14 +147,14 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
     <section class="<?= htmlspecialchars($class, ENT_QUOTES, 'UTF-8') ?>" aria-labelledby="<?= htmlspecialchars($sectionId, ENT_QUOTES, 'UTF-8') ?>-title" data-home-flyers>
         <div class="akce-list-section__head">
             <div>
-                <h2 id="<?= htmlspecialchars($sectionId, ENT_QUOTES, 'UTF-8') ?>-title"><?= htmlspecialchars(ui_text($titleKey, $titleFallback), ENT_QUOTES, 'UTF-8') ?></h2>
-                <p><?= htmlspecialchars(ui_text($textKey, $textFallback), ENT_QUOTES, 'UTF-8') ?></p>
+                <h2 id="<?= htmlspecialchars($sectionId, ENT_QUOTES, 'UTF-8') ?>-title"><?= htmlspecialchars(ui_text($titleKey), ENT_QUOTES, 'UTF-8') ?></h2>
+                <p><?= htmlspecialchars(stat_vyraz_text($textExpressionCode), ENT_QUOTES, 'UTF-8') ?></p>
             </div>
         </div>
 
         <?php if ($visiblePanels !== []): ?>
             <?php if ($showFilters): ?>
-                <div class="home-flyers__tabs akce-list-section__tabs" role="tablist" aria-label="<?= htmlspecialchars(ui_text('flyers.category', 'Kategorie'), ENT_QUOTES, 'UTF-8') ?>">
+                <div class="home-flyers__tabs akce-list-section__tabs" role="tablist" aria-label="<?= htmlspecialchars(ui_text('flyers.category'), ENT_QUOTES, 'UTF-8') ?>">
                     <?php foreach ($visiblePanels as $panelIndex => $panel): ?>
                         <?php
                         $panelId = (string)$panel['id'];
@@ -197,9 +197,9 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
                         <?php if (count($pages) > 1): ?>
                             <nav class="news-pagination akce-pagination"
                                  data-flyer-pagination
-                                 aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_label', 'Stránkování letáků'), ENT_QUOTES, 'UTF-8') ?>">
-                                <button type="button" data-flyer-page-action="first" aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_first', 'První stránka'), ENT_QUOTES, 'UTF-8') ?>" hidden>‹‹</button>
-                                <button type="button" data-flyer-page-action="prev" aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_prev', 'Předchozí stránka'), ENT_QUOTES, 'UTF-8') ?>" hidden>‹</button>
+                                 aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_label'), ENT_QUOTES, 'UTF-8') ?>">
+                                <button type="button" data-flyer-page-action="first" aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_first'), ENT_QUOTES, 'UTF-8') ?>" hidden>‹‹</button>
+                                <button type="button" data-flyer-page-action="prev" aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_prev'), ENT_QUOTES, 'UTF-8') ?>" hidden>‹</button>
                                 <?php foreach ($pages as $pageIndex => $_pageItems): ?>
                                     <button type="button"
                                             class="<?= $pageIndex === 0 ? 'is-active' : '' ?>"
@@ -209,15 +209,15 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
                                         <?= $pageIndex + 1 ?>
                                     </button>
                                 <?php endforeach; ?>
-                                <button type="button" data-flyer-page-action="next" aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_next', 'Další stránka'), ENT_QUOTES, 'UTF-8') ?>">›</button>
-                                <button type="button" data-flyer-page-action="last" aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_last', 'Poslední stránka'), ENT_QUOTES, 'UTF-8') ?>">››</button>
+                                <button type="button" data-flyer-page-action="next" aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_next'), ENT_QUOTES, 'UTF-8') ?>">›</button>
+                                <button type="button" data-flyer-page-action="last" aria-label="<?= htmlspecialchars(ui_text('flyers.pagination_last'), ENT_QUOTES, 'UTF-8') ?>">››</button>
                             </nav>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <div class="home-flyers__empty"><?= htmlspecialchars(ui_text($emptyKey, $emptyFallback), ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="home-flyers__empty"><?= htmlspecialchars(ui_text($emptyKey), ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
     </section>
     <?php
@@ -226,18 +226,18 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
 
 <section class="akce-page<?= $offer !== null ? ' akce-page--detail' : '' ?>">
     <div class="site-shell">
-        <nav class="site-breadcrumb" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb', 'Drobečková navigace'), ENT_QUOTES, 'UTF-8') ?>">
+        <nav class="site-breadcrumb" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb'), ENT_QUOTES, 'UTF-8') ?>">
             <ol>
                 <li>
-                    <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('aria.home', 'Domů'), ENT_QUOTES, 'UTF-8') ?>">
+                    <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb_home'), ENT_QUOTES, 'UTF-8') ?>">
                         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3.2 3.8 8.3v7.4h4.1v-4.6h4.2v4.6h4.1V8.3L10 3.2Zm0-2.1 8 6.6v9.6h-7.5v-4.6h-1v4.6H2V7.7l8-6.6Z"/></svg>
                     </a>
                 </li>
                 <li>
                     <?php if ($offer !== null): ?>
-                        <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/akce"><?= htmlspecialchars(ui_text('flyers.title', 'Letáky'), ENT_QUOTES, 'UTF-8') ?></a>
+                        <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/akce"><?= htmlspecialchars(ui_text('flyers.title'), ENT_QUOTES, 'UTF-8') ?></a>
                     <?php else: ?>
-                        <span aria-current="page"><?= htmlspecialchars(ui_text('flyers.title', 'Letáky'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span aria-current="page"><?= htmlspecialchars(ui_text('flyers.title'), ENT_QUOTES, 'UTF-8') ?></span>
                     <?php endif; ?>
                 </li>
                 <?php if ($offer !== null): ?>
@@ -255,9 +255,9 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
             }
             ?>
             <div class="akce-page__head akce-page__head--detail">
-                <a class="akce-page__back" href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/akce"><?= htmlspecialchars(ui_text('akce.back_to_list', 'Zpět na letáky'), ENT_QUOTES, 'UTF-8') ?></a>
+                <a class="akce-page__back" href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/akce"><?= htmlspecialchars(ui_text('akce.back_to_list'), ENT_QUOTES, 'UTF-8') ?></a>
                 <div>
-                    <span><?= htmlspecialchars((string)($offer['type_label'] ?? ui_text('nav.akce', 'Letáky')), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars((string)($offer['type_label'] ?? ui_text('nav.akce')), ENT_QUOTES, 'UTF-8') ?></span>
                     <h1><?= htmlspecialchars((string)$offer['title'], ENT_QUOTES, 'UTF-8') ?></h1>
                     <?php if (function_exists('frontend_akce_validity_text')): ?>
                         <?php $validity = frontend_akce_validity_text($offer); ?>
@@ -266,7 +266,7 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
                 </div>
                 <div class="akce-page__head-actions">
                     <?php if ((string)($offer['pdf'] ?? '') !== ''): ?>
-                        <a href="<?= htmlspecialchars((string)$offer['pdf'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('flyers.download_pdf', 'Stáhnout PDF'), ENT_QUOTES, 'UTF-8') ?></a>
+                        <a href="<?= htmlspecialchars((string)$offer['pdf'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('flyers.download_pdf'), ENT_QUOTES, 'UTF-8') ?></a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -280,38 +280,41 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
                     <button type="button"
                             class="akce-flip-viewer__close"
                             data-akce-viewer-action="close"
-                            aria-label="<?= htmlspecialchars(ui_text('flyers.close_viewer', 'Zavřít prohlížeč'), ENT_QUOTES, 'UTF-8') ?>">
+                            aria-label="<?= htmlspecialchars(ui_text('flyers.close_viewer'), ENT_QUOTES, 'UTF-8') ?>">
                         ×
                     </button>
                     <div class="akce-flip-viewer__toolbar">
-                        <a class="akce-flip-viewer__toolbar-link" href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/akce"><?= htmlspecialchars(ui_text('akce.back_to_list', 'Zpět na letáky'), ENT_QUOTES, 'UTF-8') ?></a>
+                        <a class="akce-flip-viewer__toolbar-link akce-flip-viewer__toolbar-link--back" href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/akce" aria-label="<?= htmlspecialchars(ui_text('akce.back_to_list'), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('akce.back_to_list'), ENT_QUOTES, 'UTF-8') ?></a>
                         <?php if ((string)($offer['pdf'] ?? '') !== ''): ?>
-                            <a class="akce-flip-viewer__toolbar-link" href="<?= htmlspecialchars((string)$offer['pdf'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('flyers.download_pdf', 'Stáhnout PDF'), ENT_QUOTES, 'UTF-8') ?></a>
+                            <a class="akce-flip-viewer__toolbar-link akce-flip-viewer__toolbar-link--pdf" href="<?= htmlspecialchars((string)$offer['pdf'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener" aria-label="<?= htmlspecialchars(ui_text('flyers.download_pdf'), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('flyers.download_pdf'), ENT_QUOTES, 'UTF-8') ?></a>
                         <?php endif; ?>
-                        <button type="button" data-akce-viewer-action="first" aria-label="<?= htmlspecialchars(ui_text('flyers.first_page', 'První strana'), ENT_QUOTES, 'UTF-8') ?>">‹‹</button>
-                        <button type="button" data-akce-viewer-action="prev" aria-label="<?= htmlspecialchars(ui_text('flyers.prev_page', 'Předchozí strana'), ENT_QUOTES, 'UTF-8') ?>">‹</button>
-                        <span data-akce-viewer-page data-page-word="<?= htmlspecialchars(ui_text('akce.page', 'Strana'), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('akce.page', 'Strana'), ENT_QUOTES, 'UTF-8') ?> 1 / <?= count($pages) ?></span>
-                        <button type="button" data-akce-viewer-action="next" aria-label="<?= htmlspecialchars(ui_text('flyers.next_page', 'Další strana'), ENT_QUOTES, 'UTF-8') ?>">›</button>
-                        <button type="button" data-akce-viewer-action="last" aria-label="<?= htmlspecialchars(ui_text('flyers.last_page', 'Poslední strana'), ENT_QUOTES, 'UTF-8') ?>">››</button>
-                        <button type="button" data-akce-viewer-action="zoom-out" aria-label="<?= htmlspecialchars(ui_text('flyers.zoom_out', 'Zmenšit'), ENT_QUOTES, 'UTF-8') ?>">−</button>
-                        <button type="button" data-akce-viewer-action="zoom-reset" aria-label="<?= htmlspecialchars(ui_text('flyers.zoom_reset', 'Původní velikost'), ENT_QUOTES, 'UTF-8') ?>">100%</button>
-                        <button type="button" data-akce-viewer-action="zoom-in" aria-label="<?= htmlspecialchars(ui_text('flyers.zoom_in', 'Zvětšit'), ENT_QUOTES, 'UTF-8') ?>">+</button>
-                        <button type="button" data-akce-viewer-action="fullscreen" aria-label="<?= htmlspecialchars(ui_text('flyers.fullscreen', 'Celá obrazovka'), ENT_QUOTES, 'UTF-8') ?>">⛶</button>
+                        <button type="button" data-akce-viewer-action="first" aria-label="<?= htmlspecialchars(ui_text('flyers.first_page'), ENT_QUOTES, 'UTF-8') ?>">‹‹</button>
+                        <button type="button" data-akce-viewer-action="prev" aria-label="<?= htmlspecialchars(ui_text('flyers.prev_page'), ENT_QUOTES, 'UTF-8') ?>">‹</button>
+                        <input class="akce-flip-viewer__page-input" type="text" inputmode="numeric" pattern="[0-9]*" value="1 / <?= count($pages) ?>" data-akce-viewer-page data-page-word="<?= htmlspecialchars(ui_text('akce.page'), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('flyers.go_to_page'), ENT_QUOTES, 'UTF-8') ?>">
+                        <button type="button" data-akce-viewer-action="next" aria-label="<?= htmlspecialchars(ui_text('flyers.next_page'), ENT_QUOTES, 'UTF-8') ?>">›</button>
+                        <button type="button" data-akce-viewer-action="last" aria-label="<?= htmlspecialchars(ui_text('flyers.last_page'), ENT_QUOTES, 'UTF-8') ?>">››</button>
+                        <button type="button" data-akce-viewer-action="autoplay" data-label-start="<?= htmlspecialchars(ui_text('flyers.autoplay'), ENT_QUOTES, 'UTF-8') ?>" data-label-stop="<?= htmlspecialchars(ui_text('flyers.autoplay_stop'), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('flyers.autoplay'), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="false">▶</button>
+                        <button type="button" data-akce-viewer-action="toggle-thumbs" aria-label="<?= htmlspecialchars(ui_text('flyers.toggle_thumbs'), ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars(ui_text('flyers.toggle_thumbs'), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="true">▦</button>
+                        <button type="button" data-akce-viewer-action="zoom-out" aria-label="<?= htmlspecialchars(ui_text('flyers.zoom_out'), ENT_QUOTES, 'UTF-8') ?>">−</button>
+                        <button type="button" data-akce-viewer-action="zoom-reset" aria-label="<?= htmlspecialchars(ui_text('flyers.zoom_reset'), ENT_QUOTES, 'UTF-8') ?>">100%</button>
+                        <button type="button" data-akce-viewer-action="zoom-in" aria-label="<?= htmlspecialchars(ui_text('flyers.zoom_in'), ENT_QUOTES, 'UTF-8') ?>">+</button>
+                        <button type="button" class="akce-flip-viewer__magnifier" data-akce-viewer-action="zoom-toggle" aria-label="<?= htmlspecialchars(ui_text('flyers.magnifier'), ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars(ui_text('flyers.magnifier'), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7v7M7 10.5h7"></path></svg></button>
+                        <button type="button" data-akce-viewer-action="fullscreen" data-label-enter="<?= htmlspecialchars(ui_text('flyers.fullscreen'), ENT_QUOTES, 'UTF-8') ?>" data-label-exit="<?= htmlspecialchars(ui_text('flyers.exit_fullscreen'), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('flyers.fullscreen'), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="false">⛶</button>
                     </div>
                     <div class="akce-flip-viewer__body">
                         <div class="akce-flip-viewer__book-wrap">
-                            <button type="button" class="akce-flip-viewer__side akce-flip-viewer__side--prev" data-akce-viewer-action="prev" aria-label="<?= htmlspecialchars(ui_text('flyers.prev_page', 'Předchozí strana'), ENT_QUOTES, 'UTF-8') ?>">‹</button>
+                            <button type="button" class="akce-flip-viewer__side akce-flip-viewer__side--prev" data-akce-viewer-action="prev" aria-label="<?= htmlspecialchars(ui_text('flyers.prev_page'), ENT_QUOTES, 'UTF-8') ?>">‹</button>
                             <div class="akce-flip-viewer__book-stage" data-akce-viewer-stage>
                                 <div class="akce-flip-viewer__book" data-akce-viewer-book></div>
                             </div>
-                            <button type="button" class="akce-flip-viewer__side akce-flip-viewer__side--next" data-akce-viewer-action="next" aria-label="<?= htmlspecialchars(ui_text('flyers.next_page', 'Další strana'), ENT_QUOTES, 'UTF-8') ?>">›</button>
+                            <button type="button" class="akce-flip-viewer__side akce-flip-viewer__side--next" data-akce-viewer-action="next" aria-label="<?= htmlspecialchars(ui_text('flyers.next_page'), ENT_QUOTES, 'UTF-8') ?>">›</button>
                         </div>
-                        <div class="akce-flip-viewer__thumbs" data-akce-viewer-thumbs aria-label="<?= htmlspecialchars(ui_text('flyers.page_thumbs', 'Náhledy stran'), ENT_QUOTES, 'UTF-8') ?>"></div>
+                        <div class="akce-flip-viewer__thumbs" data-akce-viewer-thumbs aria-label="<?= htmlspecialchars(ui_text('flyers.page_thumbs'), ENT_QUOTES, 'UTF-8') ?>"></div>
                     </div>
                     <div class="akce-viewer-simple" data-akce-viewer-fallback>
                         <?php foreach ($pages as $page): ?>
                             <figure class="akce-viewer-simple__page">
-                                <img src="<?= htmlspecialchars((string)$page['src'], ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars((string)$page['label'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy">
+                                <img data-src="<?= htmlspecialchars((string)$page['src'], ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars((string)$page['label'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy">
                                 <figcaption><?= htmlspecialchars((string)$page['label'], ENT_QUOTES, 'UTF-8') ?></figcaption>
                             </figure>
                         <?php endforeach; ?>
@@ -319,8 +322,8 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
                 </div>
             <?php else: ?>
                 <div class="placeholder-panel">
-                    <h1><?= htmlspecialchars(ui_text('common.preparing', 'Připravujeme'), ENT_QUOTES, 'UTF-8') ?></h1>
-                    <p><?= htmlspecialchars(ui_text('akce.no_pages', 'Pro tento leták zatím nejsou dostupné stránky prohlížeče.'), ENT_QUOTES, 'UTF-8') ?></p>
+                    <h1><?= htmlspecialchars(ui_text('common.preparing'), ENT_QUOTES, 'UTF-8') ?></h1>
+                    <p><?= htmlspecialchars(ui_text('akce.no_pages'), ENT_QUOTES, 'UTF-8') ?></p>
                 </div>
             <?php endif; ?>
         <?php else: ?>
@@ -332,12 +335,9 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
                         $renderPanelSection(
                             'akce-current',
                             'akce.valid_title',
-                            'Právě platné',
                             'akce.valid_text',
-                            'Letáky, které jsou aktuálně v platnosti.',
                             (array)($overview['current_panels'] ?? []),
                             'akce.no_current',
-                            'Aktuálně zde nejsou žádné platné letáky.',
                             'akce-list-section--current',
                             false
                         );
@@ -351,12 +351,9 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
                 $renderPanelSection(
                     'akce-current',
                     'akce.valid_title',
-                    'Právě platné',
                     'akce.valid_text',
-                    'Letáky, které jsou aktuálně v platnosti.',
                     (array)($overview['current_panels'] ?? []),
                     'akce.no_current',
-                    'Aktuálně zde nejsou žádné platné letáky.',
                     'akce-list-section--current',
                     false
                 );
@@ -365,26 +362,23 @@ $renderPanelSection = static function (string $sectionId, string $titleKey, stri
             $renderPanelSection(
                 'akce-upcoming',
                 'akce.upcoming_title',
-                'Nadcházející letáky',
                 'akce.upcoming_text',
-                'Připravované akce, které začnou platit v nejbližších dnech.',
                 (array)($overview['upcoming_panels'] ?? []),
                 'akce.no_upcoming',
-                'Nejsou zde žádné nadcházející letáky.',
                 '',
                 false
             );
 
-            $renderPanelSection(
-                'akce-archive',
-                'akce.archive_title',
-                'Uplynulé letáky',
-                'akce.archive_text',
-                'Archiv posledních uplynulých nabídek.',
-                (array)($overview['archive_panels'] ?? []),
-                'akce.no_archive',
-                'Archiv uplynulých letáků je zatím prázdný.'
-            );
+            if ((array)($overview['expired_panels'] ?? []) !== []) {
+                $renderPanelSection(
+                    'akce-archive',
+                    'akce.archive_title',
+                    'akce.archive_text',
+                    (array)$overview['expired_panels'],
+                    'akce.no_archive'
+                );
+            }
+
             ?>
         <?php endif; ?>
     </div>

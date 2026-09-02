@@ -6,9 +6,9 @@ function news_users_e(mixed $value): string
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-function news_users_zero_date(): string
+function news_users_open_end_date(): ?string
 {
-    return '0000-00-00';
+    return null;
 }
 
 function news_users_today(): string
@@ -21,7 +21,7 @@ function news_users_normalize_email(string $email): string
     return mb_strtolower(trim($email), 'UTF-8');
 }
 
-function news_users_normalize_date(mixed $value, string $fallback = '0000-00-00'): string
+function news_users_normalize_date(mixed $value, ?string $fallback = null): ?string
 {
     if ($value instanceof DateTimeInterface) {
         return $value->format('Y-m-d');
@@ -36,7 +36,7 @@ function news_users_normalize_date(mixed $value, string $fallback = '0000-00-00'
     }
 
     $date = trim((string)$value);
-    if ($date === '' || $date === '0000-00-00') {
+    if ($date === '') {
         return $fallback;
     }
 
@@ -54,7 +54,7 @@ function news_users_normalize_date(mixed $value, string $fallback = '0000-00-00'
 function news_users_format_date(mixed $value): string
 {
     $date = (string)$value;
-    if ($date === '' || $date === '0000-00-00') {
+    if ($date === '') {
         return '';
     }
 
@@ -102,11 +102,6 @@ function news_users_email_is_valid(string $email): bool
 
     $asciiDomain = idn_to_ascii($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
     return is_string($asciiDomain) && filter_var($local . '@' . $asciiDomain, FILTER_VALIDATE_EMAIL) !== false;
-}
-
-function news_users_prepare_write(PDO $pdo): void
-{
-    $pdo->exec("SET SESSION sql_mode = REPLACE(REPLACE(@@SESSION.sql_mode, 'NO_ZERO_IN_DATE', ''), 'NO_ZERO_DATE', '')");
 }
 
 function news_users_get(int $id): ?array
@@ -180,11 +175,11 @@ function news_users_payload_from_array(array $data): array
     $registered = news_users_bool($data['registered'] ?? null, 1);
     $valid = news_users_bool($data['valid'] ?? null, 1);
     $datumOd = news_users_normalize_date($data['datum_od'] ?? '', news_users_today());
-    $datumDo = news_users_normalize_date($data['datum_do'] ?? '', news_users_zero_date());
+    $datumDo = news_users_normalize_date($data['datum_do'] ?? '', news_users_open_end_date());
 
     if ($registered === 1) {
-        $datumDo = news_users_zero_date();
-    } elseif ($datumDo === news_users_zero_date()) {
+        $datumDo = news_users_open_end_date();
+    } elseif ($datumDo === null) {
         $datumDo = news_users_today();
     }
 
@@ -202,7 +197,6 @@ function news_users_save(array $data, ?int $id = null, bool $upsertByEmail = fal
 {
     global $pdo;
 
-    news_users_prepare_write($pdo);
     $payload = news_users_payload_from_array($data);
     $user = admin_session_user();
 
@@ -258,11 +252,10 @@ function news_users_delete(int $id): void
 {
     global $pdo;
 
-    news_users_prepare_write($pdo);
     $stmt = $pdo->prepare('UPDATE news_users
         SET registered = 0,
             valid = 0,
-            datum_do = IF(datum_do = "0000-00-00", :datum_do, datum_do),
+            datum_do = COALESCE(datum_do, :datum_do),
             user_u = :user_u
         WHERE id = :id');
     $stmt->execute([
@@ -276,7 +269,6 @@ function news_users_end(int $id): void
 {
     global $pdo;
 
-    news_users_prepare_write($pdo);
     $stmt = $pdo->prepare('UPDATE news_users
         SET registered = 0,
             datum_do = :datum_do,
@@ -293,12 +285,11 @@ function news_users_renew(int $id): void
 {
     global $pdo;
 
-    news_users_prepare_write($pdo);
     $stmt = $pdo->prepare('UPDATE news_users
         SET registered = 1,
             valid = 1,
             datum_od = :datum_od,
-            datum_do = "0000-00-00",
+            datum_do = NULL,
             user_u = :user_u
         WHERE id = :id');
     $stmt->execute([

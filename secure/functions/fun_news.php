@@ -747,7 +747,7 @@ function news_vypis ($limit, $valid): void
         };
 
         $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/cz/index/news/".$dev["url_cz"];
-        $info_send = ($dev["info_send"]== '0000-00-00' || $dev["info_send"] === null) ? "NE" : format_date_www($dev["info_send"]);
+        $info_send = $dev["info_send"] === null ? "NE" : format_date_www($dev["info_send"]);
         $tagNamesRaw = trim((string)($dev['tag_names'] ?? ''));
         $tagItems = $tagNamesRaw === '' ? [] : explode('||', $tagNamesRaw);
         $tagsHtml = $tagItems === []
@@ -765,7 +765,7 @@ function news_vypis ($limit, $valid): void
             <td>'.htmlspecialchars((string)($dev["typ"] ?? ''), ENT_QUOTES, 'UTF-8').'</td>
             <td>'.htmlspecialchars((string)$dev["nazev_cz"], ENT_QUOTES, 'UTF-8').'</td>
             <td>'.$tagsHtml.'</td>
-            <td>'.format_date_www($dev["datum"]).'</td>
+            <td>'.format_date_www((string)($dev["datum"] ?? '')).'</td>
             <td>'.$news_ico.'</td>
             <td>'.$galerie_id.'</td>
             <td><span class="badge text-bg-primary">'.$visible.'</span></td>
@@ -942,7 +942,7 @@ function news_users_renew ($id): void
     $pdo->exec("SET NAMES utf8");
 
     $sql = "UPDATE news_users
-        SET datum_od = :datum_od, registered = 1, datum_do = '0000-00-00', valid = 1
+        SET datum_od = :datum_od, registered = 1, datum_do = NULL, valid = 1
         WHERE id = :id";
 
     try {
@@ -984,7 +984,7 @@ function news_users_vypis ($limit, $valid): void
         echo '<td>'.stripslashes($dev["name"]).'</td>' . "\n";
         echo '<td>'.$dev["email"].'</td>' . "\n";
         echo '<td>'.format_date_www($dev["datum_od"]).'</td>' . "\n";
-        echo '<td>'.format_date_www($dev["datum_do"]).'</td>' . "\n";
+        echo '<td>'.format_date_www((string)($dev["datum_do"] ?? '')).'</td>' . "\n";
         echo '<td>'.$registered.'</td>' . "\n";
         echo '<td class="text-center">
             <a class="btn btn-danger btn-circle btn-sm" href="index.php?section=01&amp;page=01&amp;sec_page=05&amp;end='.$dev['id'].'&amp;limit='.$limit.'&amp;show=2">

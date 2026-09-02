@@ -97,7 +97,7 @@ function rep_bannery_clean_text(mixed $value, int $limit): string
 function rep_bannery_date_db(mixed $value): ?string
 {
     $value = trim((string)($value ?? ''));
-    if ($value === '' || $value === '0000-00-00') {
+    if ($value === '') {
         return null;
     }
     if (preg_match('~^\d{4}-\d{2}-\d{2}$~', $value) === 1) {
@@ -113,7 +113,7 @@ function rep_bannery_date_db(mixed $value): ?string
 function rep_bannery_date_form(mixed $value): string
 {
     $value = trim((string)($value ?? ''));
-    return $value === '' || $value === '0000-00-00' ? '' : substr($value, 0, 10);
+    return $value === '' ? '' : substr($value, 0, 10);
 }
 
 function rep_bannery_date_www(mixed $value): string
@@ -143,7 +143,7 @@ function rep_bannery_bool_badge(mixed $value): string
 function rep_bannery_updated_cell(array $row): string
 {
     $value = trim((string)($row['ts_u'] ?? ''));
-    $date = $value !== '' && $value !== '0000-00-00 00:00:00'
+    $date = $value !== ''
         ? (function_exists('format_datetime_www') ? (string)format_datetime_www($value) : $value)
         : '';
     $user = trim((string)($row['user_u'] ?? ''));

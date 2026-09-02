@@ -52,6 +52,22 @@ function rep_akce_type_badge(array $type): string
     return '<span class="badge ' . rep_akce_e(rep_akce_badge_class((string)($type['color'] ?? ''))) . '">' . rep_akce_e($label) . '</span>';
 }
 
+function rep_akce_newsletter_group(mixed $value): string
+{
+    $group = trim(mb_strtolower((string)$value, 'UTF-8'));
+    return in_array($group, ['maloobchod', 'velkoobchod', 'obe_skupiny'], true) ? $group : '';
+}
+
+function rep_akce_newsletter_group_label(mixed $value): string
+{
+    return match (rep_akce_newsletter_group($value)) {
+        'maloobchod' => 'Maloobchodní odběratelé',
+        'velkoobchod' => 'Velkoobchodní odběratelé',
+        'obe_skupiny' => 'Maloobchodní i velkoobchodní odběratelé',
+        default => 'Neodesílat',
+    };
+}
+
 function rep_akce_parse_ids(mixed $value): array
 {
     $values = is_array($value) ? $value : [$value];
@@ -68,7 +84,7 @@ function rep_akce_parse_ids(mixed $value): array
 function rep_akce_date_db(mixed $value): ?string
 {
     $value = trim((string)($value ?? ''));
-    if ($value === '' || $value === '0000-00-00') {
+    if ($value === '') {
         return null;
     }
     if (preg_match('~^\d{4}-\d{2}-\d{2}$~', $value) === 1) {
@@ -84,7 +100,7 @@ function rep_akce_date_db(mixed $value): ?string
 function rep_akce_date_form(mixed $value): string
 {
     $value = trim((string)($value ?? ''));
-    return $value === '' || $value === '0000-00-00' ? '' : substr($value, 0, 10);
+    return $value === '' ? '' : substr($value, 0, 10);
 }
 
 function rep_akce_date_www(mixed $value): string
@@ -103,7 +119,7 @@ function rep_akce_date_www(mixed $value): string
 function rep_akce_format_updated(mixed $value): string
 {
     $value = trim((string)$value);
-    if ($value === '' || $value === '0000-00-00 00:00:00') {
+    if ($value === '') {
         return '';
     }
 
@@ -198,7 +214,15 @@ function rep_akce_upload_pdf(?array $file, int $id, string $title, string $exist
     return rep_akce_store_pdf_file($tmpName, (string)($file['name'] ?? 'nabidka.pdf'), $id, $title, $existingPath, true);
 }
 
-function rep_akce_store_pdf_file(string $sourcePath, string $originalName, int $id, string $title, string $existingPath = '', bool $isUploadedFile = false): array
+function rep_akce_store_pdf_file(
+    string $sourcePath,
+    string $originalName,
+    int $id,
+    string $title,
+    string $existingPath = '',
+    bool $isUploadedFile = false,
+    bool $deleteExisting = true
+): array
 {
     if ($sourcePath === '' || !is_file($sourcePath)) {
         throw new RuntimeException('PDF soubor není dostupný.');
@@ -225,7 +249,7 @@ function rep_akce_store_pdf_file(string $sourcePath, string $originalName, int $
     if (!$stored) {
         throw new RuntimeException('PDF se nepodařilo uložit.');
     }
-    if ($existingPath !== '' && $existingPath !== $relativePath) {
+    if ($deleteExisting && $existingPath !== '' && $existingPath !== $relativePath) {
         rep_akce_safe_delete_media_file($existingPath);
     }
 
@@ -292,6 +316,16 @@ function rep_akce_page_image_quality(): int
     }
 
     return max(1, min(100, $quality));
+}
+
+function rep_akce_page_target_kb(): int
+{
+    $targetKb = function_exists('sp_hodnota') ? (int)(sp_hodnota('rep_akce_page_target_kb') ?? 0) : 0;
+    if ($targetKb <= 0) {
+        $targetKb = 400;
+    }
+
+    return max(100, min(2048, $targetKb));
 }
 
 function rep_akce_page_output_format(): string
@@ -367,6 +401,13 @@ function rep_akce_save_page_image(string $sourcePath, string $mime, string $targ
         throw new RuntimeException('Server nemá podporu pro ukládání PNG obrázků.');
     }
 
+    if (strtolower($mime) === rep_akce_page_output_mime($format)) {
+        if (!copy($sourcePath, $targetPath) || !is_file($targetPath)) {
+            throw new RuntimeException('Stránku akční nabídky se nepodařilo uložit v cílovém formátu.');
+        }
+        return;
+    }
+
     $image = rep_akce_load_page_image($sourcePath, $mime);
     $image = rep_akce_output_page_image_for_format($image, $format);
 
@@ -386,6 +427,115 @@ function rep_akce_save_page_image(string $sourcePath, string $mime, string $targ
 function rep_akce_save_page_webp(string $sourcePath, string $mime, string $targetPath): void
 {
     rep_akce_save_page_image($sourcePath, $mime, $targetPath, 'webp');
+}
+
+function rep_akce_page_variant_relative_path(string $imagePath, string $variant): string
+{
+    $imagePath = ltrim(trim($imagePath), '/');
+    $variant = strtolower(trim($variant));
+    if ($imagePath === '' || !in_array($variant, ['small', 'medium', 'thumbs'], true)) {
+        return '';
+    }
+
+    $directory = dirname($imagePath);
+    $baseName = pathinfo($imagePath, PATHINFO_FILENAME);
+    return $directory . '/' . $variant . '/' . $baseName . '.webp';
+}
+
+function rep_akce_page_thumbnail_relative_path(string $imagePath): string
+{
+    return rep_akce_page_variant_relative_path($imagePath, 'thumbs');
+}
+
+function rep_akce_save_webp_with_size_limit(GdImage $image, string $path, int $maximumBytes, int $maximumQuality = 90): bool
+{
+    $minimumQuality = 45;
+    $maximumQuality = max($minimumQuality, min(100, $maximumQuality));
+    $temporaryPath = $path . '.tmp-' . bin2hex(random_bytes(5));
+    $bestContents = null;
+    $low = $minimumQuality;
+    $high = $maximumQuality;
+
+    while ($low <= $high) {
+        $quality = (int)floor(($low + $high) / 2);
+        if (!imagewebp($image, $temporaryPath, $quality) || !is_file($temporaryPath)) {
+            @unlink($temporaryPath);
+            return false;
+        }
+        $contents = file_get_contents($temporaryPath);
+        @unlink($temporaryPath);
+        if (!is_string($contents)) {
+            return false;
+        }
+
+        if (strlen($contents) <= $maximumBytes || $quality === $minimumQuality) {
+            $bestContents = $contents;
+            $low = $quality + 1;
+        } else {
+            $high = $quality - 1;
+        }
+    }
+
+    return is_string($bestContents) && file_put_contents($path, $bestContents, LOCK_EX) !== false;
+}
+
+function rep_akce_create_page_variant(string $imagePath, string $variant, float $scale, int $maximumLongEdge, int $maximumBytes, int $maximumQuality): string
+{
+    if (!function_exists('imagewebp')) {
+        return '';
+    }
+
+    $imagePath = ltrim(trim($imagePath), '/');
+    $sourcePath = ROOT_DIR . '/' . $imagePath;
+    $imageInfo = @getimagesize($sourcePath);
+    if ($imagePath === '' || $imageInfo === false) {
+        return '';
+    }
+
+    $width = max(1, (int)($imageInfo[0] ?? 0));
+    $height = max(1, (int)($imageInfo[1] ?? 0));
+    $longEdge = max($width, $height);
+    $targetLongEdge = max(1, min($longEdge, $maximumLongEdge, (int)round($longEdge * $scale)));
+    $resizeScale = $targetLongEdge / $longEdge;
+    $targetWidth = max(1, (int)round($width * $resizeScale));
+    $targetHeight = max(1, (int)round($height * $resizeScale));
+    $source = rep_akce_load_page_image($sourcePath, strtolower((string)($imageInfo['mime'] ?? '')));
+    $target = imagecreatetruecolor($targetWidth, $targetHeight);
+    if (!$target instanceof GdImage) {
+        imagedestroy($source);
+        throw new RuntimeException('Náhled stránky akční nabídky se nepodařilo vytvořit.');
+    }
+
+    $white = imagecolorallocate($target, 255, 255, 255);
+    imagefilledrectangle($target, 0, 0, $targetWidth, $targetHeight, $white);
+    imagecopyresampled($target, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $width, $height);
+    imagedestroy($source);
+
+    $relativePath = rep_akce_page_variant_relative_path($imagePath, $variant);
+    $absolutePath = ROOT_DIR . '/' . $relativePath;
+    $absoluteDir = dirname($absolutePath);
+    if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
+        imagedestroy($target);
+        throw new RuntimeException('Adresář variant stránek se nepodařilo vytvořit.');
+    }
+
+    $saved = rep_akce_save_webp_with_size_limit($target, $absolutePath, $maximumBytes, $maximumQuality);
+    imagedestroy($target);
+    if (!$saved || !is_file($absolutePath)) {
+        throw new RuntimeException('Variantní obrázek stránky akční nabídky se nepodařilo uložit.');
+    }
+
+    return $relativePath;
+}
+
+/** @return array<string, string> */
+function rep_akce_create_page_variants(string $imagePath): array
+{
+    return [
+        'medium' => rep_akce_create_page_variant($imagePath, 'medium', 0.75, 1800, 300 * 1024, 90),
+        'small' => rep_akce_create_page_variant($imagePath, 'small', 0.50, 1200, 160 * 1024, 88),
+        'thumb' => rep_akce_create_page_variant($imagePath, 'thumbs', 1.0, 280, 25 * 1024, 78),
+    ];
 }
 
 function rep_akce_pages_relative_dir(int $id, string $title): string
@@ -450,6 +600,9 @@ function rep_akce_remove_pages(PDO $pdo, int $offerId): int
         $imagePath = trim((string)($page['image_path'] ?? ''));
         if ($imagePath !== '') {
             $removedPaths[$imagePath] = true;
+            foreach (['small', 'medium', 'thumbs'] as $variant) {
+                rep_akce_safe_delete_media_file(rep_akce_page_variant_relative_path($imagePath, $variant));
+            }
             rep_akce_safe_delete_media_file($imagePath);
         }
     }
@@ -493,6 +646,17 @@ function rep_akce_store_page(PDO $pdo, int $offerId, string $title, string $sour
     }
 
     rep_akce_save_page_image($sourcePath, $mime, $absolutePath, $outputFormat);
+    try {
+        rep_akce_create_page_variants($relativePath);
+    } catch (Throwable $error) {
+        foreach (['small', 'medium', 'thumbs'] as $variant) {
+            rep_akce_safe_delete_media_file(rep_akce_page_variant_relative_path($relativePath, $variant));
+        }
+        rep_akce_safe_delete_media_file($relativePath);
+        throw $error;
+    }
+
+    $storedImageInfo = @getimagesize($absolutePath) ?: $imageInfo;
 
     $stmt = $pdo->prepare('INSERT INTO rep_akce_strany (akce_id, poradi, image_file, image_path, mime_type, width, height, filesize, valid, user_i, user_u) VALUES (:akce_id, :poradi, :image_file, :image_path, :mime_type, :width, :height, :filesize, 1, :user_i, :user_u)');
     $stmt->execute([
@@ -501,8 +665,8 @@ function rep_akce_store_page(PDO $pdo, int $offerId, string $title, string $sour
         ':image_file' => $targetName,
         ':image_path' => $relativePath,
         ':mime_type' => rep_akce_page_output_mime($outputFormat),
-        ':width' => (int)($imageInfo[0] ?? 0),
-        ':height' => (int)($imageInfo[1] ?? 0),
+        ':width' => (int)($storedImageInfo[0] ?? 0),
+        ':height' => (int)($storedImageInfo[1] ?? 0),
         ':filesize' => (int)filesize($absolutePath),
         ':user_i' => rep_akce_user(),
         ':user_u' => rep_akce_user(),
@@ -744,12 +908,14 @@ function rep_akce_type(PDO $pdo, int $id): ?array
 function rep_akce_save_type(PDO $pdo, array $data): int
 {
     $id = (int)($data['id'] ?? 0);
+    $newsletterGroup = rep_akce_newsletter_group($data['newsletter_group'] ?? '');
     $payload = [
         ':code' => trim((string)($data['code'] ?? '')),
         ':poradi' => (int)($data['poradi'] ?? 0),
         ':nazev_cz' => trim((string)($data['nazev_cz'] ?? '')),
         ':nazev_en' => trim((string)($data['nazev_en'] ?? '')),
         ':color' => trim((string)($data['color'] ?? '')),
+        ':newsletter_group' => $newsletterGroup !== '' ? $newsletterGroup : null,
         ':valid' => isset($data['valid']) ? 1 : 0,
         ':user_u' => rep_akce_user(),
     ];
@@ -758,7 +924,7 @@ function rep_akce_save_type(PDO $pdo, array $data): int
     }
     if ($id > 0) {
         $payload[':id'] = $id;
-        $stmt = $pdo->prepare('UPDATE rep_akce_typ SET code = :code, poradi = :poradi, nazev_cz = :nazev_cz, nazev_en = :nazev_en, color = :color, valid = :valid, user_u = :user_u WHERE id = :id');
+        $stmt = $pdo->prepare('UPDATE rep_akce_typ SET code = :code, poradi = :poradi, nazev_cz = :nazev_cz, nazev_en = :nazev_en, color = :color, newsletter_group = :newsletter_group, valid = :valid, user_u = :user_u WHERE id = :id');
         $stmt->execute($payload);
         admin_auto_translate_record('rep_akce.type', $id, [
             'nazev_cz' => $payload[':nazev_cz'],
@@ -767,7 +933,7 @@ function rep_akce_save_type(PDO $pdo, array $data): int
         return $id;
     }
     $payload[':user_i'] = rep_akce_user();
-    $stmt = $pdo->prepare('INSERT INTO rep_akce_typ (code, poradi, nazev_cz, nazev_en, color, valid, user_i, user_u) VALUES (:code, :poradi, :nazev_cz, :nazev_en, :color, :valid, :user_i, :user_u)');
+    $stmt = $pdo->prepare('INSERT INTO rep_akce_typ (code, poradi, nazev_cz, nazev_en, color, newsletter_group, valid, user_i, user_u) VALUES (:code, :poradi, :nazev_cz, :nazev_en, :color, :newsletter_group, :valid, :user_i, :user_u)');
     $stmt->execute($payload);
     $newId = (int)$pdo->lastInsertId();
     admin_auto_translate_record('rep_akce.type', $newId, [
@@ -962,7 +1128,7 @@ function rep_akce_pages(PDO $pdo, int $offerId, int $limit = 0): array
 /**
  * @param array<string, mixed> $offer
  * @param array<int, array<string, mixed>> $dbPages
- * @return array<int, array{src: string, thumb: string, label: string}>
+ * @return array<int, array<string, mixed>>
  */
 function rep_akce_viewer_pages(array $offer, array $dbPages): array
 {
@@ -973,12 +1139,30 @@ function rep_akce_viewer_pages(array $offer, array $dbPages): array
             continue;
         }
         $order = (int)($page['poradi'] ?? 0);
+        $thumbPath = rep_akce_page_thumbnail_relative_path($path);
+        $sources = [];
+        foreach (['small', 'medium'] as $variant) {
+            $variantPath = rep_akce_page_variant_relative_path($path, $variant);
+            if (!rep_akce_file_exists($variantPath)) {
+                continue;
+            }
+            $variantInfo = @getimagesize(ROOT_DIR . '/' . $variantPath);
+            $sources[] = [
+                'src' => rep_akce_file_url($variantPath),
+                'width' => (int)($variantInfo[0] ?? 0),
+            ];
+        }
+        $sources[] = [
+            'src' => rep_akce_file_url($path),
+            'width' => (int)($page['width'] ?? 0),
+        ];
         $pages[] = [
             'src' => rep_akce_file_url($path),
-            'thumb' => rep_akce_file_url($path),
+            'thumb' => rep_akce_file_url(rep_akce_file_exists($thumbPath) ? $thumbPath : $path),
             'label' => 'Strana ' . ($order > 0 ? $order : count($pages) + 1),
             'width' => (int)($page['width'] ?? 0),
             'height' => (int)($page['height'] ?? 0),
+            'sources' => $sources,
         ];
     }
 
@@ -1002,6 +1186,7 @@ function rep_akce_viewer_pages(array $offer, array $dbPages): array
             'label' => 'Strana ' . ($index + 1),
             'width' => 0,
             'height' => 0,
+            'sources' => [],
         ];
     }
 

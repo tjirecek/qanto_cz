@@ -53,12 +53,12 @@ if ($type === 3 && $identify !== '') {
             <div class="volani-card">
                 <div class="volani-hero">
                     <div>
-                        <div class="volani-kicker"><?= htmlspecialchars(ui_text('volani.title', 'Vyúčtování volání'), ENT_QUOTES, 'UTF-8') ?></div>
-                        <h1><?= htmlspecialchars(ui_text('volani.overview_title', 'Přehled vyúčtování'), ENT_QUOTES, 'UTF-8') ?></h1>
+                        <div class="volani-kicker"><?= htmlspecialchars(ui_text('volani.title'), ENT_QUOTES, 'UTF-8') ?></div>
+                        <h1><?= htmlspecialchars(ui_text('volani.overview_title'), ENT_QUOTES, 'UTF-8') ?></h1>
                         <div class="volani-meta">
-                            <span><?= htmlspecialchars(ui_text('volani.email', 'E-mail'), ENT_QUOTES, 'UTF-8') ?>: <?= rep_volani_e($identify) ?></span>
+                            <span><?= htmlspecialchars(ui_text('volani.email'), ENT_QUOTES, 'UTF-8') ?>: <?= rep_volani_e($identify) ?></span>
                             <?php if ($selectedPeriod !== ''): ?>
-                                <span><?= htmlspecialchars(ui_text('volani.period', 'Období'), ENT_QUOTES, 'UTF-8') ?>: <?= rep_volani_e(rep_volani_period_label($selectedPeriod)) ?></span>
+                                <span><?= htmlspecialchars(ui_text('volani.period'), ENT_QUOTES, 'UTF-8') ?>: <?= rep_volani_e(rep_volani_period_label($selectedPeriod)) ?></span>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -66,7 +66,7 @@ if ($type === 3 && $identify !== '') {
                         <form method="get" class="volani-period-form">
                             <input type="hidden" name="typ" value="3">
                             <input type="hidden" name="identify" value="<?= rep_volani_e($identify) ?>">
-                            <label for="volani-obdobi"><?= htmlspecialchars(ui_text('volani.select_period', 'Vyberte období'), ENT_QUOTES, 'UTF-8') ?></label>
+                            <label for="volani-obdobi"><?= htmlspecialchars(ui_text('volani.select_period'), ENT_QUOTES, 'UTF-8') ?></label>
                             <div class="volani-period-form__row">
                                 <select name="obdobi" id="volani-obdobi">
                                     <?php foreach ($emailPeriods as $periodRow): ?>
@@ -76,21 +76,21 @@ if ($type === 3 && $identify !== '') {
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button type="submit"><?= htmlspecialchars(ui_text('common.show', 'Zobrazit'), ENT_QUOTES, 'UTF-8') ?></button>
+                                <button type="submit"><?= htmlspecialchars(ui_text('common.show'), ENT_QUOTES, 'UTF-8') ?></button>
                             </div>
                         </form>
                     <?php endif; ?>
                 </div>
                 <?php if ($emailRows === []): ?>
-                    <div class="alert alert-warning"><?= htmlspecialchars(ui_text('volani.not_found', 'Vyúčtování nebylo nalezeno.'), ENT_QUOTES, 'UTF-8') ?></div>
+                    <div class="alert alert-warning"><?= htmlspecialchars(ui_text('volani.not_found'), ENT_QUOTES, 'UTF-8') ?></div>
                 <?php else: ?>
                     <div class="volani-summary-grid">
                         <div class="volani-summary-box">
-                            <span><?= htmlspecialchars(ui_text('volani.phone', 'Telefon'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars(ui_text('volani.phone'), ENT_QUOTES, 'UTF-8') ?></span>
                             <strong><?= number_format(count($emailRows), 0, ',', ' ') ?></strong>
                         </div>
                         <div class="volani-summary-box volani-summary-box--primary">
-                            <span><?= htmlspecialchars(ui_text('common.total', 'Celkem'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars(ui_text('volani.with_vat', 'S DPH'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars(ui_text('common.total'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars(ui_text('volani.with_vat'), ENT_QUOTES, 'UTF-8') ?></span>
                             <strong><?= rep_volani_money($emailTotal) ?></strong>
                         </div>
                     </div>
@@ -98,11 +98,11 @@ if ($type === 3 && $identify !== '') {
                         <table class="volani-table">
                             <thead>
                             <tr>
-                                <th><?= htmlspecialchars(ui_text('volani.period', 'Období'), ENT_QUOTES, 'UTF-8') ?></th>
-                                <th><?= htmlspecialchars(ui_text('volani.name', 'Jméno'), ENT_QUOTES, 'UTF-8') ?></th>
-                                <th><?= htmlspecialchars(ui_text('volani.phone', 'Telefon'), ENT_QUOTES, 'UTF-8') ?></th>
-                                <th class="text-end"><?= htmlspecialchars(ui_text('volani.without_vat', 'Bez DPH'), ENT_QUOTES, 'UTF-8') ?></th>
-                                <th class="text-end"><?= htmlspecialchars(ui_text('volani.with_vat', 'S DPH'), ENT_QUOTES, 'UTF-8') ?></th>
+                                <th><?= htmlspecialchars(ui_text('volani.period'), ENT_QUOTES, 'UTF-8') ?></th>
+                                <th><?= htmlspecialchars(ui_text('volani.name'), ENT_QUOTES, 'UTF-8') ?></th>
+                                <th><?= htmlspecialchars(ui_text('volani.phone'), ENT_QUOTES, 'UTF-8') ?></th>
+                                <th class="text-end"><?= htmlspecialchars(ui_text('volani.without_vat'), ENT_QUOTES, 'UTF-8') ?></th>
+                                <th class="text-end"><?= htmlspecialchars(ui_text('volani.with_vat'), ENT_QUOTES, 'UTF-8') ?></th>
                                 <th></th>
                                 <th></th>
                             </tr>
@@ -115,12 +115,12 @@ if ($type === 3 && $identify !== '') {
                                     <td><?= rep_volani_e($row['mobil'] ?? '') ?></td>
                                     <td class="text-end"><?= rep_volani_money($row['zakladcelkem'] ?? 0) ?></td>
                                     <td class="text-end fw-semibold"><?= rep_volani_money($row['celkem'] ?? 0) ?></td>
-                                    <td><a class="volani-link" href="/volani/index.php?typ=1&amp;unify=<?= rawurlencode((string)$row['unify']) ?>"><?= htmlspecialchars(ui_text('volani.summary', 'Souhrn'), ENT_QUOTES, 'UTF-8') ?></a></td>
-                                    <td><a class="volani-link" href="/volani/index.php?typ=2&amp;unify=<?= rawurlencode((string)$row['unify']) ?>"><?= htmlspecialchars(ui_text('volani.detail', 'Detail'), ENT_QUOTES, 'UTF-8') ?></a></td>
+                                    <td><a class="volani-link" href="/volani/index.php?typ=1&amp;unify=<?= rawurlencode((string)$row['unify']) ?>"><?= htmlspecialchars(ui_text('volani.summary'), ENT_QUOTES, 'UTF-8') ?></a></td>
+                                    <td><a class="volani-link" href="/volani/index.php?typ=2&amp;unify=<?= rawurlencode((string)$row['unify']) ?>"><?= htmlspecialchars(ui_text('volani.detail'), ENT_QUOTES, 'UTF-8') ?></a></td>
                                 </tr>
                             <?php endforeach; ?>
                             <tr>
-                                <td colspan="4" class="text-end fw-semibold"><?= htmlspecialchars(ui_text('common.total', 'Celkem'), ENT_QUOTES, 'UTF-8') ?></td>
+                                <td colspan="4" class="text-end fw-semibold"><?= htmlspecialchars(ui_text('common.total'), ENT_QUOTES, 'UTF-8') ?></td>
                                 <td class="text-end fw-bold"><?= rep_volani_money($emailTotal) ?></td>
                                 <td colspan="2"></td>
                             </tr>
@@ -132,13 +132,13 @@ if ($type === 3 && $identify !== '') {
         <?php else: ?>
             <div class="volani-card">
                 <?php if ($invoice === null): ?>
-                    <h1><?= htmlspecialchars(ui_text('volani.title', 'Vyúčtování volání'), ENT_QUOTES, 'UTF-8') ?></h1>
-                    <div class="alert alert-warning"><?= htmlspecialchars(ui_text('volani.not_found', 'Vyúčtování nebylo nalezeno.'), ENT_QUOTES, 'UTF-8') ?></div>
+                    <h1><?= htmlspecialchars(ui_text('volani.title'), ENT_QUOTES, 'UTF-8') ?></h1>
+                    <div class="alert alert-warning"><?= htmlspecialchars(ui_text('volani.not_found'), ENT_QUOTES, 'UTF-8') ?></div>
                 <?php else: ?>
                     <div class="volani-hero">
                         <div>
-                            <div class="volani-kicker"><?= htmlspecialchars(ui_text('volani.title', 'Vyúčtování volání'), ENT_QUOTES, 'UTF-8') ?></div>
-                            <h1><?= htmlspecialchars($type === 2 ? ui_text('volani.detail_title', 'Podrobný výpis') : ui_text('volani.summary_title', 'Souhrnné vyúčtování'), ENT_QUOTES, 'UTF-8') ?></h1>
+                            <div class="volani-kicker"><?= htmlspecialchars(ui_text('volani.title'), ENT_QUOTES, 'UTF-8') ?></div>
+                            <h1><?= htmlspecialchars($type === 2 ? ui_text('volani.detail_title') : ui_text('volani.summary_title'), ENT_QUOTES, 'UTF-8') ?></h1>
                             <div class="volani-meta">
                                 <span><?= rep_volani_e($invoice['jmeno'] ?? '') ?></span>
                                 <span><?= rep_volani_e($invoice['mobil'] ?? '') ?></span>
@@ -147,25 +147,25 @@ if ($type === 3 && $identify !== '') {
                         </div>
                         <div class="volani-actions">
                             <?php if (trim((string)($invoice['email'] ?? '')) !== ''): ?>
-                                <a class="volani-action" href="/volani/index.php?typ=3&amp;identify=<?= rawurlencode((string)$invoice['email']) ?>&amp;obdobi=<?= rawurlencode((string)$invoice['obdobi']) ?>"><?= htmlspecialchars(ui_text('volani.back_overview', 'Zpět na přehled'), ENT_QUOTES, 'UTF-8') ?></a>
+                                <a class="volani-action" href="/volani/index.php?typ=3&amp;identify=<?= rawurlencode((string)$invoice['email']) ?>&amp;obdobi=<?= rawurlencode((string)$invoice['obdobi']) ?>"><?= htmlspecialchars(ui_text('volani.back_overview'), ENT_QUOTES, 'UTF-8') ?></a>
                             <?php endif; ?>
-                            <a class="volani-action <?= $type !== 2 ? 'is-active' : '' ?>" href="/volani/index.php?typ=1&amp;unify=<?= rawurlencode($unify) ?>"><?= htmlspecialchars(ui_text('volani.summary', 'Souhrn'), ENT_QUOTES, 'UTF-8') ?></a>
-                            <a class="volani-action <?= $type === 2 ? 'is-active' : '' ?>" href="/volani/index.php?typ=2&amp;unify=<?= rawurlencode($unify) ?>"><?= htmlspecialchars(ui_text('volani.detail', 'Detail'), ENT_QUOTES, 'UTF-8') ?></a>
-                            <a class="volani-action" href="/volani/index.php?typ=<?= $type === 2 ? 2 : 1 ?>&amp;unify=<?= rawurlencode($unify) ?>&amp;pdf=1"><?= htmlspecialchars(ui_text('volani.export_pdf', 'Export PDF'), ENT_QUOTES, 'UTF-8') ?></a>
+                            <a class="volani-action <?= $type !== 2 ? 'is-active' : '' ?>" href="/volani/index.php?typ=1&amp;unify=<?= rawurlencode($unify) ?>"><?= htmlspecialchars(ui_text('volani.summary'), ENT_QUOTES, 'UTF-8') ?></a>
+                            <a class="volani-action <?= $type === 2 ? 'is-active' : '' ?>" href="/volani/index.php?typ=2&amp;unify=<?= rawurlencode($unify) ?>"><?= htmlspecialchars(ui_text('volani.detail'), ENT_QUOTES, 'UTF-8') ?></a>
+                            <a class="volani-action" href="/volani/index.php?typ=<?= $type === 2 ? 2 : 1 ?>&amp;unify=<?= rawurlencode($unify) ?>&amp;pdf=1"><?= htmlspecialchars(ui_text('volani.export_pdf'), ENT_QUOTES, 'UTF-8') ?></a>
                         </div>
                     </div>
 
                     <div class="volani-summary-grid">
                         <div class="volani-summary-box">
-                            <span><?= htmlspecialchars(ui_text('volani.period', 'Období'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars(ui_text('volani.period'), ENT_QUOTES, 'UTF-8') ?></span>
                             <strong><?= rep_volani_e(rep_volani_period_label((string)($invoice['obdobi'] ?? ''))) ?></strong>
                         </div>
                         <div class="volani-summary-box">
-                            <span><?= htmlspecialchars(ui_text('common.total', 'Celkem'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars(ui_text('volani.without_vat', 'Bez DPH'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars(ui_text('common.total'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars(ui_text('volani.without_vat'), ENT_QUOTES, 'UTF-8') ?></span>
                             <strong><?= rep_volani_money($rowTotalWithoutVat ?: ($invoice['zakladcelkem'] ?? 0)) ?></strong>
                         </div>
                         <div class="volani-summary-box volani-summary-box--primary">
-                            <span><?= htmlspecialchars(ui_text('common.total', 'Celkem'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars(ui_text('volani.with_vat', 'S DPH'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars(ui_text('common.total'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars(ui_text('volani.with_vat'), ENT_QUOTES, 'UTF-8') ?></span>
                             <strong><?= rep_volani_money($rowTotalWithVat ?: ($invoice['celkem'] ?? 0)) ?></strong>
                         </div>
                     </div>
@@ -175,15 +175,15 @@ if ($type === 3 && $identify !== '') {
                             <table class="volani-table">
                                 <thead>
                                 <tr>
-                                    <th><?= htmlspecialchars(ui_text('volani.period', 'Období'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th><?= htmlspecialchars(ui_text('volani.product', 'Produktová řada'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th><?= htmlspecialchars(ui_text('volani.item', 'Položka'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th><?= htmlspecialchars(ui_text('volani.datetime', 'Datum a čas'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th><?= htmlspecialchars(ui_text('volani.direction', 'Směr'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th><?= htmlspecialchars(ui_text('volani.called_number', 'Volané číslo'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.duration', 'Trvání'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.without_vat', 'Bez DPH'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.with_vat', 'S DPH'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.period'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.product'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.item'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.datetime'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.direction'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.called_number'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.duration'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.without_vat'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.with_vat'), ENT_QUOTES, 'UTF-8') ?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -201,7 +201,7 @@ if ($type === 3 && $identify !== '') {
                                     </tr>
                                 <?php endforeach; ?>
                                 <tr>
-                                    <td colspan="7" class="text-end fw-semibold"><?= htmlspecialchars(ui_text('common.total', 'Celkem'), ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td colspan="7" class="text-end fw-semibold"><?= htmlspecialchars(ui_text('common.total'), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td class="text-end fw-bold"><?= rep_volani_money($rowTotalWithoutVat) ?></td>
                                     <td class="text-end fw-bold"><?= rep_volani_money($rowTotalWithVat) ?></td>
                                 </tr>
@@ -213,16 +213,16 @@ if ($type === 3 && $identify !== '') {
                             <table class="volani-table">
                                 <thead>
                                 <tr>
-                                    <th><?= htmlspecialchars(ui_text('volani.period', 'Období'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th><?= htmlspecialchars(ui_text('volani.product', 'Produktová řada'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th><?= htmlspecialchars(ui_text('volani.item', 'Položka'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th><?= htmlspecialchars(ui_text('volani.service', 'Služba'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.count', 'Počet'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.duration', 'Trvání'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.volume', 'Objem'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.without_vat', 'Bez DPH'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.vat', 'DPH'), ENT_QUOTES, 'UTF-8') ?></th>
-                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.with_vat', 'S DPH'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.period'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.product'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.item'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th><?= htmlspecialchars(ui_text('volani.service'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.count'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.duration'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.volume'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.without_vat'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.vat'), ENT_QUOTES, 'UTF-8') ?></th>
+                                    <th class="text-end"><?= htmlspecialchars(ui_text('volani.with_vat'), ENT_QUOTES, 'UTF-8') ?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -241,7 +241,7 @@ if ($type === 3 && $identify !== '') {
                                     </tr>
                                 <?php endforeach; ?>
                                 <tr>
-                                    <td colspan="7" class="text-end fw-semibold"><?= htmlspecialchars(ui_text('common.total', 'Celkem'), ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td colspan="7" class="text-end fw-semibold"><?= htmlspecialchars(ui_text('common.total'), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td class="text-end fw-bold"><?= rep_volani_money($rowTotalWithoutVat) ?></td>
                                     <td></td>
                                     <td class="text-end fw-bold"><?= rep_volani_money($rowTotalWithVat) ?></td>

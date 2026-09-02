@@ -24,6 +24,13 @@ $routes = [
         'menu' => 200,
         'description_key' => 'page.akce.description',
     ],
+    'odhlaseni-letaku' => [
+        'page' => 'rep_akce_unsubscribe',
+        'title_key' => 'page.akce.unsubscribe_title',
+        'menu' => 0,
+        'description_key' => 'page.akce.unsubscribe_description',
+        'current_section' => 'akce',
+    ],
     'news' => [
         'page' => 'news',
         'title_key' => 'page.news.title',
@@ -82,10 +89,11 @@ $routes = [
         'description_key' => 'page.ples.description',
     ],
     'tenisqcup' => [
-        'page' => 'placeholder',
+        'page' => 'tenisqcup',
         'title_key' => 'page.tenisqcup.title',
         'menu' => 0,
         'description_key' => 'page.tenisqcup.description',
+        'robots' => 'noindex,nofollow',
     ],
     'inventury' => [
         'page' => 'placeholder',
@@ -120,12 +128,26 @@ $routes = [
         'description_key' => 'page.media.description',
         'static_text_code' => 'media',
     ],
+    'b2b-manuals' => [
+        'page' => 'static_text',
+        'title_key' => 'page.b2b_manuals.title',
+        'menu' => 0,
+        'description_key' => 'page.b2b_manuals.description',
+        'static_text_code' => 'b2b-manuals',
+    ],
     'podporujeme' => [
         'page' => 'static_text',
         'title_key' => 'page.podporujeme.title',
         'menu' => 520,
         'description_key' => 'page.podporujeme.description',
         'static_text_code' => 'podporujeme',
+    ],
+    'darkove-poukazy' => [
+        'page' => 'static_text',
+        'title_key' => 'page.darkove_poukazy.title',
+        'menu' => 0,
+        'description_key' => 'page.darkove_poukazy.description',
+        'static_text_code' => 'darkove-poukazy',
     ],
     'kontakt' => [
         'page' => 'kontakty',
@@ -204,8 +226,9 @@ if ($detailSlug !== '' && in_array($section, ['markety', 'prodejny'], true) && f
     }
 }
 $page = (string)$route['page'];
-$pagetitle = ui_text((string)$route['title_key'], 'Qanto');
+$pagetitle = ui_text((string)$route['title_key']);
 $menu = (int)$route['menu'];
-$metaDescription = ui_text((string)$route['description_key'], (string)($word[3] ?? ''));
+$metaDescription = ui_text((string)$route['description_key']);
+$metaRobots = trim((string)($route['robots'] ?? ''));
 $currentSection = (string)($route['current_section'] ?? $section);
 $staticTextCode = (string)($route['static_text_code'] ?? '');

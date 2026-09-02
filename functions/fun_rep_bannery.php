@@ -41,9 +41,9 @@ function frontend_banner_safe_url(mixed $value): string
     return $url;
 }
 
-function frontend_banner_text(string $key, string $fallback): string
+function frontend_banner_text(string $key): string
 {
-    return function_exists('ui_text') ? ui_text($key, $fallback) : $fallback;
+    return function_exists('ui_text') ? ui_text($key) : $key;
 }
 
 function frontend_akce_subscribe_token(): string
@@ -59,12 +59,11 @@ function frontend_akce_subscribe_token(): string
     return (string)$_SESSION['akce_subscribe_token'];
 }
 
-function frontend_akce_subscribe_label(string $code, string $fallback): string
+function frontend_akce_subscribe_label(string $newsletterGroup, string $fallback): string
 {
-    return match ($code) {
-        'markety' => frontend_banner_text('flyers.subscribe_type_markety', 'Markety'),
-        'velkoobchod' => frontend_banner_text('flyers.subscribe_type_velkoobchod', 'Velkoobchod'),
-        'qantoplus' => frontend_banner_text('flyers.subscribe_type_qantoplus', 'Qanto+'),
+    return match ($newsletterGroup) {
+        'maloobchod' => frontend_banner_text('flyers.subscribe_group_maloobchod'),
+        'velkoobchod' => frontend_banner_text('flyers.subscribe_group_velkoobchod'),
         default => $fallback,
     };
 }
@@ -85,11 +84,18 @@ function frontend_akce_subscription_types(string $lang = 'cz'): array
 
     try {
         $stmt = $pdo->query(
-            "SELECT id, legacy_id, code, nazev_cz, nazev_en, color
+            "SELECT id, legacy_id, code, nazev_cz, nazev_en, color, newsletter_group
              FROM rep_akce_typ
              WHERE valid = 1
-               AND code IN ('markety', 'velkoobchod', 'qantoplus')
-             ORDER BY FIELD(code, 'markety', 'velkoobchod', 'qantoplus'), poradi ASC, id ASC"
+               AND newsletter_group IN ('maloobchod', 'velkoobchod')
+             ORDER BY FIELD(newsletter_group, 'maloobchod', 'velkoobchod'),
+                      CASE
+                          WHEN code = 'markety' THEN 0
+                          WHEN code = 'velkoobchod' THEN 0
+                          ELSE 1
+                      END,
+                      poradi ASC,
+                      id ASC"
         );
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     } catch (Throwable) {
@@ -97,7 +103,13 @@ function frontend_akce_subscription_types(string $lang = 'cz'): array
     }
 
     $types = [];
+    $seenGroups = [];
     foreach ($rows as $row) {
+        $newsletterGroup = trim((string)($row['newsletter_group'] ?? ''));
+        if ($newsletterGroup === '' || isset($seenGroups[$newsletterGroup])) {
+            continue;
+        }
+        $seenGroups[$newsletterGroup] = true;
         $code = trim((string)($row['code'] ?? ''));
         $fallback = frontend_banner_safe_text($row[$nameColumn] ?? '');
         if ($fallback === '') {
@@ -108,7 +120,8 @@ function frontend_akce_subscription_types(string $lang = 'cz'): array
             'id' => (int)$row['id'],
             'legacy_id' => $row['legacy_id'] !== null ? (int)$row['legacy_id'] : 0,
             'code' => $code,
-            'label' => frontend_akce_subscribe_label($code, $fallback),
+            'newsletter_group' => $newsletterGroup,
+            'label' => frontend_akce_subscribe_label($newsletterGroup, $fallback),
             'class' => frontend_akce_badge_class($row['color'] ?? ''),
         ];
     }
@@ -149,13 +162,13 @@ function frontend_akce_subscribe_save(array $data): array
     global $pdo;
 
     if (!($pdo instanceof PDO)) {
-        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_error', 'Odběr se nepodařilo uložit. Zkuste to prosím později.')];
+        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_error')];
     }
 
     if (function_exists('frontend_captcha_validate')) {
         $captcha = frontend_captcha_validate('akce_subscribe', $data);
         if (!empty($captcha['bot'])) {
-            return ['ok' => true, 'message' => frontend_banner_text('flyers.subscribe_success', 'Odběr letáků byl uložen.')];
+            return ['ok' => true, 'message' => frontend_banner_text('flyers.subscribe_success')];
         }
         if (empty($captcha['ok'])) {
             return ['ok' => false, 'message' => (string)$captcha['message']];
@@ -165,12 +178,12 @@ function frontend_akce_subscribe_save(array $data): array
     $sessionToken = session_status() === PHP_SESSION_ACTIVE ? (string)($_SESSION['akce_subscribe_token'] ?? '') : '';
     $postedToken = (string)($data['csrf_token'] ?? '');
     if ($sessionToken === '' || $postedToken === '' || !hash_equals($sessionToken, $postedToken)) {
-        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_invalid', 'Formulář vypršel. Odešlete ho prosím znovu.')];
+        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_invalid')];
     }
 
     $email = frontend_akce_subscribe_normalize_email((string)($data['email'] ?? ''));
     if ($email === '' || !frontend_akce_subscribe_email_valid($email)) {
-        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_email_error', 'Zadejte prosím platný e-mail.')];
+        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_email_error')];
     }
 
     $allowedTypes = [];
@@ -192,20 +205,19 @@ function frontend_akce_subscribe_save(array $data): array
     }
 
     if ($typeIds === []) {
-        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_type_error', 'Vyberte prosím alespoň jeden typ letáků.')];
+        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_type_error')];
     }
 
     try {
-        $pdo->exec("SET SESSION sql_mode = REPLACE(REPLACE(@@SESSION.sql_mode, 'NO_ZERO_IN_DATE', ''), 'NO_ZERO_DATE', '')");
         $find = $pdo->prepare('SELECT id FROM rep_akce_users WHERE LOWER(TRIM(email)) = :email AND akce_typ_id = :type_id ORDER BY valid DESC, registered DESC, id ASC LIMIT 1');
         $insert = $pdo->prepare('INSERT INTO rep_akce_users
             (akce_typ_id, legacy_akce_typ, name, email, datum_od, datum_do, registered, valid, user_i, user_u)
-            VALUES (:type_id, :legacy_type_id, "", :email, CURDATE(), "0000-00-00", 1, 1, "frontend", "frontend")');
+            VALUES (:type_id, :legacy_type_id, "", :email, CURDATE(), NULL, 1, 1, "frontend", "frontend")');
         $update = $pdo->prepare('UPDATE rep_akce_users
             SET registered = 1,
                 valid = 1,
                 datum_od = CURDATE(),
-                datum_do = "0000-00-00",
+                datum_do = NULL,
                 user_u = "frontend"
             WHERE id = :id');
 
@@ -224,12 +236,12 @@ function frontend_akce_subscribe_save(array $data): array
             ]);
         }
     } catch (Throwable) {
-        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_error', 'Odběr se nepodařilo uložit. Zkuste to prosím později.')];
+        return ['ok' => false, 'message' => frontend_banner_text('flyers.subscribe_error')];
     }
 
     $_SESSION['akce_subscribe_token'] = bin2hex(random_bytes(16));
 
-    return ['ok' => true, 'message' => frontend_banner_text('flyers.subscribe_success', 'Odběr letáků byl uložen.')];
+    return ['ok' => true, 'message' => frontend_banner_text('flyers.subscribe_success')];
 }
 
 function frontend_banner_theme(mixed $value): string
@@ -274,6 +286,22 @@ function frontend_akce_file_exists(string $relativePath): bool
 function frontend_akce_image_url(string $relativePath): string
 {
     return frontend_akce_file_exists($relativePath) ? frontend_banner_file_url($relativePath) : '';
+}
+
+function frontend_akce_page_thumbnail_path(string $imagePath): string
+{
+    return frontend_akce_page_variant_path($imagePath, 'thumbs');
+}
+
+function frontend_akce_page_variant_path(string $imagePath, string $variant): string
+{
+    $imagePath = ltrim(trim($imagePath), '/');
+    $variant = strtolower(trim($variant));
+    if ($imagePath === '' || !in_array($variant, ['small', 'medium', 'thumbs'], true)) {
+        return '';
+    }
+
+    return dirname($imagePath) . '/' . $variant . '/' . pathinfo($imagePath, PATHINFO_FILENAME) . '.webp';
 }
 
 /**
@@ -361,7 +389,7 @@ function frontend_akce_auto_secondary_ads(string $lang = 'cz', int $limit = 12):
         $seenTypes[$typeId] = true;
         $items[] = [
             'title' => $title,
-            'link_text' => frontend_banner_text('akce.view_offer', 'Prohlédnout'),
+            'link_text' => frontend_banner_text('akce.view_offer'),
             'href' => frontend_akce_view_url((int)$row['id'], $lang),
             'image' => $imageUrl,
             'image_mode' => 'cover',
@@ -430,16 +458,37 @@ function frontend_akce_offer_detail(int $offerId, string $lang = 'cz'): ?array
 
     $pages = [];
     foreach ($pageRows as $index => $page) {
-        $imageUrl = frontend_akce_image_url((string)($page['image_path'] ?? ''));
+        $imagePath = (string)($page['image_path'] ?? '');
+        $imageUrl = frontend_akce_image_url($imagePath);
         if ($imageUrl === '') {
             continue;
         }
+        $thumbPath = frontend_akce_page_thumbnail_path($imagePath);
+        $thumbUrl = frontend_akce_image_url($thumbPath);
+        $sources = [];
+        foreach (['small', 'medium'] as $variant) {
+            $variantPath = frontend_akce_page_variant_path($imagePath, $variant);
+            $variantUrl = frontend_akce_image_url($variantPath);
+            if ($variantUrl === '') {
+                continue;
+            }
+            $variantInfo = @getimagesize(ROOT_DIR . '/' . ltrim($variantPath, '/'));
+            $sources[] = [
+                'src' => $variantUrl,
+                'width' => (int)($variantInfo[0] ?? 0),
+            ];
+        }
+        $sources[] = [
+            'src' => $imageUrl,
+            'width' => (int)($page['width'] ?? 0),
+        ];
         $pages[] = [
             'src' => $imageUrl,
-            'thumb' => $imageUrl,
-            'label' => frontend_banner_text('akce.page', 'Strana') . ' ' . ((int)($page['poradi'] ?? 0) > 0 ? (int)$page['poradi'] : $index + 1),
+            'thumb' => $thumbUrl !== '' ? $thumbUrl : $imageUrl,
+            'label' => frontend_banner_text('akce.page') . ' ' . ((int)($page['poradi'] ?? 0) > 0 ? (int)$page['poradi'] : $index + 1),
             'width' => (int)($page['width'] ?? 0),
             'height' => (int)($page['height'] ?? 0),
+            'sources' => $sources,
         ];
     }
 
@@ -480,7 +529,7 @@ function frontend_akce_pdf_url(string $relativePath): string
 
 function frontend_akce_date_label(string $date): string
 {
-    if ($date === '' || $date === '0000-00-00') {
+    if ($date === '') {
         return '';
     }
 
@@ -496,7 +545,7 @@ function frontend_akce_display_title(string $title, string $typeLabel, string $d
 
     $fallback = frontend_banner_safe_text($typeLabel);
     if ($fallback === '') {
-        $fallback = frontend_banner_text('flyers.title', 'Letáky');
+        $fallback = frontend_banner_text('flyers.title');
     }
 
     $dateLabel = frontend_akce_date_label($dateTo);
@@ -513,13 +562,13 @@ function frontend_akce_validity_text(array $item): string
     $to = (string)($item['date_to_label'] ?? '');
 
     if ($from !== '' && $to !== '') {
-        return sprintf(frontend_banner_text('flyers.validity_from_to', 'Platí od %s do %s'), $from, $to);
+        return sprintf(frontend_banner_text('flyers.validity_from_to'), $from, $to);
     }
     if ($to !== '') {
-        return sprintf(frontend_banner_text('flyers.validity_to', 'Platí do %s'), $to);
+        return sprintf(frontend_banner_text('flyers.validity_to'), $to);
     }
     if ($from !== '') {
-        return sprintf(frontend_banner_text('flyers.validity_from', 'Platí od %s'), $from);
+        return sprintf(frontend_banner_text('flyers.validity_from'), $from);
     }
 
     return '';
@@ -528,9 +577,9 @@ function frontend_akce_validity_text(array $item): string
 function frontend_akce_status_label(string $status): string
 {
     return match ($status) {
-        'upcoming' => frontend_banner_text('flyers.status_upcoming', 'nadcházející'),
-        'expired' => frontend_banner_text('flyers.status_expired', 'uplynulé'),
-        default => frontend_banner_text('flyers.status_valid', 'platné'),
+        'upcoming' => frontend_banner_text('flyers.status_upcoming'),
+        'expired' => frontend_banner_text('flyers.status_expired'),
+        default => frontend_banner_text('flyers.status_valid'),
     };
 }
 
@@ -539,10 +588,10 @@ function frontend_akce_row_status(array $row, string $today): string
     $dateFrom = (string)($row['datum_od'] ?? '');
     $dateTo = (string)($row['datum_do'] ?? '');
 
-    if ($dateTo !== '' && $dateTo !== '0000-00-00' && $dateTo < $today) {
+    if ($dateTo !== '' && $dateTo < $today) {
         return 'expired';
     }
-    if ($dateFrom !== '' && $dateFrom !== '0000-00-00' && $dateFrom > $today) {
+    if ($dateFrom !== '' && $dateFrom > $today) {
         return 'upcoming';
     }
 
@@ -568,7 +617,7 @@ function frontend_akce_item_from_row(array $row, string $lang, ?string $status =
         $typeLabel = frontend_banner_safe_text($row['typ_nazev_cz'] ?? '');
     }
     if ($typeLabel === '') {
-        $typeLabel = frontend_banner_text('flyers.category', 'Kategorie');
+        $typeLabel = frontend_banner_text('flyers.category');
     }
 
     $dateFrom = (string)($row['datum_od'] ?? '');
@@ -597,11 +646,11 @@ function frontend_akce_item_from_row(array $row, string $lang, ?string $status =
         'pdf' => frontend_akce_pdf_url((string)($row['pdf_file'] ?? '')),
         'href' => frontend_akce_view_url((int)$row['id'], $lang),
         'page_count' => (int)($row['page_count'] ?? 0),
-        'year' => $dateTo !== '' && $dateTo !== '0000-00-00' ? (int)substr($dateTo, 0, 4) : 0,
+        'year' => $dateTo !== '' ? (int)substr($dateTo, 0, 4) : 0,
     ];
 }
 
-function frontend_akce_build_type_panels(array $items, string $allLabelKey = 'flyers.all_categories', string $allFallback = 'Všechny'): array
+function frontend_akce_build_type_panels(array $items, string $allLabelKey = 'flyers.all_categories'): array
 {
     if ($items === []) {
         return [];
@@ -634,13 +683,13 @@ function frontend_akce_build_type_panels(array $items, string $allLabelKey = 'fl
 
     return array_merge([[
         'id' => 'all',
-        'label' => frontend_banner_text($allLabelKey, $allFallback),
+        'label' => frontend_banner_text($allLabelKey),
         'class' => 'home-flyers__tab--all',
         'items' => $allItems,
     ]], $typePanels);
 }
 
-function frontend_akce_page_rows(int $archiveLimit = 36): array
+function frontend_akce_page_rows(): array
 {
     global $pdo;
 
@@ -682,6 +731,7 @@ function frontend_akce_page_rows(int $archiveLimit = 36): array
                AND a.visible = 1
                AND a.typ_id IS NOT NULL
                AND a.datum_do IS NOT NULL
+               AND a.datum_do >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
              ORDER BY
                 CASE
                     WHEN a.datum_do < CURDATE() THEN 2
@@ -700,29 +750,26 @@ function frontend_akce_page_rows(int $archiveLimit = 36): array
     }
 }
 
-function frontend_akce_page_overview(string $lang = 'cz', int $archiveLimit = 36): array
+function frontend_akce_page_overview(string $lang = 'cz'): array
 {
-    $archiveLimit = $archiveLimit > 0 ? max(6, min(120, $archiveLimit)) : 0;
     $today = date('Y-m-d');
     $current = [];
     $upcoming = [];
-    $archive = [];
+    $expired = [];
 
-    foreach (frontend_akce_page_rows($archiveLimit) as $row) {
+    foreach (frontend_akce_page_rows() as $row) {
         $status = frontend_akce_row_status($row, $today);
         $item = frontend_akce_item_from_row($row, $lang, $status);
         if ($item === null) {
             continue;
         }
 
-        if ($status === 'expired') {
-            if ($archiveLimit === 0 || count($archive) < $archiveLimit) {
-                $archive[] = $item;
-            }
-            continue;
-        }
         if ($status === 'upcoming') {
             $upcoming[] = $item;
+            continue;
+        }
+        if ($status === 'expired') {
+            $expired[] = $item;
             continue;
         }
 
@@ -732,10 +779,10 @@ function frontend_akce_page_overview(string $lang = 'cz', int $archiveLimit = 36
     return [
         'current' => $current,
         'upcoming' => $upcoming,
-        'archive' => $archive,
+        'expired' => $expired,
         'current_panels' => frontend_akce_build_type_panels($current),
         'upcoming_panels' => frontend_akce_build_type_panels($upcoming),
-        'archive_panels' => frontend_akce_build_type_panels($archive),
+        'expired_panels' => frontend_akce_build_type_panels($expired),
     ];
 }
 
@@ -821,7 +868,7 @@ function frontend_akce_home_flyer_categories(string $lang = 'cz', int $limitPerC
             $typeLabel = frontend_banner_safe_text($row['typ_nazev_cz'] ?? '');
         }
         if ($typeLabel === '') {
-            $typeLabel = frontend_banner_text('flyers.category', 'Kategorie');
+            $typeLabel = frontend_banner_text('flyers.category');
         }
 
         if (!isset($categories[$typeId])) {
@@ -849,7 +896,7 @@ function frontend_akce_home_flyer_categories(string $lang = 'cz', int $limitPerC
             'date_from_label' => frontend_akce_date_label($dateFrom),
             'date_to_label' => frontend_akce_date_label($dateTo),
             'status' => $status,
-            'status_label' => frontend_banner_text($status === 'upcoming' ? 'flyers.status_upcoming' : 'flyers.status_valid', $status === 'upcoming' ? 'nadcházející' : 'platné'),
+            'status_label' => frontend_banner_text($status === 'upcoming' ? 'flyers.status_upcoming' : 'flyers.status_valid'),
             'type_label' => $typeLabel,
             'type_class' => frontend_akce_badge_class($row['typ_color'] ?? ''),
             'image' => $imageUrl,
@@ -909,7 +956,7 @@ function frontend_banners(string $positionKey, string $lang = 'cz', int $limit =
             $linkText = frontend_banner_safe_text($row['link_text_cz'] ?? '');
         }
         if ($linkText === '') {
-            $linkText = ui_text('common.more', 'Zjistěte více');
+            $linkText = ui_text('common.more');
         }
 
         $items[] = [

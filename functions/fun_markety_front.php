@@ -172,17 +172,18 @@ function frontend_markety_time(?string $value): string
 
 function frontend_markety_day_label(int $day, string $lang = 'cz'): string
 {
-    $labels = [
-        1 => ['cz' => 'Pondělí', 'en' => 'Monday'],
-        2 => ['cz' => 'Úterý', 'en' => 'Tuesday'],
-        3 => ['cz' => 'Středa', 'en' => 'Wednesday'],
-        4 => ['cz' => 'Čtvrtek', 'en' => 'Thursday'],
-        5 => ['cz' => 'Pátek', 'en' => 'Friday'],
-        6 => ['cz' => 'Sobota', 'en' => 'Saturday'],
-        7 => ['cz' => 'Neděle', 'en' => 'Sunday'],
-    ];
+    $key = match ($day) {
+        1 => 'common.day_monday',
+        2 => 'common.day_tuesday',
+        3 => 'common.day_wednesday',
+        4 => 'common.day_thursday',
+        5 => 'common.day_friday',
+        6 => 'common.day_saturday',
+        7 => 'common.day_sunday',
+        default => '',
+    };
 
-    return $labels[$day][$lang === 'en' ? 'en' : 'cz'] ?? (string)$day;
+    return $key !== '' ? ui_text($key) : (string)$day;
 }
 
 /** @param array<string, mixed> $row */
@@ -290,10 +291,10 @@ function frontend_markety_opening_time_label(string $time): string
 }
 
 /** @param array{from: string, to: string} $interval */
-function frontend_markety_opening_from_to_label(string $key, string $fallback, array $interval): string
+function frontend_markety_opening_from_to_label(string $key, array $interval): string
 {
     return sprintf(
-        ui_text($key, $fallback),
+        ui_text($key),
         frontend_markety_opening_time_label($interval['from']),
         frontend_markety_opening_time_label($interval['to'])
     );
@@ -319,7 +320,7 @@ function frontend_markety_opening_week(array $openingRows, string $lang = 'cz', 
         $week[] = [
             'day' => $day,
             'label' => frontend_markety_day_label($day, $lang),
-            'time' => $interval !== '' ? $interval : ui_text('markety.closed', 'Zavřeno'),
+            'time' => $interval !== '' ? $interval : ui_text('markety.closed'),
             'note' => $note,
             'closed' => $interval === '',
             'is_today' => $isToday,
@@ -340,7 +341,7 @@ function frontend_markety_today_opening(array $openingRows, string $lang = 'cz',
     if (!is_array($row)) {
         return [
             'is_open' => false,
-            'label' => ui_text('markety.opening_unknown', 'Otevírací doba není uvedena'),
+            'label' => ui_text('markety.opening_unknown'),
             'time' => '',
             'note' => '',
             'is_exception' => is_array($todayException),
@@ -354,9 +355,9 @@ function frontend_markety_today_opening(array $openingRows, string $lang = 'cz',
         return [
             'is_open' => false,
             'label' => $tomorrowFirstInterval !== null
-                ? frontend_markety_opening_from_to_label('markety.closed_tomorrow_from_to', 'Zavřeno, zítra od %s do %s', $tomorrowFirstInterval)
-                : ui_text('markety.closed_today', 'Dnes zavřeno'),
-            'time' => ui_text('markety.closed', 'Zavřeno'),
+                ? frontend_markety_opening_from_to_label('markety.closed_tomorrow_from_to', $tomorrowFirstInterval)
+                : ui_text('markety.closed_today'),
+            'time' => ui_text('markety.closed'),
             'note' => frontend_markety_opening_note($row, $lang),
             'is_exception' => is_array($todayException),
         ];
@@ -367,13 +368,13 @@ function frontend_markety_today_opening(array $openingRows, string $lang = 'cz',
     $isOpen = $currentInterval !== null;
 
     if ($isOpen) {
-        $label = frontend_markety_opening_from_to_label('markety.open_from_to', 'Otevřeno od %s do %s', $currentInterval);
+        $label = frontend_markety_opening_from_to_label('markety.open_from_to', $currentInterval);
     } elseif ($nextIntervalToday !== null) {
-        $label = frontend_markety_opening_from_to_label('markety.closed_today_from_to', 'Zavřeno, dnes od %s do %s', $nextIntervalToday);
+        $label = frontend_markety_opening_from_to_label('markety.closed_today_from_to', $nextIntervalToday);
     } elseif ($tomorrowFirstInterval !== null) {
-        $label = frontend_markety_opening_from_to_label('markety.closed_tomorrow_from_to', 'Zavřeno, zítra od %s do %s', $tomorrowFirstInterval);
+        $label = frontend_markety_opening_from_to_label('markety.closed_tomorrow_from_to', $tomorrowFirstInterval);
     } else {
-        $label = ui_text('markety.closed_now', 'Zavřeno');
+        $label = ui_text('markety.closed_now');
     }
 
     return [
@@ -770,7 +771,7 @@ function frontend_markety_flyers(string $lang = 'cz', int $limit = 3, string $ty
                AND t.code = :type_code
                AND a.datum_do IS NOT NULL
                AND a.datum_do >= CURDATE()
-               AND (a.datum_od IS NULL OR a.datum_od = "0000-00-00" OR a.datum_od <= CURDATE())
+               AND (a.datum_od IS NULL OR a.datum_od <= CURDATE())
              ORDER BY a.datum_do ASC, a.datum_od ASC, a.id DESC
              LIMIT :limit'
         );

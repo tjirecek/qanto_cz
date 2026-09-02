@@ -10,7 +10,7 @@ Cíl projektu:
 
 Projekt není veřejný web. Kořenový `index.php` pouze přesměruje do `/secure/`.
 
-Lokální doména je `https://qanto.test` přes Laravel Herd. Lokální databáze běží přes Docker/Colima jako MySQL 5.7.44 kontejner `qanto-mysql57` na `127.0.0.1:3306`.
+Lokální doména je `https://qanto.test` přes Laravel Herd. Lokální databáze běží přes Docker/Colima jako MySQL 8.4 kontejner `qanto-mysql84` na `127.0.0.1:3306`.
 
 ## Budoucí Project Vrstva
 

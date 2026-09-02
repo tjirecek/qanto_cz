@@ -5,6 +5,7 @@
     "lint:css": "stylelint \"assets/css/**/*.css\""
   },
   "devDependencies": {
+    "pdfjs-dist": "^6.2.108",
     "stylelint": "^16.24.0",
     "stylelint-config-standard": "^39.0.1"
   }

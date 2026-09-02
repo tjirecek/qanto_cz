@@ -6,7 +6,7 @@
 - Doména: `https://qanto.test`
 - Lokální web server: Laravel Herd / Nginx
 - Lokální PHP pro web: Herd PHP 8.4
-- Lokální MySQL: Docker/Colima kontejner `qanto-mysql57`, image `mysql:5.7.44`, port `3306`
+- Lokální MySQL: Docker/Colima kontejner `qanto-mysql84`, image `mysql:8.4`, port `3306`
 - Lokální DB: `xqanto_cz_main`
 - Lokální zdrojová DB pro migrace: `xqanto_cz_old`
 - Konfigurace: `ini/config_local.ini`
@@ -23,21 +23,21 @@ V lokálních INI konfiguracích používat DB host `127.0.0.1` a port `3306`.
 
 ### Lokální DB Služba
 
-Lokální MySQL 5.7 běží přes Colima/Docker kvůli kompatibilitě s produkčním Webglobe prostředím,
-které aktuálně používá MySQL 5.7.
+Lokální MySQL 8.4 běží přes Colima/Docker. Produkční Webglobe prostředí zatím používá MySQL 5.7,
+proto je před produkčním nasazením nutné potvrdit cílovou verzi a ověřit kompatibilitu migrací.
 
 Základní příkazy:
 
 ```bash
 colima status
 colima start
-docker start qanto-mysql57
-docker ps --filter name=qanto-mysql57
+docker start qanto-mysql84
+docker ps --filter name=qanto-mysql84
 ```
 
-Kontejner `qanto-mysql57` má restart policy `unless-stopped` a používá Docker volume
-`qanto_mysql57_data`. Pokud po restartu stroje databáze neodpovídá, spustit `colima start`;
-kontejner se následně obnoví automaticky, případně ručně přes `docker start qanto-mysql57`.
+Kontejner `qanto-mysql84` má restart policy `unless-stopped`. Pokud po restartu stroje databáze
+neodpovídá, spustit `colima start`; kontejner se následně obnoví automaticky, případně ručně přes
+`docker start qanto-mysql84`.
 
 ## Produkce
 

@@ -333,10 +333,6 @@ $ui_texts = [
         'cz' => 'Mám zájem o pozici',
         'en' => 'I am interested in this position',
     ],
-    'kariera.application_intro' => [
-        'cz' => 'Vyplňte kontaktní údaje a krátký dotazník. Pokud máte životopis nebo motivační dopis, můžete ho přiložit jako PDF nebo Word.',
-        'en' => 'Fill in your contact details and a short questionnaire. If you have a CV or cover letter, you can attach it as PDF or Word.',
-    ],
     'kariera.application.name' => [
         'cz' => 'Jméno a příjmení',
         'en' => 'Full name',
@@ -501,22 +497,6 @@ $ui_texts = [
         'cz' => 'Registrace brigádníka',
         'en' => 'Part-time Work Registration',
     ],
-    'brigada.intro' => [
-        'cz' => 'Máte volný čas a chcete si přivydělat v našich marketech, prodejnách nebo velkoobchodech? Vyplňte krátkou registraci a podle vybrané pobočky se vám ozveme.',
-        'en' => 'Do you have free time and want to earn extra money in our markets, stores or wholesale branches? Fill in a short registration and we will contact you based on the selected branch.',
-    ],
-    'brigada.point_1' => [
-        'cz' => 'Vyberte pobočku přes přehledný seznam.',
-        'en' => 'Choose a branch from a clear list.',
-    ],
-    'brigada.point_2' => [
-        'cz' => 'Uveďte kontakt, na kterém vás zastihneme.',
-        'en' => 'Enter contact details where we can reach you.',
-    ],
-    'brigada.point_3' => [
-        'cz' => 'Zkušenosti z maloobchodu nebo velkoobchodu jsou výhodou, ne podmínkou.',
-        'en' => 'Retail or wholesale experience is an advantage, not a requirement.',
-    ],
     'brigada.form_label' => [
         'cz' => 'Online registrace',
         'en' => 'Online registration',
@@ -524,10 +504,6 @@ $ui_texts = [
     'brigada.form_title' => [
         'cz' => 'Mám zájem o brigádu',
         'en' => 'I am interested in part-time work',
-    ],
-    'brigada.form_intro' => [
-        'cz' => 'Formulář je společný pro maloobchod i velkoobchod. Typ registrace se přiřadí automaticky podle vybrané pobočky.',
-        'en' => 'The form is shared for retail and wholesale. The registration type is assigned automatically according to the selected branch.',
     ],
     'brigada.branch_label' => [
         'cz' => 'Pobočka',
@@ -665,6 +641,14 @@ $ui_texts = [
         'cz' => 'Média a materiály společnosti Qanto.',
         'en' => 'Qanto media and materials.',
     ],
+    'page.b2b_manuals.title' => [
+        'cz' => 'B2B manuály | Qanto',
+        'en' => 'B2B manuals | Qanto',
+    ],
+    'page.b2b_manuals.description' => [
+        'cz' => 'Videomanuály k B2B aplikaci Qanto.',
+        'en' => 'Video guides for the Qanto B2B application.',
+    ],
     'page.podporujeme.title' => [
         'cz' => 'Podporujeme | Qanto',
         'en' => 'We support | Qanto',
@@ -760,10 +744,6 @@ $ui_texts = [
     'contacts.form_title' => [
         'cz' => 'Připomínka nebo dotaz',
         'en' => 'Comment or question',
-    ],
-    'contacts.form_text' => [
-        'cz' => 'Napište nám, s čím vám můžeme pomoci. Dotaz pošleme na správné oddělení podle vybrané kategorie.',
-        'en' => 'Write to us and tell us how we can help. We will send your question to the right department based on the selected category.',
     ],
     'contacts.form_category' => [
         'cz' => 'Typ dotazu',
@@ -882,17 +862,9 @@ $ui_texts = [
         'cz' => 'Velkoobchod',
         'en' => 'Wholesale',
     ],
-    'velkoobchod.intro_fallback' => [
-        'cz' => 'Zásobujeme firmy, gastro provozy, prodejny a další zákazníky v regionech, které dlouhodobě obsluhujeme z našich velkoobchodních skladů.',
-        'en' => 'We supply companies, food service operations, stores and other customers in regions served from our wholesale warehouses.',
-    ],
     'velkoobchod.finder_title' => [
         'cz' => 'Velkoobchodní pobočky',
         'en' => 'Wholesale warehouses',
-    ],
-    'velkoobchod.finder_text' => [
-        'cz' => 'Seznam skladů a mapa oblastí, do kterých pravidelně zavážíme.',
-        'en' => 'Warehouse list and a map of areas we deliver to regularly.',
     ],
     'velkoobchod.branches_empty' => [
         'cz' => 'Aktuálně nejsou dostupné žádné velkoobchodní sklady.',
@@ -990,14 +962,6 @@ $ui_texts = [
         'cz' => 'Obchodní zástupci',
         'en' => 'Sales representatives',
     ],
-    'velkoobchod.representatives_text' => [
-        'cz' => 'Vyberte sklad a zobrazte příslušné obchodní zástupce.',
-        'en' => 'Choose a warehouse to show its sales representatives.',
-    ],
-    'velkoobchod.representatives_detail_text' => [
-        'cz' => 'Obchodní zástupci přiřazení k tomuto velkoobchodnímu skladu.',
-        'en' => 'Sales representatives assigned to this wholesale warehouse.',
-    ],
     'velkoobchod.representatives_detail_empty' => [
         'cz' => 'K tomuto velkoobchodu nejsou přiřazeni žádní obchodní zástupci.',
         'en' => 'No sales representatives are assigned to this wholesale warehouse.',
@@ -1014,15 +978,7 @@ $ui_texts = [
         'cz' => 'Obchodní zástupce doplníme.',
         'en' => 'Sales representatives will be added.',
     ],
-    'velkoobchod.contact_text' => [
-        'cz' => 'Chcete začít odebírat zboží velkoobchodně? Ozvěte se nám a najdeme vhodné řešení.',
-        'en' => 'Would you like to buy wholesale? Contact us and we will find the right solution.',
-    ],
 
-    'footer.claim' => [
-        'cz' => 'Markety, velkoobchody, velkoobchodní prodejny a služby pro zákazníky, kteří potřebují spolehlivého partnera.',
-        'en' => 'Wholesale, markets and services for customers who need a reliable partner.',
-    ],
     'footer.social_title' => [
         'cz' => 'Sociální sítě',
         'en' => 'Social networks',
@@ -1118,7 +1074,7 @@ $ui_texts = [
     ],
     'akce.page_text' => [
         'cz' => '',
-        'en' => 'Current, upcoming and past flyers in one place.',
+        'en' => 'Current and upcoming flyers in one place.',
     ],
     'akce.current_title' => [
         'cz' => 'Právě platné',
@@ -1128,25 +1084,13 @@ $ui_texts = [
         'cz' => 'Právě platné',
         'en' => 'Currently valid',
     ],
-    'akce.valid_text' => [
-        'cz' => 'Letáky, které jsou aktuálně v platnosti.',
-        'en' => 'Flyers that are currently valid.',
-    ],
     'akce.upcoming_title' => [
         'cz' => 'Nadcházející letáky',
         'en' => 'Upcoming flyers',
     ],
-    'akce.upcoming_text' => [
-        'cz' => 'Připravované akce, které začnou platit v nejbližších dnech.',
-        'en' => 'Upcoming promotions that will become valid soon.',
-    ],
     'akce.archive_title' => [
         'cz' => 'Uplynulé letáky',
         'en' => 'Past flyers',
-    ],
-    'akce.archive_text' => [
-        'cz' => 'Archiv posledních uplynulých nabídek.',
-        'en' => 'Archive of recent past offers.',
     ],
     'akce.no_pages' => [
         'cz' => 'Pro tento leták zatím nejsou dostupné stránky prohlížeče.',
@@ -1167,10 +1111,6 @@ $ui_texts = [
     'flyers.title' => [
         'cz' => 'Letáky',
         'en' => 'Flyers',
-    ],
-    'flyers.text' => [
-        'cz' => 'Prohlédněte si poslední letáky.',
-        'en' => 'Browse the latest flyers.',
     ],
     'flyers.all' => [
         'cz' => 'Všechny letáky',
@@ -1264,6 +1204,30 @@ $ui_texts = [
         'cz' => 'Celá obrazovka',
         'en' => 'Fullscreen',
     ],
+    'flyers.exit_fullscreen' => [
+        'cz' => 'Ukončit celou obrazovku',
+        'en' => 'Exit fullscreen',
+    ],
+    'flyers.magnifier' => [
+        'cz' => 'Lupa',
+        'en' => 'Magnifier',
+    ],
+    'flyers.autoplay' => [
+        'cz' => 'Automatické listování',
+        'en' => 'Auto page turn',
+    ],
+    'flyers.autoplay_stop' => [
+        'cz' => 'Zastavit automatické listování',
+        'en' => 'Stop auto page turn',
+    ],
+    'flyers.toggle_thumbs' => [
+        'cz' => 'Zobrazit nebo skrýt náhledy stran',
+        'en' => 'Show or hide page thumbnails',
+    ],
+    'flyers.go_to_page' => [
+        'cz' => 'Přejít na stranu',
+        'en' => 'Go to page',
+    ],
     'flyers.zoom_in' => [
         'cz' => 'Zvětšit',
         'en' => 'Zoom in',
@@ -1296,10 +1260,6 @@ $ui_texts = [
         'cz' => 'Nový leták vám pošleme přímo na e-mail',
         'en' => 'We will send new flyers directly to your e-mail',
     ],
-    'flyers.subscribe_text' => [
-        'cz' => 'Vyberte si typy letáků, které chcete dostávat.',
-        'en' => 'Choose the types of flyers you want to receive.',
-    ],
     'flyers.subscribe_email' => [
         'cz' => 'Váš e-mail',
         'en' => 'Your e-mail',
@@ -1316,9 +1276,17 @@ $ui_texts = [
         'cz' => 'Markety',
         'en' => 'Markets',
     ],
+    'flyers.subscribe_group_maloobchod' => [
+        'cz' => 'Maloobchodní letáky',
+        'en' => 'Retail flyers',
+    ],
+    'flyers.subscribe_group_velkoobchod' => [
+        'cz' => 'Velkoobchodní letáky',
+        'en' => 'Wholesale flyers',
+    ],
     'flyers.subscribe_type_velkoobchod' => [
-        'cz' => 'Velkoobchod',
-        'en' => 'Wholesale',
+        'cz' => 'Velkoobchodní letáky',
+        'en' => 'Wholesale flyers',
     ],
     'flyers.subscribe_type_qantoplus' => [
         'cz' => 'Qanto+',
@@ -1400,10 +1368,6 @@ $ui_texts = [
         'cz' => 'Novinky na e-mail',
         'en' => 'News by e-mail',
     ],
-    'news.subscribe_text' => [
-        'cz' => 'Pošleme vám aktuální informace ze světa Qanto.',
-        'en' => 'We will send you current information from Qanto.',
-    ],
     'news.subscribe_email' => [
         'cz' => 'Váš e-mail',
         'en' => 'Your e-mail',
@@ -1436,10 +1400,6 @@ $ui_texts = [
         'cz' => 'Odběr se nepodařilo uložit. Zkuste to prosím později.',
         'en' => 'The subscription could not be saved. Please try again later.',
     ],
-    'news.latest_text' => [
-        'cz' => 'Přečtěte si aktuální informace, zprávy, novinky.',
-        'en' => 'Read current information, updates and news.',
-    ],
     'news.all' => [
         'cz' => 'Všechny novinky',
         'en' => 'All news',
@@ -1455,6 +1415,18 @@ $ui_texts = [
     'news.back_to_list' => [
         'cz' => 'Zpět na novinky',
         'en' => 'Back to news',
+    ],
+    'news.gallery_title' => [
+        'cz' => 'Fotogalerie',
+        'en' => 'Photo gallery',
+    ],
+    'news.gallery_count' => [
+        'cz' => '%d fotografií',
+        'en' => '%d photos',
+    ],
+    'news.gallery_open_photo' => [
+        'cz' => 'Otevřít fotografii %d',
+        'en' => 'Open photo %d',
     ],
     'form.captcha_label' => [
         'cz' => 'Ověření',
@@ -1495,10 +1467,6 @@ $ui_texts = [
     'common.page_not_found' => [
         'cz' => 'Stránka nebyla nalezena.',
         'en' => 'Page not found.',
-    ],
-    'placeholder.text' => [
-        'cz' => 'Tato část frontendu bude napojená na hotovou administraci a doladíme ji podle Figmy.',
-        'en' => 'This frontend section will be connected to the prepared administration and tuned according to Figma.',
     ],
     'markety.title' => [
         'cz' => 'Markety',
@@ -1616,10 +1584,6 @@ $ui_texts = [
         'cz' => 'Fotogalerie',
         'en' => 'Photo gallery',
     ],
-    'markety.gallery_intro' => [
-        'cz' => 'Prohlédněte si %d fotografií této prodejny.',
-        'en' => 'Browse %d photos of this store.',
-    ],
     'markety.gallery_open_photo' => [
         'cz' => 'Otevřít fotografii %d',
         'en' => 'Open photo %d',
@@ -1679,10 +1643,6 @@ $ui_texts = [
     'markety.contact_title' => [
         'cz' => 'Kontaktujte nás',
         'en' => 'Contact us',
-    ],
-    'markety.contact_text' => [
-        'cz' => 'Spojte se s námi, ať už potřebujete cokoliv vyřídit nebo zanechat připomínku.',
-        'en' => 'Get in touch if you need to arrange anything or leave us a message.',
     ],
     'markety.contact_button' => [
         'cz' => 'Zobrazit kontakty',
@@ -1879,5 +1839,297 @@ $ui_texts = [
     'common.show' => [
         'cz' => 'Zobrazit',
         'en' => 'Show',
+    ],
+    'aria.breadcrumb_home' => [
+        'cz' => 'Domů',
+        'en' => 'Home',
+    ],
+    'common.search' => [
+        'cz' => 'Vyhledat',
+        'en' => 'Search',
+    ],
+    'common.bad_page' => [
+        'cz' => 'Neplatná stránka.',
+        'en' => 'Invalid page.',
+    ],
+    'footer.branches_title' => [
+        'cz' => 'Pobočky',
+        'en' => 'Branches',
+    ],
+    'footer.velkoobchody' => [
+        'cz' => 'Velkoobchody',
+        'en' => 'Wholesale branches',
+    ],
+    'footer.jobs' => [
+        'cz' => 'Volná místa',
+        'en' => 'Open positions',
+    ],
+    'footer.brigada' => [
+        'cz' => 'Brigáda',
+        'en' => 'Part-time work',
+    ],
+    'velkoobchod.jobs_title' => [
+        'cz' => 'Volná místa ve velkoobchodu',
+        'en' => 'Open positions in wholesale',
+    ],
+    'velkoobchod.jobs_empty' => [
+        'cz' => 'V tomto velkoobchodu teď nejsou vypsaná volná místa.',
+        'en' => 'There are currently no open positions at this wholesale branch.',
+    ],
+    'tenis.kicker' => [
+        'cz' => 'TenisQcup %d',
+        'en' => 'TenisQcup %d',
+    ],
+    'tenis.title_fallback' => [
+        'cz' => 'Registrace týmu',
+        'en' => 'Team registration',
+    ],
+    'tenis.year' => [
+        'cz' => 'Ročník %d',
+        'en' => 'Year %d',
+    ],
+    'tenis.form_title' => [
+        'cz' => 'Přihláška na turnaj',
+        'en' => 'Tournament registration',
+    ],
+    'tenis.required_note' => [
+        'cz' => 'Pole označená hvězdičkou jsou povinná.',
+        'en' => 'Fields marked with an asterisk are required.',
+    ],
+    'tenis.closed' => [
+        'cz' => 'Registrace na TenisQcup nyní není otevřená.',
+        'en' => 'TenisQcup registration is currently closed.',
+    ],
+    'tenis.team_name' => [
+        'cz' => 'Název týmu',
+        'en' => 'Team name',
+    ],
+    'tenis.player_1' => [
+        'cz' => 'Hráč 1',
+        'en' => 'Player 1',
+    ],
+    'tenis.contact_player' => [
+        'cz' => 'Kontaktní hráč',
+        'en' => 'Contact player',
+    ],
+    'tenis.player_2' => [
+        'cz' => 'Hráč 2',
+        'en' => 'Player 2',
+    ],
+    'tenis.additional_player' => [
+        'cz' => 'Další člen týmu',
+        'en' => 'Additional team member',
+    ],
+    'tenis.first_name' => [
+        'cz' => 'Jméno',
+        'en' => 'First name',
+    ],
+    'tenis.last_name' => [
+        'cz' => 'Příjmení',
+        'en' => 'Last name',
+    ],
+    'tenis.email' => [
+        'cz' => 'E-mail',
+        'en' => 'E-mail',
+    ],
+    'tenis.phone' => [
+        'cz' => 'Mobil',
+        'en' => 'Mobile phone',
+    ],
+    'tenis.invited_by' => [
+        'cz' => 'Kdo vás pozval?',
+        'en' => 'Who invited you?',
+    ],
+    'tenis.note' => [
+        'cz' => 'Poznámka',
+        'en' => 'Note',
+    ],
+    'tenis.consent_prefix' => [
+        'cz' => 'Souhlasím se',
+        'en' => 'I consent to the',
+    ],
+    'tenis.consent_suffix' => [
+        'cz' => 'pro organizaci turnaje.',
+        'en' => 'for organising the tournament.',
+    ],
+    'tenis.submit' => [
+        'cz' => 'Odeslat registraci',
+        'en' => 'Submit registration',
+    ],
+    'tenis.error_database' => [
+        'cz' => 'Databázové připojení není dostupné.',
+        'en' => 'The database connection is unavailable.',
+    ],
+    'tenis.success' => [
+        'cz' => 'Registrace týmu byla odeslána. Děkujeme.',
+        'en' => 'The team registration has been submitted. Thank you.',
+    ],
+    'tenis.error_security' => [
+        'cz' => 'Formulář vypršel, obnovte stránku a zkuste odeslání znovu.',
+        'en' => 'The form has expired. Refresh the page and submit it again.',
+    ],
+    'tenis.error_required' => [
+        'cz' => 'Vyplňte prosím všechna povinná pole.',
+        'en' => 'Please complete all required fields.',
+    ],
+    'tenis.error_email_1' => [
+        'cz' => 'Zadejte prosím platný e-mail prvního hráče.',
+        'en' => 'Please enter a valid e-mail address for the first player.',
+    ],
+    'tenis.error_player_2' => [
+        'cz' => 'Pokud registrujete druhého hráče, vyplňte jeho jméno a příjmení.',
+        'en' => 'When registering a second player, enter their first and last name.',
+    ],
+    'tenis.error_email_2' => [
+        'cz' => 'Zadejte prosím platný e-mail druhého hráče.',
+        'en' => 'Please enter a valid e-mail address for the second player.',
+    ],
+    'tenis.error_consent' => [
+        'cz' => 'Pro odeslání registrace potvrďte souhlas se zpracováním osobních údajů.',
+        'en' => 'Confirm your consent to personal data processing before submitting the registration.',
+    ],
+    'tenis.error_generic' => [
+        'cz' => 'Registraci se nepodařilo uložit. Zkuste to prosím znovu později.',
+        'en' => 'The registration could not be saved. Please try again later.',
+    ],
+    'tenis.email_title' => [
+        'cz' => 'Nová registrace na TenisQcup',
+        'en' => 'New TenisQcup registration',
+    ],
+    'tenis.email_registration_id' => [
+        'cz' => 'ID registrace',
+        'en' => 'Registration ID',
+    ],
+    'tenis.email_year' => [
+        'cz' => 'Ročník',
+        'en' => 'Year',
+    ],
+    'tenis.email_date' => [
+        'cz' => 'Datum registrace',
+        'en' => 'Registration date',
+    ],
+    'tenis.email_player' => [
+        'cz' => 'Hráč %d',
+        'en' => 'Player %d',
+    ],
+    'tenis.email_player_email' => [
+        'cz' => 'E-mail hráče %d',
+        'en' => 'Player %d e-mail',
+    ],
+    'tenis.email_player_phone' => [
+        'cz' => 'Mobil hráče %d',
+        'en' => 'Player %d mobile phone',
+    ],
+    'tenis.email_subject' => [
+        'cz' => 'TenisQcup %d: nová registrace týmu %s',
+        'en' => 'TenisQcup %d: new team registration %s',
+    ],
+    'tenis.email_internal_kicker' => [
+        'cz' => 'Nová registrace',
+        'en' => 'New registration',
+    ],
+    'tenis.email_sender_name' => [
+        'cz' => 'Qanto TenisQcup',
+        'en' => 'Qanto TenisQcup',
+    ],
+    'tenis.confirmation_subject' => [
+        'cz' => 'Potvrzení registrace TenisQcup %d',
+        'en' => 'TenisQcup %d registration confirmation',
+    ],
+    'tenis.confirmation_kicker' => [
+        'cz' => 'TenisQcup %d',
+        'en' => 'TenisQcup %d',
+    ],
+    'tenis.confirmation_title' => [
+        'cz' => 'Registraci jsme přijali',
+        'en' => 'We have received your registration',
+    ],
+    'tenis.confirmation_summary' => [
+        'cz' => 'Souhrn registrace',
+        'en' => 'Registration summary',
+    ],
+    'unsubscribe.kicker' => [
+        'cz' => 'Akční nabídky Qanto',
+        'en' => 'Qanto promotions',
+    ],
+    'unsubscribe.title' => [
+        'cz' => 'Odhlášení odběru letáků',
+        'en' => 'Unsubscribe from flyers',
+    ],
+    'unsubscribe.preview' => [
+        'cz' => 'Toto je pouze náhled odhlašovacího odkazu z testovacího e-mailu. Žádný skutečný odběr nebyl změněn.',
+        'en' => 'This is only a preview of the unsubscribe link from a test e-mail. No actual subscription was changed.',
+    ],
+    'unsubscribe.invalid' => [
+        'cz' => 'Odhlašovací odkaz není platný nebo již nelze ověřit.',
+        'en' => 'The unsubscribe link is invalid or can no longer be verified.',
+    ],
+    'unsubscribe.done' => [
+        'cz' => 'Odběr akčních nabídek pro adresu %s byl ukončen.',
+        'en' => 'The flyer subscription for %s has been cancelled.',
+    ],
+    'unsubscribe.no_active' => [
+        'cz' => 'Tato adresa už neměla žádný aktivní odběr letáků.',
+        'en' => 'This address no longer had an active flyer subscription.',
+    ],
+    'unsubscribe.already_done' => [
+        'cz' => 'Odběr pro adresu %s už byl dříve ukončen.',
+        'en' => 'The subscription for %s had already been cancelled.',
+    ],
+    'unsubscribe.confirm' => [
+        'cz' => 'Opravdu chcete ukončit všechny odběry akčních nabídek pro adresu %s?',
+        'en' => 'Do you really want to cancel all flyer subscriptions for %s?',
+    ],
+    'unsubscribe.submit' => [
+        'cz' => 'Odhlásit odběr letáků',
+        'en' => 'Unsubscribe from flyers',
+    ],
+    'unsubscribe.back' => [
+        'cz' => 'Zpět na letáky',
+        'en' => 'Back to flyers',
+    ],
+    'page.akce.unsubscribe_title' => [
+        'cz' => 'Odhlášení odběru letáků',
+        'en' => 'Unsubscribe from flyers',
+    ],
+    'page.akce.unsubscribe_description' => [
+        'cz' => 'Odhlášení odběru akčních letáků Qanto.',
+        'en' => 'Unsubscribe from Qanto promotional flyers.',
+    ],
+    'page.darkove_poukazy.title' => [
+        'cz' => 'Dárkové poukazy | Qanto',
+        'en' => 'Gift vouchers | Qanto',
+    ],
+    'page.darkove_poukazy.description' => [
+        'cz' => 'Informace o dárkových poukazech Qanto.',
+        'en' => 'Information about Qanto gift vouchers.',
+    ],
+    'common.day_monday' => [
+        'cz' => 'Pondělí',
+        'en' => 'Monday',
+    ],
+    'common.day_tuesday' => [
+        'cz' => 'Úterý',
+        'en' => 'Tuesday',
+    ],
+    'common.day_wednesday' => [
+        'cz' => 'Středa',
+        'en' => 'Wednesday',
+    ],
+    'common.day_thursday' => [
+        'cz' => 'Čtvrtek',
+        'en' => 'Thursday',
+    ],
+    'common.day_friday' => [
+        'cz' => 'Pátek',
+        'en' => 'Friday',
+    ],
+    'common.day_saturday' => [
+        'cz' => 'Sobota',
+        'en' => 'Saturday',
+    ],
+    'common.day_sunday' => [
+        'cz' => 'Neděle',
+        'en' => 'Sunday',
     ],
 ];

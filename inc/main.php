@@ -7,34 +7,34 @@ $langPrefix = '/' . rawurlencode($lang);
 
 $routerItems = [
     [
-        'title' => ui_text('router.markety.title', 'Markety'),
+        'title' => ui_text('router.markety.title'),
         'text' => plain_text(stat_vyraz('home.router.markety.text', $lang)),
         'href' => $langPrefix . '/markety',
         'label' => '01',
         'theme' => 'dark',
         'brand' => 'Qanto',
         'logo' => '/img/design/logo_qanto_market_router.png',
-        'logo_alt' => 'market Qanto',
+        'logo_alt' => ui_text('router.markety.title'),
     ],
     [
-        'title' => ui_text('router.velkoobchod.title', 'Velkoobchody'),
+        'title' => ui_text('router.velkoobchod.title'),
         'text' => plain_text(stat_vyraz('home.router.velkoobchod.text', $lang)),
         'href' => $langPrefix . '/velkoobchod',
         'label' => '02',
         'theme' => 'light',
         'brand' => 'Qanto',
         'logo' => '/img/design/logo_qanto_router.png',
-        'logo_alt' => 'Qanto',
+        'logo_alt' => ui_text('router.velkoobchod.title'),
     ],
     [
-        'title' => ui_text('router.qantoplus.title', 'QantoPlus'),
+        'title' => ui_text('router.qantoplus.title'),
         'text' => plain_text(stat_vyraz('home.router.qantoplus.text', $lang)),
         'href' => $langPrefix . '/prodejny',
         'label' => '03',
         'theme' => 'cream',
         'brand' => 'Qanto+',
         'logo' => '/img/design/logo_qantoplus_router.png',
-        'logo_alt' => 'Qanto+',
+        'logo_alt' => ui_text('router.qantoplus.title'),
     ],
 ];
 
@@ -64,7 +64,7 @@ $allFlyerItems = array_slice($allFlyerItems, 0, 5);
 $flyerPanels = $flyerCategories !== []
     ? array_merge([[
         'id' => 'all',
-        'label' => ui_text('flyers.all_categories', 'Všechny'),
+        'label' => ui_text('flyers.all_categories'),
         'class' => 'home-flyers__tab--all',
         'items' => $allFlyerItems,
     ]], $flyerCategories)
@@ -77,19 +77,19 @@ $adValidityText = static function (array $ad): string {
     $to = function_exists('frontend_akce_date_label') ? frontend_akce_date_label((string)($ad['valid_to'] ?? '')) : '';
 
     if ($from !== '' && $to !== '') {
-        return sprintf(ui_text('flyers.validity_from_to', 'Platí od %s do %s'), $from, $to);
+        return sprintf(ui_text('flyers.validity_from_to'), $from, $to);
     }
     if ($to !== '') {
-        return sprintf(ui_text('flyers.validity_to', 'Platí do %s'), $to);
+        return sprintf(ui_text('flyers.validity_to'), $to);
     }
     if ($from !== '') {
-        return sprintf(ui_text('flyers.validity_from', 'Platí od %s'), $from);
+        return sprintf(ui_text('flyers.validity_from'), $from);
     }
 
     return '';
 };
 ?>
-<section class="home-router-section" aria-label="<?= htmlspecialchars(ui_text('aria.router', 'Rychlý rozcestník'), ENT_QUOTES, 'UTF-8') ?>">
+<section class="home-router-section" aria-label="<?= htmlspecialchars(ui_text('aria.router'), ENT_QUOTES, 'UTF-8') ?>">
     <div class="site-shell home-router">
         <?php foreach ($routerItems as $item): ?>
             <?php $themeClass = 'home-router__card--' . preg_replace('~[^a-z0-9_-]+~i', '', (string)$item['theme']); ?>
@@ -113,49 +113,49 @@ $adValidityText = static function (array $ad): string {
 </section>
 
 <?php if ($adCarouselItems !== []): ?>
-    <section class="home-section home-section--ads" aria-label="<?= htmlspecialchars(ui_text('aria.ads', 'Aktuální reklamy'), ENT_QUOTES, 'UTF-8') ?>">
+    <section class="home-section home-section--promos" aria-label="<?= htmlspecialchars(ui_text('aria.ads'), ENT_QUOTES, 'UTF-8') ?>">
         <div class="site-shell">
-            <div class="ad-carousel" data-ad-carousel>
-                <div class="ad-carousel__viewport" data-ad-carousel-viewport>
-                    <div class="ad-carousel__track" data-ad-carousel-track>
+            <div class="promo-carousel" data-promo-carousel>
+                <div class="promo-carousel__viewport" data-promo-carousel-viewport>
+                    <div class="promo-carousel__track" data-promo-carousel-track>
                         <?php for ($loop = 0; $loop < 2; $loop++): ?>
                             <?php foreach ($adCarouselItems as $ad): ?>
                                 <?php
                                 $hasImage = (string)($ad['image'] ?? '') !== '';
                                 $hasCoverImage = $hasImage && (string)($ad['image_mode'] ?? '') === 'cover';
-                                $textColorClass = $ad['text_color'] === 'light' ? 'ad-card--light' : 'ad-card--dark';
-                                $themeClass = 'ad-card--' . preg_replace('~[^a-z0-9_-]+~i', '', $hasCoverImage ? 'custom' : (string)$ad['theme']);
-                                $imageClass = $hasCoverImage ? 'ad-card--has-image' : '';
+                                $textColorClass = $ad['text_color'] === 'light' ? 'promo-card--light' : 'promo-card--dark';
+                                $themeClass = 'promo-card--' . preg_replace('~[^a-z0-9_-]+~i', '', $hasCoverImage ? 'custom' : (string)$ad['theme']);
+                                $imageClass = $hasCoverImage ? 'promo-card--has-image' : '';
                                 $titleLength = function_exists('mb_strlen') ? mb_strlen((string)$ad['title'], 'UTF-8') : strlen((string)$ad['title']);
-                                $textDensityClass = 'ad-card--text-short';
+                                $textDensityClass = 'promo-card--text-short';
                                 if ($titleLength > 115) {
-                                    $textDensityClass = 'ad-card--text-xlong';
+                                    $textDensityClass = 'promo-card--text-xlong';
                                 } elseif ($titleLength > 78) {
-                                    $textDensityClass = 'ad-card--text-long';
+                                    $textDensityClass = 'promo-card--text-long';
                                 } elseif ($titleLength > 46) {
-                                    $textDensityClass = 'ad-card--text-medium';
+                                    $textDensityClass = 'promo-card--text-medium';
                                 }
                                 ?>
-                                <a class="ad-card <?= htmlspecialchars(trim($textColorClass . ' ' . $themeClass . ' ' . $imageClass . ' ' . $textDensityClass), ENT_QUOTES, 'UTF-8') ?>" href="<?= htmlspecialchars((string)$ad['href'], ENT_QUOTES, 'UTF-8') ?>" data-valid-from="<?= htmlspecialchars((string)($ad['valid_from'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-valid-to="<?= htmlspecialchars((string)($ad['valid_to'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                <a class="promo-card <?= htmlspecialchars(trim($textColorClass . ' ' . $themeClass . ' ' . $imageClass . ' ' . $textDensityClass), ENT_QUOTES, 'UTF-8') ?>" href="<?= htmlspecialchars((string)$ad['href'], ENT_QUOTES, 'UTF-8') ?>" data-valid-from="<?= htmlspecialchars((string)($ad['valid_from'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-valid-to="<?= htmlspecialchars((string)($ad['valid_to'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                                     <?php if ($hasImage): ?>
                                         <img src="<?= htmlspecialchars((string)$ad['image'], ENT_QUOTES, 'UTF-8') ?>" alt="" loading="lazy">
                                     <?php endif; ?>
                                     <?php $validity = $adValidityText($ad); ?>
-                                    <span class="ad-card__content">
-                                        <span class="ad-card__copy">
+                                    <span class="promo-card__content">
+                                        <span class="promo-card__copy">
                                             <strong><?= htmlspecialchars((string)$ad['title'], ENT_QUOTES, 'UTF-8') ?></strong>
-                                            <?php if ($validity !== ''): ?><small class="ad-card__validity"><?= htmlspecialchars($validity, ENT_QUOTES, 'UTF-8') ?></small><?php endif; ?>
+                                            <?php if ($validity !== ''): ?><small class="promo-card__validity"><?= htmlspecialchars($validity, ENT_QUOTES, 'UTF-8') ?></small><?php endif; ?>
                                         </span>
-                                        <span class="ad-card__button"><?= htmlspecialchars((string)$ad['link_text'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="promo-card__button"><?= htmlspecialchars((string)$ad['link_text'], ENT_QUOTES, 'UTF-8') ?></span>
                                     </span>
                                 </a>
                             <?php endforeach; ?>
                         <?php endfor; ?>
                     </div>
                 </div>
-                <div class="ad-carousel__controls" aria-label="<?= htmlspecialchars(ui_text('aria.ads_controls', 'Ovládání reklam'), ENT_QUOTES, 'UTF-8') ?>">
-                    <button type="button" data-ad-carousel-prev aria-label="<?= htmlspecialchars(ui_text('aria.ads_prev', 'Předchozí reklama'), ENT_QUOTES, 'UTF-8') ?>">‹</button>
-                    <button type="button" data-ad-carousel-next aria-label="<?= htmlspecialchars(ui_text('aria.ads_next', 'Další reklama'), ENT_QUOTES, 'UTF-8') ?>">›</button>
+                <div class="promo-carousel__controls" aria-label="<?= htmlspecialchars(ui_text('aria.ads_controls'), ENT_QUOTES, 'UTF-8') ?>">
+                    <button type="button" data-promo-carousel-prev aria-label="<?= htmlspecialchars(ui_text('aria.ads_prev'), ENT_QUOTES, 'UTF-8') ?>">‹</button>
+                    <button type="button" data-promo-carousel-next aria-label="<?= htmlspecialchars(ui_text('aria.ads_next'), ENT_QUOTES, 'UTF-8') ?>">›</button>
                 </div>
             </div>
         </div>
@@ -195,11 +195,11 @@ $adValidityText = static function (array $ad): string {
     <div class="site-shell">
         <div class="home-news__head">
             <div>
-                <h2 id="home-news-title"><?= htmlspecialchars(ui_text('news.latest_title', 'Poslední novinky'), ENT_QUOTES, 'UTF-8') ?></h2>
-                <p><?= htmlspecialchars(ui_text('news.latest_text', 'Přečtěte si aktuální informace, zprávy, novinky.'), ENT_QUOTES, 'UTF-8') ?></p>
+                <h2 id="home-news-title"><?= htmlspecialchars(ui_text('news.latest_title'), ENT_QUOTES, 'UTF-8') ?></h2>
+                <p><?= htmlspecialchars(stat_vyraz_text('news.latest_text'), ENT_QUOTES, 'UTF-8') ?></p>
             </div>
             <a href="<?= htmlspecialchars($langPrefix . '/news', ENT_QUOTES, 'UTF-8') ?>">
-                <?= htmlspecialchars(ui_text('news.all', 'Všechny novinky'), ENT_QUOTES, 'UTF-8') ?>
+                <?= htmlspecialchars(ui_text('news.all'), ENT_QUOTES, 'UTF-8') ?>
                 <span aria-hidden="true">›</span>
             </a>
         </div>
@@ -213,7 +213,7 @@ $adValidityText = static function (array $ad): string {
                     <span class="news-feature__body">
                         <time><?= htmlspecialchars((string)$featuredNews['date'], ENT_QUOTES, 'UTF-8') ?></time>
                         <strong><?= htmlspecialchars((string)$featuredNews['title'], ENT_QUOTES, 'UTF-8') ?></strong>
-                        <span class="news-card__text"><?= htmlspecialchars((string)$featuredNews['perex'], ENT_QUOTES, 'UTF-8') ?> <em><?= htmlspecialchars(ui_text('news.read_more', 'přečíst celé'), ENT_QUOTES, 'UTF-8') ?></em></span>
+                        <span class="news-card__text"><?= htmlspecialchars((string)$featuredNews['perex'], ENT_QUOTES, 'UTF-8') ?> <em><?= htmlspecialchars(ui_text('news.read_more'), ENT_QUOTES, 'UTF-8') ?></em></span>
                         <?php if (!empty($featuredNews['tags'])): ?>
                             <span class="news-tags">
                                 <?php foreach ($featuredNews['tags'] as $tag): ?>
@@ -233,7 +233,7 @@ $adValidityText = static function (array $ad): string {
                             <span class="news-side-card__body">
                                 <time><?= htmlspecialchars((string)$item['date'], ENT_QUOTES, 'UTF-8') ?></time>
                                 <strong><?= htmlspecialchars((string)$item['title'], ENT_QUOTES, 'UTF-8') ?></strong>
-                                <span class="news-card__text"><?= htmlspecialchars((string)$item['perex'], ENT_QUOTES, 'UTF-8') ?> <em><?= htmlspecialchars(ui_text('news.read_more', 'přečíst celé'), ENT_QUOTES, 'UTF-8') ?></em></span>
+                                <span class="news-card__text"><?= htmlspecialchars((string)$item['perex'], ENT_QUOTES, 'UTF-8') ?> <em><?= htmlspecialchars(ui_text('news.read_more'), ENT_QUOTES, 'UTF-8') ?></em></span>
                                 <?php if (!empty($item['tags'])): ?>
                                     <span class="news-tags">
                                         <?php foreach ($item['tags'] as $tag): ?>
@@ -247,7 +247,7 @@ $adValidityText = static function (array $ad): string {
                 </div>
             </div>
         <?php else: ?>
-            <div class="home-news__empty"><?= htmlspecialchars(ui_text('news.empty', 'Aktuálně zde nejsou žádné novinky.'), ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="home-news__empty"><?= htmlspecialchars(ui_text('news.empty'), ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
     </div>
 </section>
@@ -256,17 +256,17 @@ $adValidityText = static function (array $ad): string {
     <div class="site-shell">
         <div class="home-flyers__head">
             <div>
-                <h2 id="home-flyers-title"><?= htmlspecialchars(ui_text('flyers.title', 'Letáky'), ENT_QUOTES, 'UTF-8') ?></h2>
-                <p><?= htmlspecialchars(ui_text('flyers.text', 'Prohlédněte si poslední letáky.'), ENT_QUOTES, 'UTF-8') ?></p>
+                <h2 id="home-flyers-title"><?= htmlspecialchars(ui_text('flyers.title'), ENT_QUOTES, 'UTF-8') ?></h2>
+                <p><?= htmlspecialchars(stat_vyraz_text('flyers.text'), ENT_QUOTES, 'UTF-8') ?></p>
             </div>
             <a href="<?= htmlspecialchars($langPrefix . '/akce', ENT_QUOTES, 'UTF-8') ?>">
-                <?= htmlspecialchars(ui_text('flyers.all', 'Všechny letáky'), ENT_QUOTES, 'UTF-8') ?>
+                <?= htmlspecialchars(ui_text('flyers.all'), ENT_QUOTES, 'UTF-8') ?>
                 <span aria-hidden="true">›</span>
             </a>
         </div>
 
         <?php if ($flyerPanels !== []): ?>
-            <div class="home-flyers__tabs" role="tablist" aria-label="<?= htmlspecialchars(ui_text('flyers.category', 'Kategorie'), ENT_QUOTES, 'UTF-8') ?>">
+            <div class="home-flyers__tabs" role="tablist" aria-label="<?= htmlspecialchars(ui_text('flyers.category'), ENT_QUOTES, 'UTF-8') ?>">
                 <?php foreach ($flyerPanels as $panelIndex => $panel): ?>
                     <?php
                     $panelId = (string)$panel['id'];
@@ -293,7 +293,7 @@ $adValidityText = static function (array $ad): string {
                         <?php foreach ($panel['items'] as $item): ?>
                             <?php
                             $validityText = sprintf(
-                                ui_text('flyers.validity_from_to', 'Platí od %s do %s'),
+                                ui_text('flyers.validity_from_to'),
                                 (string)$item['date_from_label'],
                                 (string)$item['date_to_label']
                             );
@@ -313,9 +313,9 @@ $adValidityText = static function (array $ad): string {
                                     <p><?= htmlspecialchars($validityText, ENT_QUOTES, 'UTF-8') ?></p>
                                     <div class="flyer-card__actions">
                                         <?php if ((string)$item['pdf'] !== ''): ?>
-                                            <a href="<?= htmlspecialchars((string)$item['pdf'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('flyers.pdf', 'PDF'), ENT_QUOTES, 'UTF-8') ?></a>
+                                            <a href="<?= htmlspecialchars((string)$item['pdf'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener"><?= htmlspecialchars(ui_text('flyers.pdf'), ENT_QUOTES, 'UTF-8') ?></a>
                                         <?php endif; ?>
-                                        <a href="<?= htmlspecialchars((string)$item['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('flyers.browse', 'Prolistovat'), ENT_QUOTES, 'UTF-8') ?></a>
+                                        <a href="<?= htmlspecialchars((string)$item['href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ui_text('flyers.browse'), ENT_QUOTES, 'UTF-8') ?></a>
                                     </div>
                                 </div>
                             </article>
@@ -324,7 +324,7 @@ $adValidityText = static function (array $ad): string {
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <div class="home-flyers__empty"><?= htmlspecialchars(ui_text('flyers.empty', 'Aktuálně zde nejsou žádné platné ani nadcházející letáky.'), ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="home-flyers__empty"><?= htmlspecialchars(ui_text('flyers.empty'), ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
     </div>
 </section>

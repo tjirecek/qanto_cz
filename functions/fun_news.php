@@ -83,6 +83,99 @@ function frontend_news_tag_class(string $class): string
     return $safeClasses === [] ? 'text-bg-light border' : implode(' ', $safeClasses);
 }
 
+function frontend_news_gallery_media_url(int $galleryId, string $file, bool $thumb = false): string
+{
+    $file = trim($file);
+    if ($galleryId <= 0 || $file === '' || str_contains($file, '..') || str_contains($file, '/')) {
+        return '';
+    }
+
+    $relative = 'media/galerie/' . $galleryId . '-galerie/' . ($thumb ? 'small/' : '') . $file;
+    if (!defined('ROOT_DIR') || !is_file(ROOT_DIR . '/' . $relative)) {
+        return '';
+    }
+
+    return '/' . implode('/', array_map('rawurlencode', explode('/', $relative)));
+}
+
+/**
+ * @return array{title: string, description: string, photos: array<int, array{id: int, title: string, image: string, thumb: string}>}|null
+ */
+function frontend_news_gallery(int $galleryId, string $lang = 'cz'): ?array
+{
+    global $pdo;
+
+    if (!($pdo instanceof PDO) || $galleryId <= 0) {
+        return null;
+    }
+
+    $lang = $lang === 'en' ? 'en' : 'cz';
+    $titleColumn = $lang === 'en' ? 'nazev_en' : 'nazev_cz';
+    $descriptionColumn = $lang === 'en' ? 'popis_en' : 'popis_cz';
+    $stmt = $pdo->prepare(
+        "SELECT id, {$titleColumn} AS title, nazev_cz AS fallback_title,
+                {$descriptionColumn} AS description, popis_cz AS fallback_description
+         FROM galerie
+         WHERE id = :gallery_id AND valid = 1
+         LIMIT 1"
+    );
+    $stmt->execute([':gallery_id' => $galleryId]);
+    $gallery = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!is_array($gallery)) {
+        return null;
+    }
+
+    $photoTitleColumn = $lang === 'en' ? 'nazev_en' : 'nazev_cz';
+    $stmt = $pdo->prepare(
+        "SELECT id, {$photoTitleColumn} AS title, nazev_cz AS fallback_title, soubor
+         FROM galerie_photo
+         WHERE galerie_id = :gallery_id AND valid = 1
+         ORDER BY poradi ASC, id ASC"
+    );
+    $stmt->bindValue(':gallery_id', $galleryId, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $photos = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+        $file = trim((string)($row['soubor'] ?? ''));
+        $image = frontend_news_gallery_media_url($galleryId, $file);
+        if ($image === '') {
+            continue;
+        }
+
+        $thumb = frontend_news_gallery_media_url($galleryId, $file, true);
+        $photoTitle = frontend_news_safe_text($row['title'] ?? '');
+        if ($photoTitle === '') {
+            $photoTitle = frontend_news_safe_text($row['fallback_title'] ?? '');
+        }
+        $photos[] = [
+            'id' => (int)$row['id'],
+            'title' => $photoTitle,
+            'image' => $image,
+            'thumb' => $thumb !== '' ? $thumb : $image,
+        ];
+    }
+
+    if ($photos === []) {
+        return null;
+    }
+
+    $title = frontend_news_safe_text($gallery['title'] ?? '');
+    if ($title === '') {
+        $title = frontend_news_safe_text($gallery['fallback_title'] ?? '');
+    }
+    $description = frontend_news_safe_text($gallery['description'] ?? '');
+    if ($description === '') {
+        $description = frontend_news_safe_text($gallery['fallback_description'] ?? '');
+    }
+
+    return [
+        'title' => $title,
+        'description' => $description,
+        'photos' => $photos,
+    ];
+}
+
 /**
  * @return array<int, string>
  */
@@ -284,6 +377,7 @@ function frontend_news_rows(string $lang = 'cz', int $limit = 4, ?string $slug =
                 n.id,
                 n.datum,
                 n.news_ico,
+                n.galerie_id,
                 n.url_cz,
                 n.url_en,
                 n.{$titleColumn} AS title,
@@ -364,6 +458,7 @@ function frontend_news_rows(string $lang = 'cz', int $limit = 4, ?string $slug =
             'perex' => $perex,
             'perex_full' => $perexFull,
             'content' => $content,
+            'gallery_id' => (int)($row['galerie_id'] ?? 0),
             'href' => frontend_news_url($row, $lang),
             'icon_image' => frontend_news_icon_image_url($row),
             'detail_image' => frontend_news_detail_image_url($row),
@@ -489,20 +584,6 @@ function frontend_news_subscribe_token(): string
     return $token;
 }
 
-function frontend_news_allow_zero_dates(PDO $pdo): void
-{
-    $mode = (string)$pdo->query('SELECT @@SESSION.sql_mode')->fetchColumn();
-    if ($mode === '') {
-        return;
-    }
-
-    $modes = array_filter(array_map('trim', explode(',', $mode)), static function (string $item): bool {
-        return !in_array($item, ['STRICT_TRANS_TABLES', 'STRICT_ALL_TABLES', 'NO_ZERO_DATE', 'NO_ZERO_IN_DATE'], true);
-    });
-
-    $pdo->exec("SET SESSION sql_mode = " . $pdo->quote(implode(',', $modes)));
-}
-
 /**
  * @return array{ok: bool, message: string}
  */
@@ -511,13 +592,13 @@ function frontend_news_subscribe_save(array $data): array
     global $pdo;
 
     if (!($pdo instanceof PDO)) {
-        return ['ok' => false, 'message' => ui_text('news.subscribe_error', 'Odběr se nepodařilo uložit. Zkuste to prosím později.')];
+        return ['ok' => false, 'message' => ui_text('news.subscribe_error')];
     }
 
     if (function_exists('frontend_captcha_validate')) {
         $captcha = frontend_captcha_validate('news_subscribe', $data);
         if (!empty($captcha['bot'])) {
-            return ['ok' => true, 'message' => ui_text('news.subscribe_success', 'Odběr novinek byl uložen.')];
+            return ['ok' => true, 'message' => ui_text('news.subscribe_success')];
         }
         if (empty($captcha['ok'])) {
             return ['ok' => false, 'message' => (string)$captcha['message']];
@@ -527,17 +608,15 @@ function frontend_news_subscribe_save(array $data): array
     $sessionToken = (string)($_SESSION['news_subscribe_csrf_token'] ?? '');
     $formToken = (string)($data['csrf_token'] ?? '');
     if ($sessionToken === '' || $formToken === '' || !hash_equals($sessionToken, $formToken)) {
-        return ['ok' => false, 'message' => ui_text('news.subscribe_invalid', 'Formulář vypršel. Odešlete ho prosím znovu.')];
+        return ['ok' => false, 'message' => ui_text('news.subscribe_invalid')];
     }
 
     $email = trim(mb_strtolower((string)($data['email'] ?? ''), 'UTF-8'));
     if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-        return ['ok' => false, 'message' => ui_text('news.subscribe_email_error', 'Zadejte prosím platný e-mail.')];
+        return ['ok' => false, 'message' => ui_text('news.subscribe_email_error')];
     }
 
     try {
-        frontend_news_allow_zero_dates($pdo);
-
         $existingStmt = $pdo->prepare('SELECT id FROM news_users WHERE LOWER(TRIM(email)) = :email ORDER BY id ASC LIMIT 1');
         $existingStmt->execute([':email' => $email]);
         $existingId = (int)($existingStmt->fetchColumn() ?: 0);
@@ -547,7 +626,7 @@ function frontend_news_subscribe_save(array $data): array
                 "UPDATE news_users
                  SET email = :email,
                      datum_od = CURDATE(),
-                     datum_do = '0000-00-00',
+                     datum_do = NULL,
                      registered = 1,
                      valid = 1,
                      user_u = 'frontend_news_subscribe'
@@ -560,16 +639,16 @@ function frontend_news_subscribe_save(array $data): array
         } else {
             $stmt = $pdo->prepare(
                 "INSERT INTO news_users (name, email, datum_od, datum_do, registered, valid, user_i, user_u)
-                 VALUES ('', :email, CURDATE(), '0000-00-00', 1, 1, 'frontend_news_subscribe', 'frontend_news_subscribe')"
+                 VALUES ('', :email, CURDATE(), NULL, 1, 1, 'frontend_news_subscribe', 'frontend_news_subscribe')"
             );
             $stmt->execute([':email' => $email]);
         }
 
         $_SESSION['news_subscribe_csrf_token'] = bin2hex(random_bytes(24));
 
-        return ['ok' => true, 'message' => ui_text('news.subscribe_success', 'Odběr novinek byl uložen.')];
+        return ['ok' => true, 'message' => ui_text('news.subscribe_success')];
     } catch (Throwable) {
-        return ['ok' => false, 'message' => ui_text('news.subscribe_error', 'Odběr se nepodařilo uložit. Zkuste to prosím později.')];
+        return ['ok' => false, 'message' => ui_text('news.subscribe_error')];
     }
 }
 

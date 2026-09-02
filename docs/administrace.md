@@ -41,6 +41,65 @@ Project vrstva qanto.cz je otevrena pouze pro novy web qanto.cz a nesmi se autom
 - TinyMCE a DataTables inicializace.
 - Shared UI pro vypis cron uloh.
 
+## Univerzalni Vyber Jednoho Zaznamu
+
+Komponenta `admin single picker` je zavazny shared standard pro vzhledove nahrazeni bezneho HTML `<select>` pri vyberu prave jednoho zaznamu. Multiple selecty se touto komponentou nenahrazuji.
+
+Autoritativni soubory:
+
+- `assets/js/sec/admin_single_picker.js` - inicializace, spolecny Bootstrap modal, hledani a synchronizace hodnoty.
+- `assets/js/sec/admin.js` - registrace modulu podle selektoru `.js-admin-single-picker`.
+- `assets/css/secure.css` - vzhled triggeru, vysledku a z-index modalu/backdropu.
+
+Puvodni `<select>` musi zustat ve formulari se stejnym `name`, hodnotami, `required` a `disabled` stavem. Komponenta se aktivuje pouze pridanim tridy `js-admin-single-picker`; bez JavaScriptu zustane nativni select viditelny a funkcni. Po inicializaci JavaScript skryje zdrojovy select pristupnym vizualnim skrytim, zapisuje volbu zpet do jeho `value` a pri skutecne zmene vyvola bublajici nativni udalost `change`.
+
+Zakladni pouziti:
+
+```html
+<select
+    name="user_id"
+    class="form-select js-admin-single-picker"
+    data-picker-title="Vybrat uživatele"
+    data-picker-description="Vyberte právě jednoho uživatele."
+    data-picker-search-placeholder="Hledat podle jména nebo loginu…"
+    data-picker-empty-label="Bez uživatele"
+    required
+>
+    <option value="">Bez uživatele</option>
+    <option value="15" data-picker-subtext="novak" data-picker-icon="bi bi-person">Jan Novák</option>
+</select>
+```
+
+Podporovane atributy selectu:
+
+- `data-picker-title` - nadpis spolecneho modalu.
+- `data-picker-description` - volitelny popis pod nadpisem.
+- `data-picker-search-placeholder` - placeholder hledani.
+- `data-picker-empty-label` - text triggeru a prazdne option s `value=""`.
+
+Podporovane atributy `<option>`:
+
+- `data-picker-subtext` - doplnkovy text, typicky login, kod nebo pobocka; zahrnuje se do hledani.
+- `data-picker-icon` - bezpecny seznam CSS trid ikony, typicky Bootstrap Icons `bi bi-person`.
+
+Hledani ignoruje diakritiku a prohledava soucasne text option i `data-picker-subtext`. Enter vybere prvni viditelnou povolenou polozku, Escape modal zavre. Aktualni volba je oznacena. Disabled select vytvori disabled trigger a disabled option nelze vybrat. `required` zustava nativni vlastnosti selectu; pri chybe se zvyrazni a zaostri viditelny trigger.
+
+Vsechny pickery na strance pouzivaji jediny modal `#adminSinglePickerModal`, ktery JavaScript vytvari jednou a pripojuje primo pod `<body>`. Picker modal a jeho backdrop maji explicitni vyssi z-index; po zavreni se uklidi jeho backdrop a zachova `modal-open`, pokud pod nim zustal otevreny jiny Bootstrap modal.
+
+Pri programove zmene hodnoty pouzij standardni udalost `change`, aby se aktualizoval i trigger a navazujici aplikacni logika:
+
+```js
+const select = document.querySelector('#user_id');
+select.value = '15';
+select.dispatchEvent(new Event('change', { bubbles: true }));
+```
+
+Pro dynamicky doplnene options komponenta pouziva `MutationObserver`. Rucni prekresleni lze vyvolat pres `window.QantoAdminSinglePicker.refresh(select)` nebo `refreshAll()`.
+
+Picker se pouziva na single selecty, ktere vybiraji jeden databazovy zaznam nebo spravovanou kategorii. V shared administraci je nasazen na typech novinky, prirazene fotogalerii, typu galerie, skupine kontaktni osoby, pobočce obchodniho zastupce, skupine uzivatele a kategorii ChangeLogu. V project vrstve qanto.cz je nasazen na typu akcni nabidky, typu odberu akcí, skupine pracovniho mista a jeho kontaktni osobe. Backendove ukladani a nazvy poli zustavaji beze zmeny. Puvodni samostatne modaly pro pobočku obchodniho zastupce a kontaktni osobu pracovniho mista jsou nahrazeny stejnym zdrojovym selectem a spolecnym modalem komponenty.
+
+Nativni select zustava standardem pro `multiple`, filtry vypisu a kratke stavove nebo technicke enumy, napriklad Ano/Ne, barvu, mesic, rok, stav odeslani nebo rezim prohlizeni. U techto poli by modal neprinesl lepsi orientaci ani hledani. Pri auditu noveho formulare se picker nepridava plosne podle HTML tagu, ale podle tohoto vyznamoveho pravidla.
+
 ## Project Menu Qanto.cz
 
 Administrace pouziva pevne sekce: `01` shared menu, `02` project menu, `09` system menu. V kazde sekci zacina `page` od `01`.
@@ -67,7 +126,7 @@ Agenda `05 Ples` obsahuje registrace hostů z frontend formuláře, default posl
 
 Agenda `04 Brigádníci` má submenu `VO` a `MO`. Obě podstránky obsahují registrace z frontend formuláře, default posledního ročníku podle `reg_date`, filtrování podle ročníků, valid/nevalid přepínač, znevalidnění/obnovení, název napárované aktuální pobočky a XLSX export aktuálního filtru.
 
-Agenda `07 TenisQcup` obsahuje registrace týmů z frontend formuláře, filtrování podle ročníků a XLSX export aktuálně vybraných ročníků.
+Agenda `07 TenisQcup` obsahuje registrace týmů z frontend formuláře, filtrování podle ročníků a XLSX export aktuálně vybraných ročníků. Počty a nabídka ročníků vždy respektují aktuální přepnutí mezi validními a nevalidními registracemi. Formulář odesílá přes společný logovaný mailer interní oznámení na jednu nebo více adres ze systémové proměnné `tenis_default-email-main` a samostatné potvrzení kontaktnímu hráči. Oba e-maily používají odesílatele `Qanto TenisQcup` a společný Qanto HTML design; obsah potvrzení je editovatelný statický text `tenisqcup_confirmation_email`.
 
 Agenda `06 Volání` obsahuje import tří Vodafone XLSX souborů (`prehled.xlsx`, `souhrn.xlsx`, `detail.xlsx`), historický výpis podle období/e-mailu/telefonu a zákaznické odkazy přes `unify` na veřejný souhrn nebo detail. Import netruncuje tabulky; přehled se aktualizuje podle `obdobi + mobil`, souhrn a detail se deduplikují podle hashe řádku. Přehled bere sloupce `obdobi` ve formátu `MM.RRRR`, `zamestnanec`, `email`, `mobil`, `0dph`, `21dph`, `bdph`, `sdph` a importuje jen řádky s nenulovým `sdph`. Souhrn/detail používají názvy sloupců kopírované z Vodafone, např. `Období`, `Mobil`, `Produktová řada`, `Položka`, `Služba`, `Datum čas`, `Volané číslo`, `CELKEM_BEZ_DPH`, `CELKEM_S_DPH`. Výpis má stav odeslání e-mailu, filtr Odesláno ANO/NE, ruční odeslání a hromadné odeslání neodeslaných v aktuálním filtru; e-maily se seskupují podle `obdobi + email`, takže jeden e-mail obsahuje všechna telefonní čísla daného příjemce za období. Úspěšné odeslání se označí u všech zahrnutých řádků v `volani_preuctovani.email_sent_at`, chyba zůstane v `email_last_error`. Tělo e-mailu používá obsahový statický text `stat_texty.code = volani`, odesílatel se řídí systémovou proměnnou `volani_from_email` s výchozí hodnotou `volani@qanto.cz`; před použitím se hodnota převede na prostý text, ověří jako e-mail a při neplatném obsahu se použije výchozí adresa. Lokální CLI alternativa pro přehled je `scripts/import_volani_prehled_xlsx.php`.
 
@@ -155,3 +214,9 @@ Pohled `Systémové proměnné > DB migrace` umí:
 - smazat evidenci migrace a odpovídající SQL soubor.
 
 Smazání migrace není rollback databázového schématu.
+
+# MySQL 8.4 a datumy newsletteru
+
+- Aktivní odběr v `news_users.datum_do` používá SQL `NULL`, nikoli legacy hodnotu `0000-00-00`.
+- Shared helper kvůli zápisům datumů nemění `sql_mode` aktuální DB relace.
+- Historická data a nullable schéma opravuje jednorázová migrace `secure/sql/20260901_01_mysql84_shared_zero_date_cleanup.sql`; runtime pracuje pouze s platnými datumy nebo `NULL`.

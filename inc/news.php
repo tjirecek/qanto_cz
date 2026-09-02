@@ -20,6 +20,9 @@ $subscribeToken = function_exists('frontend_news_subscribe_token') ? frontend_ne
 
 $detail = $slug !== '' && function_exists('frontend_news_detail_row') ? frontend_news_detail_row($lang, $slug) : null;
 $detailSidebarItems = $detail && function_exists('frontend_detail_sidebar_ads') ? frontend_detail_sidebar_ads($lang, 3) : [];
+$detailGallery = $detail && function_exists('frontend_news_gallery')
+    ? frontend_news_gallery((int)($detail['gallery_id'] ?? 0), $lang)
+    : null;
 $tagOptions = (!$detail && function_exists('frontend_news_tags')) ? frontend_news_tags($lang) : [];
 $selectedTag = trim((string)($_GET['tag'] ?? ''));
 if ($selectedTag !== '' && preg_match('~^[a-z0-9_-]+$~i', $selectedTag) !== 1) {
@@ -52,18 +55,18 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
 
 <section class="news-page">
     <div class="site-shell">
-        <nav class="site-breadcrumb" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb', 'Drobečková navigace'), ENT_QUOTES, 'UTF-8') ?>">
+        <nav class="site-breadcrumb" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb'), ENT_QUOTES, 'UTF-8') ?>">
             <ol>
                 <li>
-                    <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('aria.home', 'Domů'), ENT_QUOTES, 'UTF-8') ?>">
+                    <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('aria.breadcrumb_home'), ENT_QUOTES, 'UTF-8') ?>">
                         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3.2 3.8 8.3v7.4h4.1v-4.6h4.2v4.6h4.1V8.3L10 3.2Zm0-2.1 8 6.6v9.6h-7.5v-4.6h-1v4.6H2V7.7l8-6.6Z"/></svg>
                     </a>
                 </li>
                 <li>
                     <?php if ($detail): ?>
-                        <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/news"><?= htmlspecialchars(ui_text('news.page_title', 'Novinky'), ENT_QUOTES, 'UTF-8') ?></a>
+                        <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/news"><?= htmlspecialchars(ui_text('news.page_title'), ENT_QUOTES, 'UTF-8') ?></a>
                     <?php else: ?>
-                        <span aria-current="page"><?= htmlspecialchars(ui_text('news.page_title', 'Novinky'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span aria-current="page"><?= htmlspecialchars(ui_text('news.page_title'), ENT_QUOTES, 'UTF-8') ?></span>
                     <?php endif; ?>
                 </li>
                 <?php if ($detail): ?>
@@ -97,18 +100,71 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
                     <div class="news-detail__content">
                         <?= (string)($detail['content'] ?: '<p>' . htmlspecialchars((string)$detail['perex'], ENT_QUOTES, 'UTF-8') . '</p>') ?>
                     </div>
+                    <?php if (is_array($detailGallery) && !empty($detailGallery['photos'])): ?>
+                        <?php
+                        $galleryTitle = (string)($detailGallery['title'] ?? '');
+                        $galleryHeading = $galleryTitle !== '' ? $galleryTitle : ui_text('news.gallery_title');
+                        $galleryDescription = (string)($detailGallery['description'] ?? '');
+                        $galleryPhotos = (array)$detailGallery['photos'];
+                        ?>
+                        <section
+                            class="news-detail__gallery"
+                            aria-labelledby="news-gallery-title"
+                            data-market-gallery
+                        >
+                            <div class="news-detail__gallery-head">
+                                <h2 id="news-gallery-title"><?= htmlspecialchars($galleryHeading, ENT_QUOTES, 'UTF-8') ?></h2>
+                                <p>
+                                    <?= htmlspecialchars(
+                                        $galleryDescription !== ''
+                                            ? $galleryDescription
+                                            : sprintf(ui_text('news.gallery_count'), count($galleryPhotos)),
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
+                                </p>
+                            </div>
+                            <div class="market-detail-gallery__grid">
+                                <?php foreach ($galleryPhotos as $index => $photo): ?>
+                                    <?php
+                                    $photoTitle = (string)($photo['title'] ?? '');
+                                    $photoAlt = $photoTitle !== '' ? $photoTitle : $galleryHeading;
+                                    ?>
+                                    <button
+                                        type="button"
+                                        class="market-detail-gallery__item"
+                                        data-market-gallery-item
+                                        data-market-gallery-index="<?= (int)$index ?>"
+                                        data-full="<?= htmlspecialchars((string)$photo['image'], ENT_QUOTES, 'UTF-8') ?>"
+                                        data-title="<?= htmlspecialchars($photoAlt, ENT_QUOTES, 'UTF-8') ?>"
+                                        aria-label="<?= htmlspecialchars(sprintf(ui_text('news.gallery_open_photo'), $index + 1), ENT_QUOTES, 'UTF-8') ?>"
+                                    >
+                                        <img src="<?= htmlspecialchars((string)$photo['thumb'], ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($photoAlt, ENT_QUOTES, 'UTF-8') ?>" loading="lazy">
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                            <div
+                                class="market-gallery-lightbox"
+                                data-market-gallery-lightbox
+                                data-label-close="<?= htmlspecialchars(ui_text('common.close'), ENT_QUOTES, 'UTF-8') ?>"
+                                data-label-prev="<?= htmlspecialchars(ui_text('common.previous'), ENT_QUOTES, 'UTF-8') ?>"
+                                data-label-next="<?= htmlspecialchars(ui_text('common.next'), ENT_QUOTES, 'UTF-8') ?>"
+                                hidden
+                            ></div>
+                        </section>
+                    <?php endif; ?>
                 </article>
                 <?php include __DIR__ . '/detail_sidebar.php'; ?>
             </div>
         <?php else: ?>
             <div class="news-page__head">
-                <h1><?= htmlspecialchars(ui_text('news.page_title', 'Novinky'), ENT_QUOTES, 'UTF-8') ?></h1>
+                <h1><?= htmlspecialchars(ui_text('news.page_title'), ENT_QUOTES, 'UTF-8') ?></h1>
             </div>
 
             <?php if ($tagOptions !== []): ?>
-                <nav class="news-filter" aria-label="<?= htmlspecialchars(ui_text('news.tags_filter', 'Filtrovat podle štítků'), ENT_QUOTES, 'UTF-8') ?>">
+                <nav class="news-filter" aria-label="<?= htmlspecialchars(ui_text('news.tags_filter'), ENT_QUOTES, 'UTF-8') ?>">
                     <a class="news-filter__item<?= $selectedTag === '' ? ' is-active' : '' ?>" href="<?= htmlspecialchars($newsListUrl(null), ENT_QUOTES, 'UTF-8') ?>">
-                        <?= htmlspecialchars(ui_text('news.tags_all', 'Všechny'), ENT_QUOTES, 'UTF-8') ?>
+                        <?= htmlspecialchars(ui_text('news.tags_all'), ENT_QUOTES, 'UTF-8') ?>
                     </a>
                     <?php foreach ($tagOptions as $tag): ?>
                         <?php $tagSlug = (string)$tag['slug']; ?>
@@ -131,7 +187,7 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
                         <span class="news-page-featured__body">
                             <time><?= htmlspecialchars((string)$featuredItem['date'], ENT_QUOTES, 'UTF-8') ?></time>
                             <strong><?= htmlspecialchars((string)$featuredItem['title'], ENT_QUOTES, 'UTF-8') ?></strong>
-                            <span class="news-card__text"><?= htmlspecialchars((string)$featuredItem['perex'], ENT_QUOTES, 'UTF-8') ?> <em><?= htmlspecialchars(ui_text('news.read_more', 'přečíst celé'), ENT_QUOTES, 'UTF-8') ?></em></span>
+                            <span class="news-card__text"><?= htmlspecialchars((string)$featuredItem['perex'], ENT_QUOTES, 'UTF-8') ?> <em><?= htmlspecialchars(ui_text('news.read_more'), ENT_QUOTES, 'UTF-8') ?></em></span>
                             <?php if (!empty($featuredItem['tags'])): ?>
                                 <span class="news-tags">
                                     <?php foreach ($featuredItem['tags'] as $tag): ?>
@@ -143,9 +199,9 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
                     </a>
 
                     <aside class="news-subscribe" aria-labelledby="news-subscribe-title">
-                        <span><?= htmlspecialchars(ui_text('news.subscribe_kicker', 'Odběr novinek'), ENT_QUOTES, 'UTF-8') ?></span>
-                        <h2 id="news-subscribe-title"><?= htmlspecialchars(ui_text('news.subscribe_title', 'Novinky na e-mail'), ENT_QUOTES, 'UTF-8') ?></h2>
-                        <p><?= htmlspecialchars(ui_text('news.subscribe_text', 'Pošleme vám aktuální informace ze světa Qanto.'), ENT_QUOTES, 'UTF-8') ?></p>
+                        <span><?= htmlspecialchars(ui_text('news.subscribe_kicker'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <h2 id="news-subscribe-title"><?= htmlspecialchars(ui_text('news.subscribe_title'), ENT_QUOTES, 'UTF-8') ?></h2>
+                        <p><?= htmlspecialchars(stat_vyraz_text('news.subscribe_text'), ENT_QUOTES, 'UTF-8') ?></p>
 
                         <?php if (is_array($subscribeResult)): ?>
                             <div class="news-subscribe__message <?= (bool)($subscribeResult['ok'] ?? false) ? 'is-success' : 'is-error' ?>" role="status">
@@ -156,24 +212,24 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
                         <form method="post" class="news-subscribe__form">
                             <input type="hidden" name="action" value="news_subscribe">
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($subscribeToken, ENT_QUOTES, 'UTF-8') ?>">
-                            <label class="visually-hidden" for="news_subscribe_email"><?= htmlspecialchars(ui_text('news.subscribe_email', 'Váš e-mail'), ENT_QUOTES, 'UTF-8') ?></label>
+                            <label class="visually-hidden" for="news_subscribe_email"><?= htmlspecialchars(ui_text('news.subscribe_email'), ENT_QUOTES, 'UTF-8') ?></label>
                             <input type="email"
                                    name="email"
                                    id="news_subscribe_email"
                                    required
                                    autocomplete="email"
-                                   placeholder="<?= htmlspecialchars(ui_text('news.subscribe_email', 'Váš e-mail'), ENT_QUOTES, 'UTF-8') ?>"
+                                   placeholder="<?= htmlspecialchars(ui_text('news.subscribe_email'), ENT_QUOTES, 'UTF-8') ?>"
                                    value="<?= is_array($subscribeResult) && !(bool)($subscribeResult['ok'] ?? false) ? htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES, 'UTF-8') : '' ?>">
                             <?php if (function_exists('frontend_captcha_render')): ?>
                                 <?php frontend_captcha_render('news_subscribe', 'news-subscribe'); ?>
                             <?php endif; ?>
-                            <button type="submit"><?= htmlspecialchars(ui_text('news.subscribe_button', 'Odebírat'), ENT_QUOTES, 'UTF-8') ?> <span aria-hidden="true">›</span></button>
+                            <button type="submit"><?= htmlspecialchars(ui_text('news.subscribe_button'), ENT_QUOTES, 'UTF-8') ?> <span aria-hidden="true">›</span></button>
                         </form>
 
                         <p class="news-subscribe__consent">
-                            <?= htmlspecialchars(ui_text('news.subscribe_consent', 'Odběrem souhlasíte se'), ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars(ui_text('news.subscribe_consent'), ENT_QUOTES, 'UTF-8') ?>
                             <a href="/<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>/osobni-udaje">
-                                <?= htmlspecialchars(ui_text('news.subscribe_privacy_link', 'zpracováním osobních údajů'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars(ui_text('news.subscribe_privacy_link'), ENT_QUOTES, 'UTF-8') ?>
                             </a>.
                         </p>
                     </aside>
@@ -182,7 +238,7 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
 
             <?php if ($listItems !== []): ?>
                 <div class="news-page__subhead">
-                    <span><?= htmlspecialchars(ui_text('news.more_title', 'Další novinky'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars(ui_text('news.more_title'), ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
                 <div class="news-page__grid">
                     <?php foreach ($listItems as $item): ?>
@@ -206,7 +262,7 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
                     <?php endforeach; ?>
                 </div>
             <?php elseif (!$featuredItem): ?>
-                <div class="home-news__empty"><?= htmlspecialchars(ui_text('news.empty', 'Aktuálně zde nejsou žádné novinky.'), ENT_QUOTES, 'UTF-8') ?></div>
+                <div class="home-news__empty"><?= htmlspecialchars(ui_text('news.empty'), ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
 
             <?php if ($totalPages > 1): ?>
@@ -218,10 +274,10 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
                     $endPage = min($totalPages, $startPage + 4);
                 }
                 ?>
-                <nav class="news-pagination" aria-label="<?= htmlspecialchars(ui_text('news.pagination_label', 'Stránkování novinek'), ENT_QUOTES, 'UTF-8') ?>">
+                <nav class="news-pagination" aria-label="<?= htmlspecialchars(ui_text('news.pagination_label'), ENT_QUOTES, 'UTF-8') ?>">
                     <?php if ($currentPage > 1): ?>
-                        <a href="<?= htmlspecialchars($newsListUrl($selectedTag, 1), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('news.pagination_first', 'První stránka'), ENT_QUOTES, 'UTF-8') ?>">‹‹</a>
-                        <a href="<?= htmlspecialchars($newsListUrl($selectedTag, $currentPage - 1), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('news.pagination_prev', 'Předchozí stránka'), ENT_QUOTES, 'UTF-8') ?>">‹</a>
+                        <a href="<?= htmlspecialchars($newsListUrl($selectedTag, 1), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('news.pagination_first'), ENT_QUOTES, 'UTF-8') ?>">‹‹</a>
+                        <a href="<?= htmlspecialchars($newsListUrl($selectedTag, $currentPage - 1), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('news.pagination_prev'), ENT_QUOTES, 'UTF-8') ?>">‹</a>
                     <?php endif; ?>
                     <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
                         <a class="<?= $i === $currentPage ? 'is-active' : '' ?>" href="<?= htmlspecialchars($newsListUrl($selectedTag, $i), ENT_QUOTES, 'UTF-8') ?>"<?= $i === $currentPage ? ' aria-current="page"' : '' ?>>
@@ -229,8 +285,8 @@ $newsListUrl = static function (?string $tag = null, int $pageNumber = 1) use ($
                         </a>
                     <?php endfor; ?>
                     <?php if ($currentPage < $totalPages): ?>
-                        <a href="<?= htmlspecialchars($newsListUrl($selectedTag, $currentPage + 1), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('news.pagination_next', 'Další stránka'), ENT_QUOTES, 'UTF-8') ?>">›</a>
-                        <a href="<?= htmlspecialchars($newsListUrl($selectedTag, $totalPages), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('news.pagination_last', 'Poslední stránka'), ENT_QUOTES, 'UTF-8') ?>">››</a>
+                        <a href="<?= htmlspecialchars($newsListUrl($selectedTag, $currentPage + 1), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('news.pagination_next'), ENT_QUOTES, 'UTF-8') ?>">›</a>
+                        <a href="<?= htmlspecialchars($newsListUrl($selectedTag, $totalPages), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(ui_text('news.pagination_last'), ENT_QUOTES, 'UTF-8') ?>">››</a>
                     <?php endif; ?>
                 </nav>
             <?php endif; ?>

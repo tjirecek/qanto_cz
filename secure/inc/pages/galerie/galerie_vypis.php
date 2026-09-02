@@ -403,7 +403,15 @@ if ($typeFilter !== null) {
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="galerie_typ">Typ galerie</label>
-                            <select class="form-select" name="galerie_typ" id="galerie_typ">
+                            <select
+                                class="form-select js-admin-single-picker"
+                                name="galerie_typ"
+                                id="galerie_typ"
+                                data-picker-title="Vybrat typ galerie"
+                                data-picker-description="Vyberte jeden typ, do kterého bude galerie zařazena."
+                                data-picker-search-placeholder="Hledat podle názvu typu…"
+                                data-picker-empty-label="Bez typu"
+                            >
                                 <?php galerie_typ_option_form((int)($gallery['galerie_typ'] ?? 0)); ?>
                             </select>
                         </div>

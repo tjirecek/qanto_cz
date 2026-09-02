@@ -7,7 +7,7 @@ Ukoly, ktere musi byt doresene pred produkcni migraci a nasazenim noveho `qanto.
 - Pred finalni produkcni migraci domluvit s Webglobe moznost a postup prechodu produkcni DB z MySQL 5.7 na novejsi MySQL nebo MariaDB.
 - Overit konkretni dostupnou verzi, hostname/server, dopad na phpMyAdmin/WebSSH a zda jde o migraci existujici DB nebo zalozeni nove DB s importem.
 - Nepocitat s tim, ze prepnuti verze DB je dostupne jako bezny uzivatelsky prepinac v administraci hostingu.
-- Dokud produkce zustava na MySQL 5.7, lokalni vyvoj drzet kompatibilni s MySQL 5.7.
+- Lokální vývoj běží na MySQL 8.4. Dokud produkce zůstává na MySQL 5.7, před nasazením ověřit cílovou verzi a kompatibilitu produkčních migrací.
 
 ## Novinky
 

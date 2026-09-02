@@ -2,9 +2,9 @@
 
 Lokální DB pro tento projekt je `xqanto_cz_main`.
 
-Lokální MySQL běží přes Docker/Colima jako kontejner `qanto-mysql57` s image `mysql:5.7.44`
-na `127.0.0.1:3306`. Toto záměrně drží lokální vývoj u MySQL 5.7, protože produkční Webglobe
-prostředí zatím používá MySQL 5.7.
+Lokální MySQL běží přes Docker/Colima jako kontejner `qanto-mysql84` s image `mysql:8.4`
+na `127.0.0.1:3306`. Produkční Webglobe prostředí zatím používá MySQL 5.7; před produkčním
+nasazením je proto nutné potvrdit cílovou verzi DB a ověřit migrace proti tomuto prostředí.
 
 ## Shared Tabulky
 

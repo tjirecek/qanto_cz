@@ -6,9 +6,9 @@ function rep_akce_users_e(mixed $value): string
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-function rep_akce_users_zero_date(): string
+function rep_akce_users_open_end_date(): ?string
 {
-    return '0000-00-00';
+    return null;
 }
 
 function rep_akce_users_today(): string
@@ -50,7 +50,7 @@ function rep_akce_users_validate_email(string $email): string
     return $email;
 }
 
-function rep_akce_users_normalize_date(mixed $value, string $fallback = '0000-00-00'): string
+function rep_akce_users_normalize_date(mixed $value, ?string $fallback = null): ?string
 {
     if ($value instanceof DateTimeInterface) {
         return $value->format('Y-m-d');
@@ -65,7 +65,7 @@ function rep_akce_users_normalize_date(mixed $value, string $fallback = '0000-00
     }
 
     $date = trim((string)$value);
-    if ($date === '' || $date === '0000-00-00') {
+    if ($date === '') {
         return $fallback;
     }
 
@@ -83,7 +83,7 @@ function rep_akce_users_normalize_date(mixed $value, string $fallback = '0000-00
 function rep_akce_users_format_date(mixed $value): string
 {
     $date = (string)$value;
-    if ($date === '' || $date === '0000-00-00') {
+    if ($date === '') {
         return '';
     }
 
@@ -93,7 +93,7 @@ function rep_akce_users_format_date(mixed $value): string
 function rep_akce_users_format_updated(mixed $value): string
 {
     $value = trim((string)$value);
-    if ($value === '' || $value === '0000-00-00 00:00:00') {
+    if ($value === '') {
         return '';
     }
 
@@ -125,11 +125,6 @@ function rep_akce_users_bool(mixed $value, int $default = 0): int
     }
 
     return in_array($value, ['1', 'ano', 'yes', 'true', 'aktivni', 'aktivní'], true) ? 1 : 0;
-}
-
-function rep_akce_users_prepare_write(PDO $pdo): void
-{
-    $pdo->exec("SET SESSION sql_mode = REPLACE(REPLACE(@@SESSION.sql_mode, 'NO_ZERO_IN_DATE', ''), 'NO_ZERO_DATE', '')");
 }
 
 /** @return array<int, array<string, mixed>> */
@@ -310,12 +305,12 @@ function rep_akce_users_payload_from_array(PDO $pdo, array $data): array
     $registered = rep_akce_users_bool($data['registered'] ?? null, 1);
     $valid = rep_akce_users_bool($data['valid'] ?? null, 1);
     $datumOd = rep_akce_users_normalize_date($data['datum_od'] ?? '', rep_akce_users_today());
-    $datumDo = rep_akce_users_normalize_date($data['datum_do'] ?? '', rep_akce_users_zero_date());
+    $datumDo = rep_akce_users_normalize_date($data['datum_do'] ?? '', rep_akce_users_open_end_date());
     $typeId = rep_akce_users_payload_type_id($pdo, $data);
 
     if ($registered === 1) {
-        $datumDo = rep_akce_users_zero_date();
-    } elseif ($datumDo === rep_akce_users_zero_date()) {
+        $datumDo = rep_akce_users_open_end_date();
+    } elseif ($datumDo === null) {
         $datumDo = rep_akce_users_today();
     }
 
@@ -333,7 +328,6 @@ function rep_akce_users_payload_from_array(PDO $pdo, array $data): array
 
 function rep_akce_users_save(PDO $pdo, array $data, ?int $id = null, bool $upsertByEmail = false): int
 {
-    rep_akce_users_prepare_write($pdo);
     $payload = rep_akce_users_payload_from_array($pdo, $data);
     $user = function_exists('admin_session_user') ? admin_session_user() : 'system';
 
@@ -393,11 +387,10 @@ function rep_akce_users_save(PDO $pdo, array $data, ?int $id = null, bool $upser
 
 function rep_akce_users_delete(PDO $pdo, int $id): void
 {
-    rep_akce_users_prepare_write($pdo);
     $stmt = $pdo->prepare('UPDATE rep_akce_users
         SET registered = 0,
             valid = 0,
-            datum_do = IF(datum_do = "0000-00-00", :datum_do, datum_do),
+            datum_do = COALESCE(datum_do, :datum_do),
             user_u = :user_u
         WHERE id = :id');
     $stmt->execute([
@@ -409,7 +402,6 @@ function rep_akce_users_delete(PDO $pdo, int $id): void
 
 function rep_akce_users_set_valid(PDO $pdo, int $id, int $valid): void
 {
-    rep_akce_users_prepare_write($pdo);
     $stmt = $pdo->prepare('UPDATE rep_akce_users
         SET valid = :valid,
             user_u = :user_u
@@ -423,7 +415,6 @@ function rep_akce_users_set_valid(PDO $pdo, int $id, int $valid): void
 
 function rep_akce_users_end(PDO $pdo, int $id): void
 {
-    rep_akce_users_prepare_write($pdo);
     $stmt = $pdo->prepare('UPDATE rep_akce_users
         SET registered = 0,
             datum_do = :datum_do,
@@ -438,12 +429,11 @@ function rep_akce_users_end(PDO $pdo, int $id): void
 
 function rep_akce_users_renew(PDO $pdo, int $id): void
 {
-    rep_akce_users_prepare_write($pdo);
     $stmt = $pdo->prepare('UPDATE rep_akce_users
         SET registered = 1,
             valid = 1,
             datum_od = :datum_od,
-            datum_do = "0000-00-00",
+            datum_do = NULL,
             user_u = :user_u
         WHERE id = :id');
     $stmt->execute([

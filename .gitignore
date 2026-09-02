@@ -1,6 +1,9 @@
 .DS_Store
 
 .idea/
+.user.ini
+__pycache__/
+*.py[cod]
 node_modules/
 vendor/
 test-results/

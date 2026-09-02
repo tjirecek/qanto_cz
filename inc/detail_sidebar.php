@@ -4,7 +4,7 @@ declare(strict_types=1);
 $detailSidebarItems = is_array($detailSidebarItems ?? null) ? $detailSidebarItems : [];
 ?>
 <?php if ($detailSidebarItems !== []): ?>
-    <aside class="detail-sidebar" aria-label="<?= htmlspecialchars(ui_text('detail.sidebar_links', 'Doporučené odkazy'), ENT_QUOTES, 'UTF-8') ?>">
+    <aside class="detail-sidebar" aria-label="<?= htmlspecialchars(ui_text('detail.sidebar_links'), ENT_QUOTES, 'UTF-8') ?>">
         <?php foreach ($detailSidebarItems as $ad): ?>
             <?php
             $hasImage = (string)($ad['image'] ?? '') !== '';
@@ -14,7 +14,7 @@ $detailSidebarItems = is_array($detailSidebarItems ?? null) ? $detailSidebarItem
             $imageClass = $hasCoverImage ? 'steady-ad-card--has-image' : '';
             $linkText = trim((string)($ad['link_text'] ?? ''));
             if ($linkText === '') {
-                $linkText = ui_text('common.more', 'Zjistěte více');
+                $linkText = ui_text('common.more');
             }
             ?>
             <a class="steady-ad-card detail-sidebar__card <?= htmlspecialchars(trim($themeClass . ' ' . $textColorClass . ' ' . $imageClass), ENT_QUOTES, 'UTF-8') ?>" href="<?= htmlspecialchars((string)($ad['href'] ?? '#'), ENT_QUOTES, 'UTF-8') ?>">
