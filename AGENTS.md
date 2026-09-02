@@ -22,7 +22,7 @@ Tento projekt je hlavní zdroj sdílené administrace pro Qanto projekty.
 
 ## Shared Admin
 
-Sdílené soubory se stabilizují zde a následně se portují do QRS/QANTOPLUS.
+Sdílené soubory se stabilizují zde a následně se portují do QRS, QANTOPLUS a Tipovačky HCPCEfans.cz.
 
 Shared admin obsahuje zejména:
 

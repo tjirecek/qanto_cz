@@ -7,12 +7,13 @@ Skript `scripts/compare_shared_admin.sh` porovnava shared administraci z `qanto_
 - Primarni zdroj: `/Users/tjirecek/www_dev/qanto_cz`
 - Sekundarni projekt: `/Users/tjirecek/www_dev/qrs-qanto_cz`
 - Sekundarni projekt: `/Users/tjirecek/www_dev/qantoplus_cz`
+- Sekundarni projekt: `/Users/tjirecek/www_dev/tipovacka-hcpcefans_cz`
 
 Primarni projekt je vzdy repozitar, ve kterem je skript spusten. V tomto projektu je to `qanto_cz`.
 
 ## Spusteni
 
-Defaultni porovnani proti obema sekundarnim projektum:
+Defaultni porovnani proti všem sekundárním projektům:
 
 ```bash
 scripts/compare_shared_admin.sh
@@ -23,6 +24,7 @@ Porovnani proti vybranym sekundarnim projektum:
 ```bash
 scripts/compare_shared_admin.sh /Users/tjirecek/www_dev/qrs-qanto_cz
 scripts/compare_shared_admin.sh /Users/tjirecek/www_dev/qrs-qanto_cz /Users/tjirecek/www_dev/qantoplus_cz
+scripts/compare_shared_admin.sh /Users/tjirecek/www_dev/tipovacka-hcpcefans_cz
 ```
 
 Ulozeni reportu:

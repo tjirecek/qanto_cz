@@ -12,6 +12,7 @@ Compares shared admin candidate files from primary qanto_cz against secondary
 projects. When no secondary roots are passed, compares against:
   /Users/tjirecek/www_dev/qrs-qanto_cz
   /Users/tjirecek/www_dev/qantoplus_cz
+  /Users/tjirecek/www_dev/tipovacka-hcpcefans_cz
 
 Primary project is always the repository containing this script:
   $PRIMARY_ROOT
@@ -29,6 +30,7 @@ else
   SECONDARY_ROOTS=(
     "/Users/tjirecek/www_dev/qrs-qanto_cz"
     "/Users/tjirecek/www_dev/qantoplus_cz"
+    "/Users/tjirecek/www_dev/tipovacka-hcpcefans_cz"
   )
 fi
 
